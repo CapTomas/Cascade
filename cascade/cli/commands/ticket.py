@@ -4,6 +4,8 @@ import click
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from rich.text import Text
+from rich import box
 from typing import Optional
 
 from cascade.core.project import get_project
@@ -19,7 +21,8 @@ from cascade.cli.styles import (
     print_success,
     print_error,
     print_warning,
-    print_info
+    print_info,
+    get_progress,
 )
 
 
@@ -155,12 +158,13 @@ def show(ctx: click.Context, ticket_id: int) -> None:
             for b in blocking:
                 content += f" [error]![/error] [id]#{b.id}[/id]: {b.title} ({b.status.value})\n"
 
-        console.print(
-            create_panel(
-                content,
-                title=f"Ticket #{t.id}: {t.title}",
-            )
-        )
+        console.print(Panel(
+            content,
+            title=f"[header]Ticket #{t.id}[/header]: [accent]{t.title}[/accent]",
+            border_style="border",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        ))
 
     except FileNotFoundError:
         print_error("Not a Cascade project.")
@@ -209,12 +213,17 @@ def list_tickets(
         )
 
         if not tickets:
-            print_info("No tickets found")
+            console.print(Panel(
+                "[muted]No tickets found.[/muted]\n\n"
+                "[accent]›[/accent] Run [white]cascade ticket create[/white] to create one",
+                border_style="border",
+                box=box.ROUNDED,
+            ))
             return
 
-        print_banner("Ticket Catalog")
-
-        table = create_table(["#", "TYPE", "STATUS", "SEVERITY", "TITLE"])
+        console.print()
+        table = create_table(["#", "Type", "Status", "Severity", "Title"])
+        table.title = "[header]Ticket Catalog[/header]"
 
         for t in tickets:
             st = t.status.value.upper()

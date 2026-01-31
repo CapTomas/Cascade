@@ -13,6 +13,7 @@ from cascade.core.quality_gates import QualityGates
 from cascade.core.context_builder import ContextBuilder
 from cascade.core.prompt_builder import PromptBuilder
 from cascade.core.planner import Planner
+from cascade.core.metrics import MetricsService
 from cascade.agents.registry import get_agent
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class CascadeProject:
         self._context_builder: Optional[ContextBuilder] = None
         self._prompt_builder: Optional[PromptBuilder] = None
         self._planner: Optional[Planner] = None
+        self._metrics: Optional[MetricsService] = None
 
     @property
     def root(self) -> Path:
@@ -149,6 +151,13 @@ class CascadeProject:
                 knowledge_base=self.kb,
             )
         return self._planner
+
+    @property
+    def metrics(self) -> MetricsService:
+        """Get metrics service (lazy loaded)."""
+        if self._metrics is None:
+            self._metrics = MetricsService(self.db)
+        return self._metrics
 
     def initialize(
         self,

@@ -3,16 +3,29 @@
 import click
 from pathlib import Path
 from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.table import Table
+from rich import box
+
 from cascade.core.project import CascadeProject
 from cascade.cli.styles import (
     console,
     print_banner,
-    print_step,
     print_success,
     print_error,
+    print_warning,
     create_table,
     create_panel,
-    get_progress
+    get_progress,
+    CASCADE_LOGO,
+)
+from cascade.cli.ui import (
+    create_box,
+    create_dashboard_panel,
+    print_success_box,
+    print_info_box,
+    BoxChars,
 )
 
 
@@ -78,37 +91,54 @@ def init_cmd(
         req_path = Path(requirements).expanduser().resolve()
         if req_path.exists() and req_path.is_file():
             try:
-                console.print(f"[dim]Reading requirements from {req_path}[/dim]")
+                console.print(f"[muted]Reading requirements from {req_path}[/muted]")
                 requirements = req_path.read_text(encoding="utf-8")
             except Exception as e:
-                console.print(f"[yellow]Warning: Could not read file {req_path}: {e}[/yellow]")
-                console.print("[dim]Treating input as raw text string.[/dim]")
+                print_warning(f"Could not read file {req_path}: {e}")
+                console.print("[muted]Treating input as raw text string.[/muted]")
 
     try:
         project = CascadeProject(project_path)
 
         if project.is_initialized:
-            console.print(
-                f"[yellow]Project already initialized at {project_path}[/yellow]"
-            )
+            console.print(Panel(
+                f"[warning]⚠[/warning] Project already initialized at [accent]{project_path}[/accent]",
+                border_style="warning",
+                box=box.ROUNDED,
+            ))
             return
 
+        # Show getting started message
+        console.print()
+        console.print(Panel(
+            "[header]Initializing Cascade Project[/header]\n\n"
+            "[muted]Setting up your AI-powered development environment...[/muted]",
+            border_style="border",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        ))
+
         # 1. Basic initialization
-        project.initialize(
-            name=name or project_path.name,
-            description=description,
-            tech_stack=list(tech_stack) if tech_stack else [],
-        )
+        with get_progress() as progress:
+            task = progress.add_task("[muted]Creating project structure...", total=100)
+            project.initialize(
+                name=name or project_path.name,
+                description=description,
+                tech_stack=list(tech_stack) if tech_stack else [],
+            )
+            progress.update(task, completed=50)
+            progress.update(task, completed=100, description="[success]Project created[/success]")
 
         # 2. Interactive Agent Configuration (Do this BEFORE planning)
         _configure_agent(console, project)
 
         # 3. Planning if requirements provided
         if requirements:
+            console.print()
             with get_progress() as progress:
-                task = progress.add_task("[dim]Analyzing requirements...", total=100)
+                task = progress.add_task("[muted]Analyzing requirements with AI...", total=100)
                 plan = project.planner.plan(requirements)
-                progress.update(task, completed=100)
+                progress.update(task, completed=100, description="[success]Analysis complete[/success]")
 
             # Update project config with AI-discovered info
             project.config.name = plan.project_name
@@ -116,79 +146,124 @@ def init_cmd(
             project.config.tech_stack = plan.tech_stack
             project.save_config()
 
-            print_banner("Proposed Project")
-            console.print(f"[white]Name:[/white] [accent]{plan.project_name}[/accent]")
-            console.print(f"[dim]{plan.project_description}[/dim]")
-
-            # Display Tech Stack
-            stack_text = ", ".join(f"[cyan]{t}[/cyan]" for t in plan.tech_stack)
-            console.print(f"[label]Tech Stack:[/label] {stack_text}")
-
-            # Display Topics
-            if plan.topics:
-                print_banner("Proposed Topics")
-                topic_table = create_table(["TOPIC", "DESCRIPTION"])
-                for topic in plan.topics:
-                    topic_table.add_row(f"[accent]{topic.name}[/accent]", topic.description)
-                console.print(topic_table)
-
-            # Display Tickets
-            if plan.tickets:
-                print_banner("Proposed Tickets")
-                ticket_table = create_table(["TYPE", "TITLE", "SEVERITY", "SUBTASKS"])
-
-                def add_to_table(tickets, indent=0):
-                    for t in tickets:
-                        type_str = "  " * indent + t.ticket_type.value.lower()
-                        sev_style = "dim"
-                        if t.severity:
-                            sev_str = t.severity.value.upper()
-                        else:
-                            sev_str = "MEDIUM"
-
-                        ticket_table.add_row(
-                            type_str,
-                            t.title,
-                            sev_str,
-                            str(len(t.children)) if t.children else "-"
-                        )
-                        if t.children:
-                            add_to_table(t.children, indent + 1)
-
-                add_to_table(plan.tickets)
-                console.print(ticket_table)
+            # Display proposed project in a nice box
+            console.print()
+            _display_proposed_plan(console, plan)
 
             generate_plan = True
             if not yes:
                 console.print()
                 if not click.confirm("Generate this project plan?", default=True):
                     generate_plan = False
-                    print_success("Skipping plan generation.")
+                    print_info_box(console, "Skipping plan generation.")
 
             if generate_plan:
-                project.planner.generate_tickets(plan)
+                with get_progress() as progress:
+                    task = progress.add_task("[muted]Generating tickets...", total=100)
+                    project.planner.generate_tickets(plan)
+                    progress.update(task, completed=100)
                 print_success("Project plan generated successfully.")
 
-        summary = (
-            f"[label]Project:[/label]  [accent]{project.config.name}[/accent]\n"
-            f"[label]Location:[/label] [dim]{project_path}[/dim]\n"
-            f"[label]Config:[/label]   [dim]{project.config_path.name}[/dim]\n"
-            f"[label]Agent:[/label]    [accent]{project.config.agent.default}[/accent]\n\n"
-            f"[white]Next steps:[/white]\n"
-            f" [accent]→[/accent] Run [white]ccd status[/white] to view the dashboard\n"
-            f" [accent]→[/accent] Run [white]ccd ticket list[/white] to see all tickets\n"
-            f" [accent]→[/accent] Run [white]ccd ticket execute 1[/white] to start"
-        )
-        console.print(create_panel(summary, title="CASCADE INITIALIZED", border_style="green"))
+        # Show success summary
+        _display_success_summary(console, project, project_path)
 
     except ValueError as e:
-        console.print(f"[red]Error:[/red] {e}")
+        print_error(str(e))
         raise SystemExit(1)
     except Exception as e:
-        console.print(f"[red]Failed to initialize project:[/red] {e}")
+        console.print(Panel(
+            f"[error]✗[/error] Failed to initialize project\n\n[muted]{str(e)}[/muted]",
+            title="[error]Initialization Failed[/error]",
+            border_style="error",
+            box=box.ROUNDED,
+        ))
         import logging
         logging.getLogger(__name__).exception("Init failure")
         raise SystemExit(1)
+
+
+def _display_proposed_plan(console: Console, plan) -> None:
+    """Display the proposed project plan in styled boxes."""
+    # Project overview
+    tech_stack = ", ".join(f"[accent]{t}[/accent]" for t in plan.tech_stack)
+
+    overview = Text()
+    overview.append(f"{plan.project_name}\n", style="header")
+    overview.append(f"{plan.project_description}\n\n", style="muted")
+    overview.append("Tech Stack: ", style="label")
+
+    console.print(Panel(
+        f"[header]{plan.project_name}[/header]\n\n"
+        f"[muted]{plan.project_description}[/muted]\n\n"
+        f"[label]Tech Stack:[/label] {tech_stack}",
+        title="[accent]Proposed Project[/accent]",
+        border_style="accent",
+        box=box.ROUNDED,
+        padding=(1, 2),
+    ))
+
+    # Topics table
+    if plan.topics:
+        console.print()
+        topic_table = create_table(["Topic", "Description"])
+        topic_table.title = "[header]Proposed Topics[/header]"
+        for topic in plan.topics:
+            topic_table.add_row(f"[accent]{topic.name}[/accent]", topic.description)
+        console.print(topic_table)
+
+    # Tickets table
+    if plan.tickets:
+        console.print()
+        ticket_table = create_table(["Type", "Title", "Severity", "Subtasks"])
+        ticket_table.title = "[header]Proposed Tickets[/header]"
+
+        def add_to_table(tickets, indent=0):
+            for t in tickets:
+                type_str = "  " * indent + t.ticket_type.value.lower()
+                sev_str = t.severity.value.upper() if t.severity else "MEDIUM"
+                subtasks = str(len(t.children)) if t.children else "-"
+
+                ticket_table.add_row(
+                    f"[muted]{type_str}[/muted]",
+                    t.title,
+                    sev_str,
+                    subtasks
+                )
+                if t.children:
+                    add_to_table(t.children, indent + 1)
+
+        add_to_table(plan.tickets)
+        console.print(ticket_table)
+
+
+def _display_success_summary(console: Console, project: CascadeProject, project_path: Path) -> None:
+    """Display the success summary in a modern styled box."""
+    console.print()
+
+    # ASCII logo with success message
+    logo_text = Text()
+    for line in CASCADE_LOGO.strip().split("\n"):
+        logo_text.append(line + "\n", style="logo")
+
+    # Build summary content
+    summary_content = (
+        f"[label]Project[/label]    [accent]{project.config.name}[/accent]\n"
+        f"[label]Location[/label]   [muted]{project_path}[/muted]\n"
+        f"[label]Agent[/label]      [accent]{project.config.agent.default}[/accent]\n"
+        f"[label]Config[/label]     [muted]{project.config_path.name}[/muted]\n\n"
+        f"[header]Getting Started[/header]\n"
+        f"  [accent]›[/accent] Run [white]cascade[/white] to enter interactive mode\n"
+        f"  [accent]›[/accent] Run [white]cascade status[/white] to view dashboard\n"
+        f"  [accent]›[/accent] Run [white]cascade ticket list[/white] to see tickets"
+    )
+
+    console.print(Panel(
+        summary_content,
+        title="[success]✓ CASCADE INITIALIZED[/success]",
+        border_style="success",
+        box=box.ROUNDED,
+        padding=(1, 2),
+    ))
 
 
 def _configure_agent(console: Console, project: CascadeProject) -> None:
@@ -196,8 +271,14 @@ def _configure_agent(console: Console, project: CascadeProject) -> None:
     from cascade.agents.registry import get_agent
     import click
 
-    print_banner("Agent Configuration")
-    console.print("[dim]Checking for installed AI tools...[/dim]")
+    console.print()
+    console.print(Panel(
+        "[header]Agent Configuration[/header]\n\n"
+        "[muted]Checking for installed AI tools...[/muted]",
+        border_style="border",
+        box=box.ROUNDED,
+        padding=(0, 2),
+    ))
 
     # Check for CLI tools
     available_clis = []
@@ -216,26 +297,47 @@ def _configure_agent(console: Console, project: CascadeProject) -> None:
     if len(available_clis) == 1:
         # Only one CLI found - Use it
         selected_agent = available_clis[0]
-        console.print(f"[green]Detected {selected_agent}. Setting as default.[/green]")
+        console.print(f"[success]✓[/success] Detected [accent]{selected_agent}[/accent]. Setting as default.")
         project.config.agent.default = selected_agent
         project.save_config()
         return
 
     elif len(available_clis) > 1:
-        # Multiple CLIs found - Ask user
-        console.print(f"[green]Detected multiple tools: {', '.join(available_clis)}[/green]")
-        import questionary
-        selected_agent = questionary.select(
-            "Which agent would you like to use as default?",
-            choices=available_clis
-        ).ask()
+        # Multiple CLIs found - Ask user (if interactive)
+        console.print(f"[success]✓[/success] Detected: {', '.join(f'[accent]{a}[/accent]' for a in available_clis)}")
+
+        # Check if we're in an interactive environment
+        import sys
+        if sys.stdin.isatty():
+            import questionary
+            selected_agent = questionary.select(
+                "Which agent would you like to use as default?",
+                choices=available_clis
+            ).ask()
+            if selected_agent:
+                project.config.agent.default = selected_agent
+                project.save_config()
+                return
+
+        # Non-interactive or user cancelled - use first available
+        selected_agent = available_clis[0]
+        console.print(f"[info]ℹ[/info] Using [accent]{selected_agent}[/accent] as default.")
         project.config.agent.default = selected_agent
         project.save_config()
         return
 
-    # No CLIs found - Prompt for API configuration
-    console.print("[yellow]No local CLI tools detected.[/yellow]")
-    console.print("Please select an AI provider to configure (API Key required):")
+    # No CLIs found - Prompt for API configuration (if interactive)
+    console.print("[warning]⚠[/warning] No local CLI tools detected.")
+
+    import sys
+    if not sys.stdin.isatty():
+        # Non-interactive - use generic agent
+        console.print("[info]ℹ[/info] Using [accent]generic[/accent] agent as default.")
+        project.config.agent.default = "generic"
+        project.save_config()
+        return
+
+    console.print("[muted]Please select an AI provider to configure (API Key required):[/muted]")
 
     import questionary
     provider_choice = questionary.select(
@@ -247,6 +349,13 @@ def _configure_agent(console: Console, project: CascadeProject) -> None:
         ]
     ).ask()
 
+    if not provider_choice:
+        # User cancelled
+        print_warning("No provider selected. Using Generic agent as fallback.")
+        project.config.agent.default = "generic"
+        project.save_config()
+        return
+
     provider_map = {
         "Anthropic (Claude)": ("claude", "ANTHROPIC_API_KEY"),
         "Google (Gemini)": ("google", "ANTIGRAVITY_API_KEY"),
@@ -255,11 +364,11 @@ def _configure_agent(console: Console, project: CascadeProject) -> None:
 
     provider_key, env_var_name = provider_map[provider_choice]
 
-    console.print(f"\n[dim]You can find your API key in your {provider_choice.split()[0]} account settings.[/dim]")
+    console.print(f"\n[muted]You can find your API key in your {provider_choice.split()[0]} account settings.[/muted]")
     api_key = questionary.password(f"Enter your {env_var_name}:").ask()
 
     if not api_key:
-        console.print("[yellow]No API key provided. Using Generic agent as fallback.[/yellow]")
+        print_warning("No API key provided. Using Generic agent as fallback.")
         project.config.agent.default = "generic"
         project.save_config()
         return
@@ -279,8 +388,8 @@ def _configure_agent(console: Console, project: CascadeProject) -> None:
 
     # 2. Save Securely to .env
     _save_to_env(project.cascade_dir.parent, env_var_name, api_key)
-    console.print(f"[green]API key saved securely to .env[/green]")
-    console.print(f"[green]Default agent set to {project.config.agent.default}[/green]")
+    console.print(f"[success]✓[/success] API key saved securely to [muted].env[/muted]")
+    console.print(f"[success]✓[/success] Default agent set to [accent]{project.config.agent.default}[/accent]")
 
 
 def _save_to_env(project_root: Path, key: str, value: str) -> None:
@@ -316,7 +425,4 @@ def _save_to_env(project_root: Path, key: str, value: str) -> None:
             with open(gitignore_path, "a") as f:
                 f.write("\n.env\n")
     else:
-        # Create if not exists (safer to assume we should if we are managing secrets)
-        pass # Actually, if no gitignore, maybe we shouldn't create one unless we init git?
-             # But protecting .env is critical. Let's create it if missing to be safe.
         gitignore_path.write_text(".env\n")

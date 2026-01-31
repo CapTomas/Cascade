@@ -181,6 +181,7 @@ class CodexCliAgent(AgentInterface):
         """Build the CLI command with safety overrides."""
         cmd = [
             self.CLI_COMMAND,
+            "exec",  # Use exec subcommand for non-interactive execution
             "--dangerously-bypass-approvals-and-sandbox",  # Skip confirmation
             prompt
         ]

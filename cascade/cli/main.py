@@ -4,9 +4,10 @@ import sys
 import click
 from rich.console import Console
 from rich.panel import Panel
+from rich import box
 from dotenv import load_dotenv
 
-from cascade.cli.styles import console
+from cascade.cli.themes import get_current_theme
 from cascade.cli.commands import init, ticket, topic, status, config, knowledge, agents, type_cmd, next, metrics, git, destroy
 from cascade.core.project import get_project
 from cascade.utils.logger import setup_logging, get_logger
@@ -17,7 +18,25 @@ load_dotenv()
 logger = get_logger(__name__)
 
 
-@click.group()
+def get_console() -> Console:
+    """Get a themed console instance."""
+    theme = get_current_theme()
+    return Console(theme=theme.to_rich_theme())
+
+
+# Global console - initialized lazily
+_console: Console | None = None
+
+
+def get_themed_console() -> Console:
+    """Get the global themed console."""
+    global _console
+    if _console is None:
+        _console = get_console()
+    return _console
+
+
+@click.group(invoke_without_command=True)
 @click.version_option(package_name="cascade-ai")
 @click.pass_context
 def cli(ctx: click.Context) -> None:
@@ -26,11 +45,11 @@ def cli(ctx: click.Context) -> None:
 
     AI assists, human directs - works with any AI agent.
 
-    Run 'cascade init' to initialize a new project, or run commands
-    in an existing project directory.
+    Run 'cascade init' to initialize a new project, or enter
+    interactive mode by running 'cascade' with no arguments.
     """
     ctx.ensure_object(dict)
-    ctx.obj["console"] = console
+    ctx.obj["console"] = get_themed_console()
 
     # Setup logging if we are in a project
     try:
@@ -39,30 +58,38 @@ def cli(ctx: click.Context) -> None:
         setup_logging(
             level=project.config.logging.level if hasattr(project.config, "logging") else "INFO",
             log_file=log_file,
-            console=False, # We use rich directly in CLI
+            console=False,  # We use rich directly in CLI
         )
     except (FileNotFoundError, Exception):
         # Not in a project or config error, just setup basic logging
         setup_logging(level="INFO", console=False)
 
+    # If no command specified, enter interactive mode
+    if ctx.invoked_subcommand is None:
+        from cascade.cli.interactive import start_interactive_mode
+        start_interactive_mode(ctx.obj["console"])
+
 
 def main() -> None:
     """Main entry point."""
+    console = get_themed_console()
+
     try:
         cli(obj={})
     except SystemExit as e:
         sys.exit(e.code)
     except click.ClickException as e:
-        console.print(f"[red]Error:[/red] {e.format_message()}")
+        console.print(f"[error]Error:[/error] {e.format_message()}")
         sys.exit(e.exit_code)
     except Exception as e:
         logger.exception("Unexpected error")
         console.print(
             Panel(
-                f"[bold red]An unexpected error occurred:[/bold red]\n{str(e)}\n\n"
-                f"[dim]See logs for full details.[/dim]",
-                title="Fatal Error",
-                border_style="red",
+                f"[error]An unexpected error occurred:[/error]\n{str(e)}\n\n"
+                f"[muted]See logs for full details.[/muted]",
+                title="[error]Fatal Error[/error]",
+                border_style="error",
+                box=box.ROUNDED,
             )
         )
         sys.exit(1)

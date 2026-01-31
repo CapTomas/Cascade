@@ -3,15 +3,21 @@
 import click
 import yaml
 from rich.syntax import Syntax
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich import box
+
 from cascade.core.project import get_project
 from cascade.agents.registry import list_agents
 from cascade.cli.styles import (
     console,
-    print_banner,
     print_success,
     print_error,
-    create_panel
+    print_warning,
+    create_table,
 )
+from cascade.cli.themes import get_theme_manager, get_current_theme, THEMES
 
 
 @click.group()
@@ -29,14 +35,61 @@ def show(ctx: click.Context) -> None:
         project = get_project()
         config_dict = project.config.to_dict()
 
-        yaml_str = yaml.dump(config_dict, default_flow_style=False, sort_keys=False)
-        syntax = Syntax(yaml_str, "yaml", theme="monokai", line_numbers=False)
+        # Settings-style display
+        console.print()
 
-        print_banner("Project Configuration")
-        console.print(create_panel(syntax, title=str(project.config_path.name), border_style="dim"))
+        # Project section
+        project_info = (
+            f"[label]Name[/label]         [accent]{config_dict.get('project', {}).get('name', 'N/A')}[/accent]\n"
+            f"[label]Description[/label]  [muted]{config_dict.get('project', {}).get('description', 'N/A')}[/muted]\n"
+            f"[label]Tech Stack[/label]   [accent]{', '.join(config_dict.get('project', {}).get('tech_stack', []))}[/accent]"
+        )
+        console.print(Panel(
+            project_info,
+            title="[header]⚙ Project[/header]",
+            border_style="border",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        ))
+
+        console.print()
+
+        # Agent section
+        agent_config = config_dict.get('agent', {})
+        agent_info = (
+            f"[label]Default[/label]   [accent]{agent_config.get('default', 'N/A')}[/accent]\n"
+            f"[label]Fallback[/label]  [muted]{agent_config.get('fallback', 'N/A')}[/muted]"
+        )
+        console.print(Panel(
+            agent_info,
+            title="[header]⚙ Agent[/header]",
+            border_style="border",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        ))
+
+        console.print()
+
+        # Theme section
+        current_theme = get_current_theme()
+        theme_info = (
+            f"[label]Current[/label]  [accent]{current_theme.name}[/accent]\n"
+            f"[label]Colors[/label]   [{current_theme.primary}]■[/{current_theme.primary}] [{current_theme.accent}]■[/{current_theme.accent}] [{current_theme.success}]■[/{current_theme.success}]"
+        )
+        console.print(Panel(
+            theme_info,
+            title="[header]⚙ Theme[/header]",
+            border_style="border",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        ))
+
+        console.print()
+        console.print("[muted]Run [white]cascade config set <key> <value>[/white] to modify settings[/muted]")
+        console.print("[muted]Run [white]cascade config edit[/white] to open in editor[/muted]")
 
     except FileNotFoundError as e:
-        console.print(f"[red]Error:[/red] {e}")
+        print_error(str(e))
         raise SystemExit(1)
 
 
@@ -52,14 +105,23 @@ def set_config(ctx: click.Context, key: str, value: str) -> None:
 
     Examples:
 
-        cascade config set agent.default claude-code
+        cascade config set agent.default claude-cli
 
         cascade config set quality_gates.unit_tests.enabled true
     """
-    console: Console = ctx.obj["console"]
-
     try:
         project = get_project()
+
+        # Special handling for theme
+        if key == "theme":
+            tm = get_theme_manager()
+            if tm.set_theme(value):
+                print_success(f"Theme set to [accent]{value}[/accent]")
+            else:
+                print_error(f"Unknown theme: {value}")
+                console.print(f"[muted]Available: {', '.join(tm.list_themes())}[/muted]")
+                raise SystemExit(1)
+            return
 
         # Parse the key path
         parts = key.split(".")
@@ -79,10 +141,8 @@ def set_config(ctx: click.Context, key: str, value: str) -> None:
         # Validate agent names when setting defaults
         if key in ("agent.default", "agent.fallback"):
             if not isinstance(converted_value, str) or converted_value not in list_agents():
-                console.print(
-                    "[red]Invalid agent:[/red] "
-                    f"{converted_value}. Available: {', '.join(list_agents())}"
-                )
+                print_error(f"Invalid agent: {converted_value}")
+                console.print(f"[muted]Available: {', '.join(list_agents())}[/muted]")
                 raise SystemExit(1)
         current[final_key] = converted_value
 
@@ -91,7 +151,7 @@ def set_config(ctx: click.Context, key: str, value: str) -> None:
         project._config = ProjectConfig._from_dict(config_dict)
         project.save_config()
 
-        print_success(f"Set {key} = {converted_value}")
+        print_success(f"Set [accent]{key}[/accent] = [white]{converted_value}[/white]")
 
     except FileNotFoundError as e:
         print_error(str(e))
@@ -126,9 +186,14 @@ def get_config(ctx: click.Context, key: str) -> None:
 
         if isinstance(current, dict):
             yaml_str = yaml.dump(current, default_flow_style=False)
-            console.print(yaml_str.strip())
+            console.print(Panel(
+                Syntax(yaml_str.strip(), "yaml", theme="monokai"),
+                title=f"[accent]{key}[/accent]",
+                border_style="border",
+                box=box.ROUNDED,
+            ))
         else:
-            console.print(str(current))
+            console.print(f"[accent]{key}[/accent] = [white]{current}[/white]")
 
     except FileNotFoundError as e:
         print_error(str(e))
@@ -160,7 +225,7 @@ def reset_config(ctx: click.Context, force: bool) -> None:
 
         if not force:
             if not click.confirm("Reset configuration to defaults?"):
-                console.print("[dim]Cancelled[/dim]")
+                console.print("[muted]Cancelled[/muted]")
                 return
 
         from cascade.models.project import ProjectConfig
@@ -176,6 +241,38 @@ def reset_config(ctx: click.Context, force: bool) -> None:
     except FileNotFoundError as e:
         print_error(str(e))
         raise SystemExit(1)
+
+
+@config.command("theme")
+@click.argument("name", required=False)
+@click.option("--scope", type=click.Choice(["user", "project"]), default="user", help="Where to save the theme preference")
+@click.pass_context
+def set_theme(ctx: click.Context, name: str | None, scope: str) -> None:
+    """Set or view the color theme."""
+    tm = get_theme_manager()
+
+    if name:
+        if tm.set_theme(name, scope):
+            print_success(f"Theme set to [accent]{name}[/accent] ({scope})")
+        else:
+            print_error(f"Unknown theme: {name}")
+            console.print(f"[muted]Available: {', '.join(tm.list_themes())}[/muted]")
+            raise SystemExit(1)
+    else:
+        # Display available themes
+        console.print()
+        table = create_table(["Theme", "Preview", "Status"])
+        table.title = "[header]Available Themes[/header]"
+
+        current = get_current_theme()
+        for theme_name, theme in THEMES.items():
+            preview = f"[{theme.primary}]■[/{theme.primary}] [{theme.accent}]■[/{theme.accent}] [{theme.success}]■[/{theme.success}]"
+            status = "[success]● Active[/success]" if theme_name == current.name else ""
+            table.add_row(f"[accent]{theme_name}[/accent]", preview, status)
+
+        console.print(table)
+        console.print()
+        console.print("[muted]Usage: cascade config theme <name> [--scope user|project][/muted]")
 
 
 def _convert_value(value: str):
