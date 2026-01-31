@@ -1,4 +1,3 @@
-import json
 import shutil
 import subprocess
 import time
@@ -16,68 +15,46 @@ from cascade.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-class ClaudeCodeAgent(AgentInterface):
+class GeminiCliAgent(AgentInterface):
     """
-    Claude Code agent via CLI.
+    Gemini agent via CLI.
 
-    This agent integrates with Claude Code (the Anthropic CLI tool)
-    to execute prompts with full capabilities including file editing,
-    command execution, and code analysis.
+    Wraps the 'gemini' CLI tool.
     """
 
-    # Claude Code CLI command
-    CLI_COMMAND = "claude"
-
-    # Default token limit for Claude models
-    DEFAULT_TOKEN_LIMIT = 200000
+    CLI_COMMAND = "gemini"
+    DEFAULT_TOKEN_LIMIT = 1000000
 
     def __init__(self, config: Optional[AgentConfig] = None):
-        """
-        Initialize Claude Code agent.
-
-        Args:
-            config: Agent configuration
-        """
         super().__init__(config)
         self._cli_path: Optional[str] = None
         self._available: Optional[bool] = None
 
     def get_name(self) -> str:
-        """Return agent identifier."""
-        return "claude-code"
+        return "gemini-cli"
 
     def get_capabilities(self) -> AgentCapabilities:
-        """Return Claude Code capabilities."""
         return AgentCapabilities(
             capabilities={
                 AgentCapability.FILE_READ,
                 AgentCapability.FILE_WRITE,
-                AgentCapability.FILE_EDIT,
                 AgentCapability.COMMAND_EXECUTE,
                 AgentCapability.CODE_ANALYSIS,
             },
             supports_streaming=True,
-            supports_tools=True,
-            max_output_tokens=16384,
+            supports_tools=False,
+            max_output_tokens=8192,
         )
 
     def get_token_limit(self) -> int:
-        """Return Claude's context window size."""
         return self.DEFAULT_TOKEN_LIMIT
 
     def is_available(self) -> bool:
-        """Check if Claude Code CLI is installed and accessible."""
         if self._available is not None:
             return self._available
 
         self._cli_path = shutil.which(self.CLI_COMMAND)
         self._available = self._cli_path is not None
-
-        if self._available:
-            logger.debug(f"Claude Code CLI found at: {self._cli_path}")
-        else:
-            logger.warning("Claude Code CLI not found in PATH")
-
         return self._available
 
     def execute(
@@ -87,39 +64,29 @@ class ClaudeCodeAgent(AgentInterface):
         callback: Optional[callable] = None,
     ) -> AgentResponse:
         """
-        Execute prompt via Claude Code CLI.
+        Execute prompt via Gemini CLI.
 
         Args:
             prompt: The prompt to execute
             working_dir: Working directory for the command
-            callback: Optional callback for streaming (not currently implemented for CLI)
+            callback: Optional callback for streaming
 
         Returns:
             AgentResponse with execution results
         """
-        # Validate
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:
-            return AgentResponse(
-                success=False,
-                content="",
-                error=error,
-            )
+            return AgentResponse(success=False, content="", error=error)
 
-        # Validate working directory
         is_safe, error = self._validate_working_dir(working_dir)
         if not is_safe:
-            return AgentResponse(
-                success=False,
-                content="",
-                error=error,
-            )
+            return AgentResponse(success=False, content="", error=error)
 
         if not self.is_available():
             return AgentResponse(
                 success=False,
                 content="",
-                error="Claude Code CLI is not installed or not in PATH",
+                error="Gemini CLI not found"
             )
 
         start_time = time.time()
@@ -128,7 +95,7 @@ class ClaudeCodeAgent(AgentInterface):
             # Build command
             cmd = self._build_command()
 
-            logger.debug(f"Executing Claude Code: {' '.join(cmd)}...")
+            logger.debug(f"Executing Gemini CLI: {' '.join(cmd)}...")
 
             # Execute - pass prompt via stdin and use Popen for streaming
             process = subprocess.Popen(
@@ -206,7 +173,7 @@ class ClaudeCodeAgent(AgentInterface):
             return self._parse_response(result, execution_time)
 
         except Exception as e:
-            logger.exception("Unexpected error executing Claude Code")
+            logger.exception("Unexpected error executing Gemini CLI")
             return AgentResponse(
                 success=False,
                 content="".join(stdout_lines) if 'stdout_lines' in locals() else "",
@@ -215,37 +182,18 @@ class ClaudeCodeAgent(AgentInterface):
             )
 
     def _build_command(self) -> list[str]:
-        """
-        Build the CLI command with safety overrides.
-
-        Warning: --dangerously-skip-permissions is used for automation,
-        but agents are restricted to the project directory by the core system.
-        """
+        """Build the CLI command with safety overrides."""
         cmd = [
             self.CLI_COMMAND,
-            "--print",  # Print response to stdout
-            "--dangerously-skip-permissions",  # Skip confirmation prompts for autonomous tool use
+            "-y",  # Automatically accept all actions (YOLO mode)
         ]
 
-        # Add any extra args from config, filtering for safety if necessary
         if self.config.extra_args:
             for arg in self.config.extra_args:
-                # Basic safety filtering for CLI arguments
                 if not any(char in arg for char in [';', '&', '|', '>', '<']):
                     cmd.append(arg)
 
         return cmd
-
-    def _get_environment(self) -> Optional[dict[str, str]]:
-        """Get environment variables for subprocess."""
-        import os
-
-        if not self.config.environment:
-            return None
-
-        env = os.environ.copy()
-        env.update(self.config.environment)
-        return env
 
     def _parse_response(
         self,
@@ -283,16 +231,12 @@ class ClaudeCodeAgent(AgentInterface):
         import re
 
         files = set()
-        # Common markers in Claude Code output
         patterns = [
             r"(?:Created|Modified|Edited|Wrote|Updated|Applied changes to)\s*(?:file:?\s*)?`?([^`\s\*,]+)`?",
-            r"CHANGELOG\.md|package\.json|pyproject\.toml", # Specific important files often mentioned
             r"(?:into|to)\s+`?([^`\s\*,]+\.[a-z0-9]+)`?",
         ]
 
-        # Also look for file paths in backticks that are mentioned in context of modification
         for line in output.split("\n"):
-            # Skip lines that look like code blocks or logs unless they contain markers
             if line.strip().startswith("```") or line.strip().startswith(">"):
                 continue
 
@@ -300,11 +244,9 @@ class ClaudeCodeAgent(AgentInterface):
                 matches = re.finditer(pattern, line, re.IGNORECASE)
                 for match in matches:
                     path = match.group(1).strip()
-                    # Remove any trailing punctuation or formatting
                     path = path.rstrip(".,:;)]`'\"")
                     path = path.lstrip("`'\"")
 
-                    # Basic sanity check for file path
                     if path and "." in path and "/" in path or len(path) > 2:
                         if not any(x in path for x in [" ", "\n", "\t"]):
                             files.add(path)
@@ -316,7 +258,6 @@ class ClaudeCodeAgent(AgentInterface):
         import re
 
         commands = []
-        # Support both prefixed markers and markdown blocks
         markers = [
             r"Running:\s*(.+)",
             r"Executed:\s*(.+)",
@@ -332,25 +273,3 @@ class ClaudeCodeAgent(AgentInterface):
                         commands.append(cmd)
 
         return commands
-
-
-def create_claude_code_agent(
-    timeout: int = 300,
-    extra_args: Optional[list[str]] = None,
-) -> ClaudeCodeAgent:
-    """
-    Factory function to create a Claude Code agent.
-
-    Args:
-        timeout: Execution timeout in seconds
-        extra_args: Additional CLI arguments
-
-    Returns:
-        Configured ClaudeCodeAgent instance
-    """
-    config = AgentConfig(
-        name="claude-code",
-        timeout_seconds=timeout,
-        extra_args=extra_args or [],
-    )
-    return ClaudeCodeAgent(config)

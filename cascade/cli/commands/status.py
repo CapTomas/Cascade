@@ -76,7 +76,13 @@ def status(ctx: click.Context, health: bool) -> None:
             console.print("[info]Project is empty.[/info] [dim]Create your first ticket to begin.[/dim]")
             console.print(f"  [dim]Run:[/dim] [white]cascade ticket create[/white]")
         else:
-            console.print("[success]All caught up![/success] [dim]All tickets are currently complete or blocked.[/dim]")
+            # Check if there are any DEFINED tickets that could be activated
+            defined_count = tickets["total"] - (tickets["done"] + tickets["blocked"] + tickets["ready"] + tickets["in_progress"])
+            if defined_count > 0:
+                console.print(f"[info]No tickets are ready.[/info] [dim]{defined_count} tickets are defined but pending activation.[/dim]")
+                console.print(f"  [dim]Run:[/dim] [white]cascade ticket ready <id>[/white] to mark a ticket as ready.")
+            else:
+                console.print("[success]All caught up![/success] [dim]All tickets are currently complete or blocked.[/dim]")
 
         # Recent Accomplishments
         if tickets["total"] > 0:

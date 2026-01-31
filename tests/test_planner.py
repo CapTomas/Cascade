@@ -100,8 +100,8 @@ def test_planner_generate_tickets(mock_agent, mock_managers):
         ]
     )
 
-    topic_m.create.return_value = 1
-    tm.create.side_effect = [10, 11, 12]
+    topic_m.create.return_value = MagicMock(id=1)
+    tm.create.side_effect = [MagicMock(id=10), MagicMock(id=11), MagicMock(id=12)]
 
     planner.generate_tickets(result)
 
@@ -143,7 +143,7 @@ def test_planner_dependencies(mock_agent, mock_managers):
         ]
     )
 
-    tm.create.side_effect = [1, 2]
+    tm.create.side_effect = [MagicMock(id=1), MagicMock(id=2)]
 
     planner.generate_tickets(result)
 

@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch, MagicMock
 from cascade.agents.registry import list_agents, get_agent
 from cascade.agents.interface import AgentCapability
-from cascade.agents.antigravity import AntigravityAgent
+from cascade.agents import AntigravityAgent
 from cascade.agents.manual import ManualAgent
 
 def test_list_agents():
@@ -18,7 +18,7 @@ def test_list_agents():
 def test_get_antigravity_agent():
     agent = get_agent("antigravity")
     assert isinstance(agent, AntigravityAgent)
-    assert agent.get_name() == "antigravity"
+    assert agent.get_name() == "gemini-api"
     assert agent.is_available() is True
 
 def test_antigravity_capabilities():

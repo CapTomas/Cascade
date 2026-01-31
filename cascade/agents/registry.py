@@ -3,18 +3,73 @@
 from typing import Optional, Type
 
 from cascade.agents.interface import AgentInterface, AgentConfig
-from cascade.agents.claude_code import ClaudeCodeAgent
-from cascade.agents.codex import CodexAgent
+from cascade.agents.anthropic.claude_cli import ClaudeCliAgent
+from cascade.agents.anthropic.claude_api import ClaudeApiAgent
+from cascade.agents.openai.codex_cli import CodexCliAgent
+from cascade.agents.openai.codex_api import CodexApiAgent
+from cascade.agents.google.gemini_cli import GeminiCliAgent
+from cascade.agents.google.gemini_api import GeminiApiAgent
 from cascade.agents.generic import GenericAgent
-from cascade.agents.antigravity import AntigravityAgent
 from cascade.agents.manual import ManualAgent
 
 AGENT_CLASSES: dict[str, Type[AgentInterface]] = {
-    "claude-code": ClaudeCodeAgent,
-    "codex": CodexAgent,
+    "claude-cli": ClaudeCliAgent,
+    "claude-api": ClaudeApiAgent,
+    "codex-cli": CodexCliAgent,
+    "codex-api": CodexApiAgent,
+    "gemini-cli": GeminiCliAgent,
+    "gemini-api": GeminiApiAgent,
     "generic": GenericAgent,
-    "antigravity": AntigravityAgent,
     "manual": ManualAgent,
+    # Aliases
+    "claude": ClaudeCliAgent,
+    "claude-code": ClaudeCliAgent,
+    "codex": CodexApiAgent,
+    "antigravity": GeminiApiAgent,
+    "gemini": GeminiCliAgent,
+}
+
+AGENT_METADATA: dict[str, dict[str, str]] = {
+    "claude-cli": {
+        "title": "Claude Code (CLI)",
+        "description": "Mature agent with streaming and tool support via 'claude' CLI.",
+        "provider": "Anthropic"
+    },
+    "claude-api": {
+        "title": "Claude (API)",
+        "description": "Direct integration with Anthropic's Claude API.",
+        "provider": "Anthropic"
+    },
+    "gemini-cli": {
+        "title": "Gemini (CLI)",
+        "description": "Google's Gemini models via 'gemini' CLI tool.",
+        "provider": "Google"
+    },
+    "gemini-api": {
+        "title": "Gemini (API)",
+        "description": "Direct integration with Google Gemini Pro API.",
+        "provider": "Google"
+    },
+    "codex-cli": {
+        "title": "Codex (CLI)",
+        "description": "OpenAI Codex/GPT models via 'codex' CLI tool.",
+        "provider": "OpenAI"
+    },
+    "codex-api": {
+        "title": "Codex (API)",
+        "description": "Direct integration with OpenAI API.",
+        "provider": "OpenAI"
+    },
+    "generic": {
+        "title": "Generic Agent",
+        "description": "Basic agent for simple text generation tasks.",
+        "provider": "Internal"
+    },
+    "manual": {
+        "title": "Manual / Human",
+        "description": "Ask a human for input when AI isn't enough.",
+        "provider": "User"
+    }
 }
 
 # In-memory cache for agent instances
@@ -65,3 +120,11 @@ def resolve_agent_name(ticket_type: str, agent_config: AgentConfig) -> str:
             return orch[type_key]
 
     return agent_config.default
+
+
+def get_agent_class_for_provider(provider: str, mode: str) -> Type[AgentInterface]:
+    """Get agent class for a specific provider and mode."""
+    key = f"{provider}-{mode}"
+    if key in AGENT_CLASSES:
+        return AGENT_CLASSES[key]
+    raise KeyError(f"Unknown provider/mode combination: {provider}/{mode}")

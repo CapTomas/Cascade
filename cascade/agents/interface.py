@@ -204,5 +204,17 @@ class AgentInterface(ABC):
         except Exception as e:
             return False, f"Failed to validate working directory: {e}"
 
+    def _get_environment(self) -> dict[str, str]:
+        """
+        Get environment variables for subprocess execution.
+
+        Merges system environment with overrides from config.
+        """
+        import os
+        env = os.environ.copy()
+        if self.config.environment:
+            env.update(self.config.environment)
+        return env
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.get_name()})"

@@ -42,6 +42,7 @@ class AgentConfig(BaseModel):
     default: str = "claude-code"
     fallback: str = "generic"
     orchestration: dict[str, str] = Field(default_factory=dict)
+    configurations: dict[str, dict[str, str]] = Field(default_factory=dict)
 
 
 class ConstraintsConfig(BaseModel):

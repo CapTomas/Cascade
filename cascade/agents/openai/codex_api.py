@@ -19,14 +19,14 @@ from cascade.agents.interface import (
 logger = logging.getLogger(__name__)
 
 
-class CodexAgent(AgentInterface):
+class CodexApiAgent(AgentInterface):
     """
     Codex agent via OpenAI Responses API.
 
     Configuration:
-    - OPENAI_API_KEY: required
-    - OPENAI_BASE_URL: optional (default https://api.openai.com/v1)
-    - OPENAI_MODEL: required (no default to avoid guessing)
+    - CODEX_API_KEY (or OPENAI_API_KEY): required
+    - CODEX_BASE_URL (or OPENAI_BASE_URL): optional
+    - CODEX_MODEL (or OPENAI_MODEL): required
     """
 
     DEFAULT_TOKEN_LIMIT = 128000
@@ -35,7 +35,7 @@ class CodexAgent(AgentInterface):
         super().__init__(config)
 
     def get_name(self) -> str:
-        return "codex"
+        return "codex-api"
 
     def get_capabilities(self) -> AgentCapabilities:
         return AgentCapabilities(
@@ -152,14 +152,26 @@ class CodexAgent(AgentInterface):
         )
 
     def _get_api_key(self) -> Optional[str]:
-        return self.config.environment.get("OPENAI_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        return (
+            self.config.environment.get("CODEX_API_KEY")
+            or os.environ.get("CODEX_API_KEY")
+            or self.config.environment.get("OPENAI_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+        )
 
     def _get_model(self) -> Optional[str]:
-        return self.config.environment.get("OPENAI_MODEL") or os.environ.get("OPENAI_MODEL")
+        return (
+            self.config.environment.get("CODEX_MODEL")
+            or os.environ.get("CODEX_MODEL")
+            or self.config.environment.get("OPENAI_MODEL")
+            or os.environ.get("OPENAI_MODEL")
+        )
 
     def _get_base_url(self) -> str:
         return (
-            self.config.environment.get("OPENAI_BASE_URL")
+            self.config.environment.get("CODEX_BASE_URL")
+            or os.environ.get("CODEX_BASE_URL")
+            or self.config.environment.get("OPENAI_BASE_URL")
             or os.environ.get("OPENAI_BASE_URL")
             or "https://api.openai.com/v1"
         )

@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import MagicMock, patch
-from cascade.agents.antigravity import AntigravityAgent
+from cascade.agents import AntigravityAgent
 from cascade.agents.interface import AgentResponse
 from cascade.core.executor import TicketExecutor
 from cascade.core.exceptions import AgentError

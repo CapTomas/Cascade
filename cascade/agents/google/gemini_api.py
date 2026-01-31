@@ -17,18 +17,14 @@ from cascade.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-class AntigravityAgent(AgentInterface):
+class GeminiApiAgent(AgentInterface):
     """
-    Antigravity agent implementation.
-
-    This agent integrates with the Antigravity AI platform via its REST API.
-    It is a high-capability agent optimized for complex software engineering
-    tasks, including multi-file edits and terminal interactions.
+    Google Gemini agent implementation via API (formerly Antigravity).
 
     Configuration:
-    - ANTIGRAVITY_API_KEY: required
-    - ANTIGRAVITY_BASE_URL: optional (default https://api.antigravity.ai/v1)
-    - ANTIGRAVITY_MODEL: optional (default 'antigravity-pro-1')
+    - GEMINI_API_KEY (or ANTIGRAVITY_API_KEY): required
+    - GEMINI_BASE_URL (or ANTIGRAVITY_BASE_URL): optional
+    - GEMINI_MODEL (or ANTIGRAVITY_MODEL): optional
     """
 
     DEFAULT_BASE_URL = "https://api.antigravity.ai/v1"
@@ -36,20 +32,12 @@ class AntigravityAgent(AgentInterface):
     DEFAULT_TOKEN_LIMIT = 1000000
 
     def __init__(self, config: Optional[AgentConfig] = None):
-        """
-        Initialize Antigravity agent.
-
-        Args:
-            config: Agent configuration
-        """
         super().__init__(config)
 
     def get_name(self) -> str:
-        """Return agent identifier."""
-        return "antigravity"
+        return "gemini-api"
 
     def get_capabilities(self) -> AgentCapabilities:
-        """Return Antigravity capabilities."""
         return AgentCapabilities(
             capabilities={
                 AgentCapability.FILE_READ,
@@ -65,11 +53,9 @@ class AntigravityAgent(AgentInterface):
         )
 
     def get_token_limit(self) -> int:
-        """Return Antigravity's context window size."""
         return self.DEFAULT_TOKEN_LIMIT
 
     def is_available(self) -> bool:
-        """Check if API key is configured."""
         return bool(self._get_api_key())
 
     def execute(
@@ -78,23 +64,10 @@ class AntigravityAgent(AgentInterface):
         working_dir: Optional[str] = None,
         callback: Optional[callable] = None,
     ) -> AgentResponse:
-        """
-        Execute prompt via Antigravity API.
-
-        Args:
-            prompt: The prompt to execute
-            working_dir: Working directory for the command
-            callback: Optional callback for streaming partial results
-
-        Returns:
-            AgentResponse with execution results
-        """
-        # Validate
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:
             return AgentResponse(success=False, content="", error=error)
 
-        # Validate working directory
         is_safe, error = self._validate_working_dir(working_dir)
         if not is_safe:
             return AgentResponse(success=False, content="", error=error)
@@ -114,7 +87,7 @@ class AntigravityAgent(AgentInterface):
             "model": self._get_model(),
             "messages": [{"role": "user", "content": prompt}],
             "working_directory": str(working_dir) if working_dir else None,
-            "stream": False,  # Simplified for this implementation
+            "stream": False,
         }
 
         max_retries = self.config.max_retries
@@ -140,20 +113,15 @@ class AntigravityAgent(AgentInterface):
 
                     if status_code != 200:
                         if attempt < max_retries and status_code in (429, 500, 502, 503, 504):
-                            logger.warning(f"Antigravity API temporary failure ({status_code}). Retrying in {retry_delay}s...")
+                            logger.warning(f"API temporary failure ({status_code}). Retrying...")
                             time.sleep(retry_delay)
                             retry_delay *= 2
                             continue
 
-                        try:
-                            error_details = json.loads(raw_response).get("error", raw_response)
-                        except Exception:
-                            error_details = raw_response
-
                         return AgentResponse(
                             success=False,
                             content="",
-                            error=f"API returned status {status_code}: {error_details}",
+                            error=f"API returned status {status_code}",
                             execution_time_ms=int((time.time() - start_time) * 1000),
                             raw_output=raw_response,
                         )
@@ -176,26 +144,14 @@ class AntigravityAgent(AgentInterface):
                     time.sleep(retry_delay)
                     retry_delay *= 2
                     continue
-                error_body = e.read().decode("utf-8")
                 return AgentResponse(
                     success=False,
                     content="",
-                    error=f"HTTP Error {e.code}: {error_body}",
-                    execution_time_ms=int((time.time() - start_time) * 1000),
-                )
-            except (urllib.error.URLError, TimeoutError) as e:
-                if attempt < max_retries:
-                    time.sleep(retry_delay)
-                    retry_delay *= 2
-                    continue
-                return AgentResponse(
-                    success=False,
-                    content="",
-                    error=f"Network Error: {str(e)}",
+                    error=f"HTTP Error {e.code}",
                     execution_time_ms=int((time.time() - start_time) * 1000),
                 )
             except Exception as e:
-                logger.exception("Unexpected error in AntigravityAgent execution")
+                logger.exception("Unexpected error in GeminiApiAgent execution")
                 return AgentResponse(
                     success=False,
                     content="",
@@ -204,13 +160,23 @@ class AntigravityAgent(AgentInterface):
                 )
 
     def _get_api_key(self) -> Optional[str]:
-        """Get API key from config or environment."""
-        return self.config.environment.get("ANTIGRAVITY_API_KEY") or os.environ.get("ANTIGRAVITY_API_KEY")
+        return (
+            self.config.environment.get("GEMINI_API_KEY")
+            or os.environ.get("GEMINI_API_KEY")
+            or self.config.environment.get("ANTIGRAVITY_API_KEY")
+            or os.environ.get("ANTIGRAVITY_API_KEY")
+        )
 
     def _get_base_url(self) -> str:
-        """Get base URL from environment or default."""
-        return os.environ.get("ANTIGRAVITY_BASE_URL", self.DEFAULT_BASE_URL)
+        return (
+            os.environ.get("GEMINI_BASE_URL")
+            or os.environ.get("ANTIGRAVITY_BASE_URL")
+            or self.DEFAULT_BASE_URL
+        )
 
     def _get_model(self) -> str:
-        """Get model from environment or default."""
-        return os.environ.get("ANTIGRAVITY_MODEL", self.DEFAULT_MODEL)
+        return (
+            os.environ.get("GEMINI_MODEL")
+            or os.environ.get("ANTIGRAVITY_MODEL")
+            or self.DEFAULT_MODEL
+        )

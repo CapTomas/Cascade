@@ -36,6 +36,7 @@ class TicketManager:
         acceptance_criteria: str = "",
         affected_files: Optional[list[str]] = None,
         estimated_effort: Optional[int] = None,
+        status: TicketStatus = TicketStatus.DEFINED,
     ) -> Ticket:
         """
         Create a new ticket.
@@ -58,7 +59,7 @@ class TicketManager:
             "ticket_type": ticket_type.value,
             "title": title,
             "description": description,
-            "status": TicketStatus.DEFINED.value,
+            "status": status.value,
             "severity": severity.value if severity else None,
             "priority_score": self._calculate_priority(severity),
             "parent_ticket_id": parent_ticket_id,
@@ -78,7 +79,7 @@ class TicketManager:
             ticket_type=ticket_type,
             title=title,
             description=description,
-            status=TicketStatus.DEFINED,
+            status=status,
             severity=severity,
             priority_score=data["priority_score"],
             parent_ticket_id=parent_ticket_id,

@@ -123,36 +123,41 @@ class Planner:
         # 1. Create topics
         topic_map = {}
         for prop_topic in result.topics:
-            topic_id = self.topic_manager.create(
+            topic = self.topic_manager.create(
                 name=prop_topic.name,
                 description=prop_topic.description
             )
-            topic_map[prop_topic.name] = topic_id
+            topic_map[prop_topic.name] = topic.id
 
         # 2. Create tickets (recursively)
         created_tickets = {}  # title -> id
 
         def create_recursive(prop_ticket: ProposedTicket, parent_id: Optional[int] = None):
-            ticket_id = self.tm.create(
+            # Determine initial status: READY if no dependencies and no children, else DEFINED
+            initial_status = TicketStatus.READY
+            if prop_ticket.dependencies or prop_ticket.children:
+                initial_status = TicketStatus.DEFINED
+
+            ticket = self.tm.create(
                 ticket_type=prop_ticket.ticket_type,
                 title=prop_ticket.title,
                 description=prop_ticket.description,
-                status=TicketStatus.DEFINED,
+                status=initial_status,
                 severity=prop_ticket.severity,
                 parent_ticket_id=parent_id,
                 estimated_effort=prop_ticket.estimated_effort,
                 acceptance_criteria=prop_ticket.acceptance_criteria,
             )
-            created_tickets[prop_ticket.title] = ticket_id
+            created_tickets[prop_ticket.title] = ticket.id
 
             # Assign topics
             for t_name in prop_ticket.topics:
                 if t_name in topic_map:
-                    self.tm.assign_topic(ticket_id, topic_map[t_name])
+                    self.topic_manager.assign_ticket(topic_map[t_name], ticket.id)
 
             # Recurse children
             for child in prop_ticket.children:
-                create_recursive(child, ticket_id)
+                create_recursive(child, ticket.id)
 
         for top_ticket in result.tickets:
             create_recursive(top_ticket)

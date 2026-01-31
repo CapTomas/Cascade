@@ -4,11 +4,15 @@ import sys
 import click
 from rich.console import Console
 from rich.panel import Panel
+from dotenv import load_dotenv
 
 from cascade.cli.styles import console
-from cascade.cli.commands import init, ticket, topic, status, config, knowledge, agents, type_cmd, next, metrics, git
+from cascade.cli.commands import init, ticket, topic, status, config, knowledge, agents, type_cmd, next, metrics, git, destroy
 from cascade.core.project import get_project
 from cascade.utils.logger import setup_logging, get_logger
+
+# Load environment variables from .env file
+load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -76,6 +80,7 @@ cli.add_command(type_cmd.type_cmd)
 cli.add_command(next.next_cmd)
 cli.add_command(metrics.metrics)
 cli.add_command(git.git)
+cli.add_command(destroy.destroy_cmd)
 
 
 if __name__ == "__main__":

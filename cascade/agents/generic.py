@@ -126,9 +126,3 @@ class GenericAgent(AgentInterface):
             return None
         return shlex.split(command) + self.config.extra_args
 
-    def _get_environment(self) -> Optional[dict[str, str]]:
-        if not self.config.environment:
-            return None
-        env = os.environ.copy()
-        env.update(self.config.environment)
-        return env

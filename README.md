@@ -72,9 +72,9 @@ Cascade acts as an orchestration layer between developers and AI agents. It mana
 
 Cascade supports multiple AI agents through a unified interface:
 
-- **Claude Code**: Anthropic's CLI-based coding agent
-- **Antigravity**: High-capability AI service for complex engineering tasks
-- **OpenAI Codex**: OpenAI's code-focused models via API
+- **Claude**: Anthropic's models via CLI or API
+- **Gemini**: Google's models via CLI or API (formerly Antigravity)
+- **Codex**: OpenAI's code-focused models via CLI or API
 - **Generic Agent**: Interface for custom or unsupported agents
 - **Manual Agent**: Human-in-the-loop mode for copy-paste workflows
 
@@ -191,6 +191,8 @@ The short alias `ccd` is also available for all commands.
 ```bash
 cd your-project-directory
 cascade init "Build a REST API for inventory management"
+# OR
+cascade init ./requirements.txt
 ```
 
 This command:
@@ -297,6 +299,8 @@ Topics provide organizational grouping for related tickets. Examples include "Au
 | Command                 | Description                              |
 |-------------------------|------------------------------------------|
 | `cascade init <desc>`   | Initialize a new Cascade project         |
+| `cascade init <file>`   | Initialize project from requirements file|
+| `cascade destroy`       | Uninitialize project (destructive)       |
 | `cascade status`        | Display project dashboard                |
 | `cascade config show`   | View current configuration               |
 | `cascade config set`    | Update configuration value               |
@@ -356,51 +360,60 @@ Topics provide organizational grouping for related tickets. Examples include "Au
 
 ## Agent Configuration
 
-### Claude Code
+New in version 1.0: Cascade supports both CLI and API modes for major providers.
 
-Requires the `claude` CLI to be installed and authenticated.
+### Anthropic (Claude)
 
-```bash
-# Install Claude CLI (see Anthropic documentation)
-claude login
-
-# Configure Cascade
-cascade config set agent.default claude-code
-```
-
-**Environment Variables:**
-
-| Variable                | Description                           |
-|------------------------|---------------------------------------|
-| None required          | Uses authenticated CLI session        |
-
-### Antigravity
+**Mode: CLI (Default)**
+Wraps the `claude` CLI tool. Best for development workflows with full tool access.
 
 ```bash
-cascade config set agent.default antigravity
+# Set mode to CLI
+cascade config set agent.configurations.claude.mode cli
 ```
 
-**Environment Variables:**
-
-| Variable               | Description                           | Default                          |
-|------------------------|---------------------------------------|----------------------------------|
-| `ANTIGRAVITY_API_KEY`  | API authentication key (required)     | -                                |
-| `ANTIGRAVITY_BASE_URL` | API endpoint                          | `https://api.antigravity.ai/v1` |
-| `ANTIGRAVITY_MODEL`    | Model identifier                      | `antigravity-pro-1`              |
-
-### OpenAI Codex
+**Mode: API**
+Uses Anthropic API directly. Best for automated tasks or CI/CD.
 
 ```bash
-cascade config set agent.default codex
+# Set mode to API
+cascade config set agent.configurations.claude.mode api
+export ANTHROPIC_API_KEY=sk-...
 ```
 
-**Environment Variables:**
+### Google (Gemini)
 
-| Variable          | Description                      | Default                      |
-|-------------------|----------------------------------|------------------------------|
-| `OPENAI_API_KEY`  | API authentication key (required)| -                            |
-| `OPENAI_MODEL`    | Model to use                     | -                            |
-| `OPENAI_BASE_URL` | API endpoint                     | `https://api.openai.com/v1`  |
+**Mode: API (Default)**
+Uses Google Generative AI API (formerly Antigravity).
+
+```bash
+cascade config set agent.configurations.google.mode api
+export ANTIGRAVITY_API_KEY=...
+```
+
+**Mode: CLI**
+Wraps the `gemini` CLI tool.
+
+```bash
+cascade config set agent.configurations.google.mode cli
+```
+
+### OpenAI (Codex)
+
+**Mode: API (Default)**
+Uses OpenAI API.
+
+```bash
+cascade config set agent.configurations.openai.mode api
+export OPENAI_API_KEY=sk-...
+```
+
+**Mode: CLI**
+Wraps the `codex` CLI.
+
+```bash
+cascade config set agent.configurations.openai.mode cli
+```
 
 ### Generic Agent
 
@@ -418,15 +431,15 @@ No configuration required. Prompts are copied to clipboard for manual execution 
 
 ### Multi-Agent Orchestration
 
-Configure different agents for different ticket types in `.cascade/config.yaml`:
+Configure different agents for specific ticket types in `.cascade/config.yaml`:
 
 ```yaml
 agent:
-  default: claude-code
+  default: claude-cli
   orchestration:
     docs: generic
-    bug: codex
-    story: claude-code
+    bug: codex-api
+    story: claude-cli
 ```
 
 ---
