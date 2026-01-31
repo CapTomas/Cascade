@@ -1,0 +1,40 @@
+"""Topic model for Cascade."""
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional
+
+
+@dataclass
+class Topic:
+    """
+    Represents a logical grouping of tickets.
+
+    Topics organize tickets by feature area, component, or any other
+    logical grouping. A ticket can belong to multiple topics.
+    """
+
+    id: Optional[int] = None
+    name: str = ""
+    description: str = ""
+    created_at: Optional[datetime] = None
+
+    def __post_init__(self) -> None:
+        """Normalize topic name."""
+        self.name = self.name.strip().lower().replace(" ", "-")
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Topic":
+        """Create topic from dictionary."""
+        if data.get("created_at") and isinstance(data["created_at"], str):
+            data["created_at"] = datetime.fromisoformat(data["created_at"])
+        return cls(**data)
