@@ -1,10 +1,8 @@
-# Cascade
+# Cascade 🌊
 
-[![PyPI version](https://img.shields.io/pypi/v/cascade-ai.svg)](https://pypi.org/project/cascade-ai/)
-[![Python](https://img.shields.io/pypi/pyversions/cascade-ai.svg)](https://pypi.org/project/cascade-ai/)
+[![CI](https://github.com/cascade-ai/cascade/actions/workflows/ci.yml/badge.svg)](https://github.com/cascade-ai/cascade/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/cascade-ai.svg)](https://badge.fury.io/py/cascade-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://github.com/cascade-ai/cascade/actions/workflows/ci.yml/badge.svg)](https://github.com/cascade-ai/cascade/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/cascade-ai/cascade)](https://codecov.io/gh/cascade-ai/cascade)
 
 **Human-Directed AI Development Orchestration System**
 
