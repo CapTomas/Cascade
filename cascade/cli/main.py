@@ -20,6 +20,7 @@ from cascade.cli.commands import (
     knowledge,
     metrics,
     next,
+    settings,
     status,
     ticket,
     topic,
@@ -121,6 +122,7 @@ cli.add_command(ticket.ticket)
 cli.add_command(topic.topic)
 cli.add_command(status.status)
 cli.add_command(config.config)
+cli.add_command(settings.settings)
 cli.add_command(knowledge.knowledge)
 cli.add_command(agents.agents)
 cli.add_command(type_cmd.type_cmd)

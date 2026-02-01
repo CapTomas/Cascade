@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import logging
 
+from cascade.core.prompt_templates import (
+    DEFAULT_NEXT_COMMAND_PROMPT,
+    get_template,
+)
 from cascade.models.context import MultiTicketContext, TicketContext
+from cascade.models.project import PromptConfig
 from cascade.models.ticket import Ticket
 
 logger = logging.getLogger(__name__)
@@ -17,6 +22,15 @@ class PromptBuilder:
     Assembles ticket details, project conventions, and relevant
     knowledge into a structured prompt for the AI agent.
     """
+
+    def __init__(self, prompt_config: PromptConfig | None = None):
+        """
+        Initialize prompt builder.
+
+        Args:
+            prompt_config: Optional custom prompt configuration
+        """
+        self.prompt_config = prompt_config or PromptConfig()
 
     def _sanitize(self, text: str) -> str:
         """
@@ -54,13 +68,28 @@ class PromptBuilder:
         description = self._sanitize(ticket.description)
         ac = self._sanitize(ticket.acceptance_criteria)
 
+        # Get template for this ticket type
+        template = get_template(ticket.ticket_type)
+
+        # Check if custom prompts are configured
+        ticket_type_key = ticket.ticket_type.value
+        use_custom = self.prompt_config.enabled
+
+        # Build task focus section
+        if use_custom and ticket_type_key in self.prompt_config.task_focus:
+            task_focus = self.prompt_config.task_focus[ticket_type_key]
+        else:
+            task_focus = template.get_task_focus()
+
+        # Build ticket header
         prompt = [
-            "# Task",
-            "Complete the following ticket. Focus only on this ticket.",
+            "# Task: Professional Software Engineering",
+            "",
+            task_focus,
             "",
             f"## Ticket #{ticket.id}: {title}",
-            f"Type: {ticket.ticket_type.value}",
-            f"Priority: {ticket.severity.value if ticket.severity else 'MEDIUM'}",
+            f"**Type**: {ticket.ticket_type.value}",
+            f"**Priority**: {ticket.severity.value if ticket.severity else 'MEDIUM'}",
             "",
             "### Description",
             f"{description}",
@@ -76,6 +105,7 @@ class PromptBuilder:
                 prompt.append(f"- {file_path}")
             prompt.append("")
 
+        # Add context sections
         prompt.append("## Project Conventions")
         prompt.append(context.conventions_text)
         prompt.append("")
@@ -97,37 +127,192 @@ class PromptBuilder:
                 prompt.append(f"{t.description}")
                 prompt.append("")
 
+        # Add approach section
         prompt.extend(
             [
-                "## Instructions",
-                "1. **Implement exactly** what the ticket describes. Do not over-engineer.",
-                "2. **Strictly follow** the project conventions provided above.",
-                "3. **Test-Driven Development**: If you are adding new functionality, ensure corresponding unit tests are created or updated.",
-                "4. **Isolation**: Do not modify unrelated code. If you discover a bug elsewhere, note it but do not fix it unless it blocks this ticket.",
-                "5. **Clean Code**: Ensure your code is professional, documented, and follows the tech stack best practices.",
-                "6. **Summary**: Provide a concise summary of your changes (files changed, main logic) after implementation.",
-                "7. **Propose Knowledge**: If you identify a reusable pattern or a significant architectural decision, propose it using the following format at the end of your response:",
+                "## Approach",
                 "",
-                "<knowledge_proposal>",
-                "---",
-                "type: PATTERN",
-                "name: Pattern Name",
-                "description: What it does",
-                "template: |",
-                "  Code template here",
-                "tags: [tag1, tag2]",
-                "examples: [file1.py]",
-                "---",
-                "type: ADR",
-                "title: Decision Title",
-                "context: Why now?",
-                "decision: What decided?",
-                "rationale: Why this?",
-                "consequences: What next?",
-                "alternatives: What else?",
-                "</knowledge_proposal>",
+                "Before writing any code, think through your approach:",
+                "1. **Understand**: What exactly needs to be done? What's the current state?",
+                "2. **Plan**: What files need changes? What's the implementation strategy?",
+                "3. **Execute**: Make changes following the plan",
+                "4. **Verify**: Does it work? Do tests pass? Are acceptance criteria met?",
+                "5. **Reflect**: What else did you discover? What follow-up work is needed?",
+                "",
+                "## CRITICAL: Proactive Discovery",
+                "",
+                "While working, actively identify and report follow-up work:",
+                "",
+                "**Follow-up Tickets** (report in NEW_TICKETS_NEEDED):",
+                "**IMPORTANT**: Be specific! Include file paths, line numbers, and clear descriptions.",
+                "",
+                "Format: `TYPE: Description with file.py:line - specific details`",
+                "",
+                "Examples:",
+                "- `BUG: Similar validation missing in signup.py:156 - allows special characters that should be blocked`",
+                "- `SECURITY: SQL injection risk in user_controller.py:89 - needs parameterized queries`",
+                "- `TEST: Missing integration tests for auth/oauth.py - no tests for token refresh flow`",
+                "- `DOC: API docs outdated in docs/api.md - still shows old v1 endpoints`",
+                "- `TASK: Refactor duplicate code in utils/validators.py:45-78 - same logic in 3 places`",
+                "",
+                "**What to report**:",
+                "- 🐛 Related bugs or edge cases (with file:line)",
+                "- 🔒 Security concerns or vulnerabilities (with specific location)",
+                "- 📝 Missing tests (which files/functions need coverage)",
+                "- 🔧 Tech debt or code needing refactoring (specific code locations)",
+                "- ✨ Missing features or improvements (clear value proposition)",
+                "- 📚 Documentation gaps (which docs need updating)",
+                "",
+                "**Knowledge to Capture** (use <knowledge_proposal> tags):",
+                "- 🎯 Reusable patterns you created or discovered",
+                "- 🏗️ Architectural decisions you made (propose as ADR)",
+                "- 💡 Best practices or gotchas future developers should know",
+                "- 🔗 Useful code templates or examples",
+                "",
+                "**Think**: 'What did I learn that others should know?' and 'What else needs attention?'",
+                "",
             ]
         )
+
+        # Add instructions
+        prompt.append("## Detailed Instructions")
+        if use_custom and ticket_type_key in self.prompt_config.instructions:
+            instructions = self.prompt_config.instructions[ticket_type_key]
+        else:
+            instructions = template.get_instructions()
+
+        for i, instruction in enumerate(instructions, 1):
+            prompt.append(f"{i}. {instruction}")
+
+        prompt.append("")
+
+        # Add knowledge extraction format if enabled
+        if self.prompt_config.include_knowledge_extraction:
+            prompt.extend(
+                [
+                    "## Knowledge Extraction Format",
+                    "",
+                    "If you created reusable patterns or made significant architectural decisions, capture them with FULL DETAIL:",
+                    "",
+                    "**For Patterns** (reusable code solutions):",
+                    "```",
+                    "<knowledge_proposal>",
+                    "---",
+                    "type: PATTERN",
+                    "name: Clear, Descriptive Pattern Name (e.g., 'Input Validation Helper', 'Async Error Handler')",
+                    "description: |",
+                    "  COMPREHENSIVE description (3-5 sentences):",
+                    "  - What problem does this solve?",
+                    "  - When should it be used?",
+                    "  - What are the key benefits?",
+                    "  - What scenarios is it NOT appropriate for?",
+                    "template: |",
+                    "  # COMPLETE, RUNNABLE code template with:",
+                    "  # - All necessary imports",
+                    "  # - Type hints",
+                    "  # - Docstrings",
+                    "  # - Example usage in comments",
+                    "  # - Error handling",
+                    "  ",
+                    "  def example_pattern(input: str) -> bool:",
+                    '      """Clear docstring explaining purpose and usage."""',
+                    "      # Implementation here",
+                    "      pass",
+                    "tags: [specific, searchable, relevant, tags, technologies]",
+                    "examples: [",
+                    "  file1.py:123,  # Where this pattern is used",
+                    "  file2.py:45,   # Another example",
+                    "  file3.py:89    # More examples help!",
+                    "]",
+                    "---",
+                    "</knowledge_proposal>",
+                    "```",
+                    "",
+                    "**For Architectural Decisions** (significant design choices):",
+                    "```",
+                    "<knowledge_proposal>",
+                    "---",
+                    "type: ADR",
+                    "title: ADR: Clear, Specific Decision Title (e.g., 'Use Parameterized Queries for All DB Access')",
+                    "context: |",
+                    "  DETAILED context (2-4 sentences):",
+                    "  - What situation or problem led to this decision?",
+                    "  - What were the constraints or requirements?",
+                    "  - Why does this decision matter now?",
+                    "decision: |",
+                    "  SPECIFIC decision statement (1-3 sentences):",
+                    "  - Exactly what are we choosing to do?",
+                    "  - What will change?",
+                    "  - What are the boundaries/scope?",
+                    "rationale: |",
+                    "  COMPREHENSIVE rationale (3-5 sentences):",
+                    "  - Why is this the best choice?",
+                    "  - What benefits does it provide?",
+                    "  - What problems does it solve?",
+                    "  - What trade-offs are we accepting?",
+                    "consequences: |",
+                    "  DETAILED consequences (3-5 sentences):",
+                    "  - What are the immediate implications?",
+                    "  - What follow-up work is needed?",
+                    "  - What will be easier/harder going forward?",
+                    "  - What technical debt might this create/eliminate?",
+                    "alternatives: |",
+                    "  SPECIFIC alternatives considered (2-4 options):",
+                    "  - Alternative 1: Description and why rejected",
+                    "  - Alternative 2: Description and why rejected",
+                    "  - Alternative 3: Description and why rejected",
+                    "  - Explain specific reasons for rejection",
+                    "---",
+                    "</knowledge_proposal>",
+                    "```",
+                    "",
+                    "**Knowledge Quality Standards**:",
+                    "- ✅ Patterns have COMPLETE, runnable code (not pseudocode)",
+                    "- ✅ Patterns include 2-3 file examples showing actual usage",
+                    "- ✅ ADRs explain context thoroughly (someone reading months later should understand)",
+                    "- ✅ ADRs list 2-3 specific alternatives that were considered",
+                    "- ✅ All fields are filled with substantive content (no placeholders)",
+                    "- ✅ Technical terms are explained or obvious from context",
+                    "",
+                    "**When to propose knowledge**:",
+                    "- You solved a problem in a novel or reusable way",
+                    "- You made a significant technical decision affecting architecture",
+                    "- You discovered a best practice or important gotcha",
+                    "- You created a useful abstraction, helper, or utility",
+                    "- You found a pattern worth standardizing across the codebase",
+                    "",
+                ]
+            )
+
+        # Add quality expectations
+        prompt.extend(
+            [
+                "## Quality Standards",
+                "",
+                "Your implementation must meet professional standards:",
+                "- ✅ All acceptance criteria met completely",
+                "- ✅ Code follows project conventions exactly",
+                "- ✅ Changes are minimal and focused (no scope creep)",
+                "- ✅ Tests added/updated and passing",
+                "- ✅ No syntax errors, linting errors, or type errors",
+                "- ✅ Error handling is appropriate and follows existing patterns",
+                "- ✅ Code is production-ready",
+                "",
+            ]
+        )
+
+        # Add response format
+        prompt.append("## Required Response Format")
+        prompt.append("")
+        prompt.append("**CRITICAL**: You MUST end your response with the following status summary.")
+        prompt.append("Fill in ALL fields with specific, accurate information:")
+        prompt.append("")
+        if use_custom and ticket_type_key in self.prompt_config.response_format:
+            response_format = self.prompt_config.response_format[ticket_type_key]
+        else:
+            response_format = template.get_response_format()
+
+        prompt.append(response_format)
 
         return "\n".join(prompt)
 
@@ -141,23 +326,52 @@ class PromptBuilder:
         Returns:
             The formatted prompt string
         """
+        # Group tickets by type to provide focused guidance
+        ticket_types = {t.ticket_type for t in context.tickets}
+        is_mixed_types = len(ticket_types) > 1
+
         prompt = [
-            "# Task: Batch Execution",
-            "Complete the following set of related tickets in a single pass.",
-            "Ensure consistency across all changes.",
+            "# Task: Coordinated Batch Execution",
+            "",
+            "You are executing multiple related tickets together. This requires careful coordination.",
+            "",
+            "## Batch Execution Strategy",
+            "",
+            "1. **Read All Tickets First**: Understand the full scope before starting",
+            "2. **Identify Dependencies**: Determine the order - what must be done first?",
+            "3. **Plan Integration**: How will these changes work together?",
+            "4. **Execute in Order**: Implement tickets in dependency order",
+            "5. **Verify Together**: Ensure all changes work as a cohesive whole",
+            "",
+            "**Critical**: All tickets must be COMPLETE. Don't leave any partially done.",
             "",
         ]
 
+        if is_mixed_types:
+            prompt.extend(
+                [
+                    "**Note**: This batch contains different ticket types.",
+                    "Apply the specific guidelines for each type while ensuring overall coherence.",
+                    "",
+                ]
+            )
+
+        # List all tickets with their details
         for ticket in context.tickets:
             title = self._sanitize(ticket.title)
             description = self._sanitize(ticket.description)
             ac = self._sanitize(ticket.acceptance_criteria)
 
+            template = get_template(ticket.ticket_type)
+            task_focus = template.get_task_focus()
+
             prompt.extend(
                 [
                     f"## Ticket #{ticket.id}: {title}",
-                    f"Type: {ticket.ticket_type.value}",
-                    f"Priority: {ticket.severity.value if ticket.severity else 'MEDIUM'}",
+                    f"**Type**: {ticket.ticket_type.value}",
+                    f"**Priority**: {ticket.severity.value if ticket.severity else 'MEDIUM'}",
+                    "",
+                    f"**Type-Specific Guidance**: {task_focus}",
                     "",
                     "### Description",
                     f"{description}",
@@ -168,6 +382,7 @@ class PromptBuilder:
                 ]
             )
 
+        # Add context sections
         prompt.append("## Project Conventions")
         prompt.append(context.conventions_text)
         prompt.append("")
@@ -182,19 +397,75 @@ class PromptBuilder:
             prompt.append(context.adrs_text)
             prompt.append("")
 
+        # General batch instructions
         prompt.extend(
             [
-                "## Instructions",
-                "1. **Implement all tickets** described above.",
-                "2. **Strictly follow** the project conventions provided.",
-                "3. **Test-Driven Development**: Ensure corresponding unit tests are created or updated for ALL changes.",
-                "4. **Batch Summary**: You MUST provide a status summary for EACH ticket using the following XML format at the end of your response:",
+                "## Batch Execution Instructions",
+                "",
+                "1. **Complete ALL Tickets**: Every ticket in this batch must be fully implemented. Mark each as COMPLETE or BLOCKED individually.",
+                "",
+                "2. **Execution Order**: Implement tickets in logical order based on dependencies. If ticket B needs changes from ticket A, do A first.",
+                "",
+                "3. **Consistency**: Use consistent patterns across all tickets. Don't solve the same problem two different ways. Establish patterns in early tickets and follow them in later ones.",
+                "",
+                "4. **Integration**: Think about how these changes interact. Shared files? Common data? Integration points? Handle these coherently.",
+                "",
+                "5. **Project Conventions**: Strictly follow the project conventions for ALL changes. Maintain consistency with existing code.",
+                "",
+                "6. **Comprehensive Testing**: Add tests for all new functionality. Ensure tests cover interactions between the changes from different tickets.",
+                "",
+                "7. **Type-Specific Guidelines**: Follow the guidance specific to each ticket type while maintaining overall batch coherence.",
+                "",
+                "8. **Proactive Discovery**: While working, identify follow-up work and knowledge opportunities across ALL tickets. Report findings per ticket.",
+                "",
+            ]
+        )
+
+        # Knowledge extraction if enabled
+        if self.prompt_config.include_knowledge_extraction:
+            prompt.extend(
+                [
+                    "## Knowledge Proposals (Optional)",
+                    "Use the standard `<knowledge_proposal>` format for patterns or ADRs.",
+                    "",
+                ]
+            )
+
+        # Batch summary format
+        prompt.extend(
+            [
+                "## Quality Standards for Batch",
+                "",
+                "Your batch implementation must meet professional standards:",
+                "- ✅ ALL tickets in batch are COMPLETE (or explicitly BLOCKED with reason)",
+                "- ✅ Changes work together cohesively",
+                "- ✅ Consistent patterns used across all tickets",
+                "- ✅ All acceptance criteria met for every ticket",
+                "- ✅ Comprehensive testing covers individual tickets AND their interactions",
+                "- ✅ Code is production-ready",
+                "",
+                "## CRITICAL: Batch Status Summary",
+                "",
+                "**REQUIRED**: You MUST end your response with status for EACH ticket in this exact format:",
                 "",
                 "<batch_summary>",
-                "- TICKET #ID: [SUCCESS|FAILED] - Brief explanation",
+            ]
+        )
+
+        for ticket in context.tickets:
+            prompt.append(
+                f"- TICKET #{ticket.id}: [COMPLETE|BLOCKED] - Brief explanation of status and what was done/blocking issue"
+            )
+
+        prompt.extend(
+            [
                 "</batch_summary>",
                 "",
-                "5. **Propose Knowledge**: If applicable, use the `<knowledge_proposal>` format as described in project conventions.",
+                "**Rules**:",
+                "- Mark COMPLETE only if the ticket is 100% done with all acceptance criteria met",
+                "- Mark BLOCKED if you cannot complete, with specific reason why",
+                "- Provide a brief explanation for each ticket's status",
+                "- Every ticket in the batch MUST have a status line",
             ]
         )
 
@@ -210,73 +481,140 @@ class PromptBuilder:
         Returns:
             The formatted planning prompt
         """
-        return f"""
-# Core Requirements Analysis
+        return f"""# Project Requirements Analysis & Breakdown
 
-Analyze the following requirements and break them down into a structured project plan.
-Your goal is to produce a high-quality, professional senior engineer level breakdown.
+You are a senior software architect analyzing requirements to create a structured, actionable project plan.
 
-## Requirements
+## Requirements to Analyze
 {requirements}
 
-## Instructions
-1. **Identify the Core Tech Stack**: List the main technologies needed.
-2. **Define Topics**: Identify logical feature areas or components (e.g., Auth, Database, Frontend, CLI).
-3. **Generate Tickets**: Create a hierarchy of tickets:
-    - **EPICs**: High-level features.
-    - **STORIES**: User-facing features within Epics.
-    - **TASKS**: Technical units of work within Stories or Epics.
-    - **DOCS**: Documentation tasks.
-    - **TESTS**: Testing infrastructure tasks.
-4. **Define Dependencies**: Identify which tickets block others.
-5. **Set Acceptance Criteria**: Every ticket must have clear "done" criteria.
-6. **Assign Topics**: Every ticket should ideally belong to at least one topic.
-7. **Propose initial ADRs**: If there are critical architectural decisions, propose them.
+## Your Task
+
+Create a comprehensive breakdown that a development team can execute. Think carefully about:
+- What technologies are truly needed (don't over-engineer)
+- How to organize work into logical, independent units
+- What dependencies exist and what order makes sense
+- What architectural decisions must be made early
+
+## Analysis Process
+
+### Step 1: Understand the Requirements
+- What is the core problem being solved?
+- Who are the users and what do they need?
+- What are the critical vs nice-to-have features?
+- What are the technical constraints?
+
+### Step 2: Identify Architecture & Tech Stack
+- What technologies are required? (List only what's necessary)
+- What are the major components/layers? (e.g., API, Database, Frontend, CLI, Auth)
+- What are the critical architectural decisions? (These become ADRs)
+
+### Step 3: Define Topics (Feature Areas)
+Create logical groupings like:
+- **Core Infrastructure**: Database, auth, deployment
+- **Feature Areas**: User management, payments, notifications
+- **Cross-Cutting**: Testing, documentation, security
+
+### Step 4: Create Ticket Hierarchy
+Break down into actionable work:
+
+**EPICs**: Large features spanning multiple components (e.g., "User Authentication System")
+- Should take multiple sprints
+- Contains multiple Stories/Tasks
+- Has clear user/technical value
+
+**STORIES**: User-facing features (e.g., "User can sign up with email")
+- Focused on user value
+- Deliverable in 1-3 days
+- Has clear acceptance criteria from user perspective
+
+**TASKS**: Technical implementation work (e.g., "Implement JWT token generation")
+- Focused on technical objectives
+- Deliverable in 0.5-2 days
+- Often enablers for Stories
+
+**TESTS**: Testing infrastructure (e.g., "Add integration tests for auth flow")
+- Focused on quality assurance
+- Can be parallel work
+
+**DOCS**: Documentation (e.g., "Document API authentication endpoints")
+- User guides, API docs, architecture docs
+
+**SECURITY**: Security hardening (e.g., "Add rate limiting to login endpoint")
+- Security reviews, vulnerability fixes
+
+### Step 5: Set Priorities
+- CRITICAL: Blocking work, security issues, core infrastructure
+- HIGH: Important features, significant value
+- MEDIUM: Standard features, improvements
+- LOW: Nice-to-haves, polish
+
+### Step 6: Define Dependencies
+- What must be built before other things?
+- Example: Database schema → API endpoints → Frontend UI
+- Be specific: "depends on: Database Setup, JWT Implementation"
+
+### Step 7: Write Acceptance Criteria
+Make criteria specific, testable, and complete:
+- Good: "User can submit email/password, receive JWT token, use token to access protected endpoints"
+- Bad: "Authentication works"
 
 ## Output Format
-You MUST respond with a JSON object following this structure:
+
+Respond with a valid JSON object following this exact structure:
 
 ```json
 {{
-  "project_name": "Name of the project",
-  "project_description": "Clear description",
-  "tech_stack": ["tech1", "tech2"],
+  "project_name": "Concise project name",
+  "project_description": "Clear 2-3 sentence description of what this project does and who it's for",
+  "tech_stack": ["tech1", "tech2", "tech3"],
   "topics": [
     {{
       "name": "topic-name",
-      "description": "Topic description"
+      "description": "What this topic area covers"
     }}
   ],
   "tickets": [
     {{
-      "title": "Ticket Title",
-      "description": "Detailed description",
-      "ticket_type": "EPIC | STORY | TASK | DOC | TEST",
+      "title": "Clear, action-oriented title",
+      "description": "Detailed description of what needs to be done and why. Include context.",
+      "ticket_type": "EPIC | STORY | TASK | DOC | TEST | SECURITY",
       "severity": "CRITICAL | HIGH | MEDIUM | LOW",
-      "acceptance_criteria": "How to verify",
+      "acceptance_criteria": "Specific, testable criteria for 'done'. Use bullets for multiple criteria.",
       "estimated_effort": 3,
       "topics": ["topic-name"],
-      "dependencies": ["Other Ticket Title"],
+      "dependencies": ["Title of blocking ticket"],
       "children": [
-        // Sub-tickets following same structure
+        // Nested tickets for EPICs (same structure)
       ]
     }}
   ],
   "suggested_adrs": [
     {{
-      "title": "Decision Title",
-      "context": "Why is this needed?",
-      "decision": "What is the decision?",
-      "rationale": "Why this way?",
-      "consequences": "What next?",
-      "alternatives": "What else?"
+      "title": "ADR: Clear decision title",
+      "context": "What is the situation and why do we need to decide?",
+      "decision": "What are we choosing to do?",
+      "rationale": "Why is this the best choice? What are the benefits?",
+      "consequences": "What are the implications and follow-up work?",
+      "alternatives": "What other options did we consider and why not those?"
     }}
   ]
 }}
 ```
 
-Ensure the JSON is valid and follows the schema strictly.
-"""
+## Quality Checklist
+
+Before outputting, verify:
+- [ ] Tickets are appropriately sized (EPICs are large, Tasks are small)
+- [ ] Dependencies are logical and form a valid DAG (no circular dependencies)
+- [ ] Every ticket has clear, testable acceptance criteria
+- [ ] Priorities reflect true importance and dependencies
+- [ ] Topics group related work logically
+- [ ] Tech stack includes only what's necessary
+- [ ] ADRs cover significant architectural choices
+- [ ] JSON is valid and follows schema exactly
+
+Output ONLY the JSON object. Ensure it is valid JSON that can be parsed."""
 
     def build_suggestion_prompt(self, tickets: list[Ticket], topic_name: str | None = None) -> str:
         """
@@ -289,41 +627,27 @@ Ensure the JSON is valid and follows the schema strictly.
         Returns:
             The formatted suggestion prompt
         """
-        prompt = [
-            "# Ticket Selection",
-            "You are a technical project manager assisting an engineer.",
-            "Based on the following list of pending tickets, suggest which one should be tackled next.",
-            "",
-        ]
+        # Use custom prompt if configured, otherwise use default
+        if self.prompt_config.enabled and self.prompt_config.next_command_prompt:
+            base_prompt = self.prompt_config.next_command_prompt
+        else:
+            base_prompt = DEFAULT_NEXT_COMMAND_PROMPT
+
+        prompt = [base_prompt, ""]
 
         if topic_name:
-            prompt.append(f"Focusing on Topic: **{topic_name}**")
+            prompt.append(f"**Topic Filter**: {topic_name}")
             prompt.append("")
 
         prompt.append("## Available Tickets")
         for t in tickets:
             prompt.append(f"### Ticket #{t.id}: {t.title}")
-            prompt.append(f"Type: {t.ticket_type.value}")
-            prompt.append(f"Severity: {t.severity.value if t.severity else 'MEDIUM'}")
-            prompt.append(f"Description: {t.description}")
+            prompt.append(f"**Type**: {t.ticket_type.value}")
+            prompt.append(f"**Priority**: {t.severity.value if t.severity else 'MEDIUM'}")
+            prompt.append(f"**Description**: {t.description}")
             if t.acceptance_criteria:
-                prompt.append(f"Acceptance Criteria: {t.acceptance_criteria}")
+                prompt.append(f"**Acceptance Criteria**: {t.acceptance_criteria}")
             prompt.append("")
-
-        prompt.extend(
-            [
-                "## Instructions",
-                "1. Analyze dependencies and priorities.",
-                "2. Select the single most impactful ticket OR a BATCH of 2-4 highly related tickets that should be tackled next.",
-                "3. Provide your selection in the following format:",
-                "",
-                "SELECTION: #ID1, #ID2 (if batch) or SELECTION: #ID",
-                "TYPE: [SINGLE|BATCH]",
-                "RATIONALE: Detailed reasoning why this ticket or batch is next.",
-                "",
-                "4. Do not include any other text except the selection, type, and rationale.",
-            ]
-        )
 
         return "\n".join(prompt)
 

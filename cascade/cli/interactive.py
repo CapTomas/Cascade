@@ -225,7 +225,10 @@ class InteractiveMode:
         }
         settings_subs = {
             "__meta__": "Configure Cascade settings",
-            "show": {"__meta__": "Show current configuration"},
+            "show": {"__meta__": "Show all configurable settings"},
+            "agents": {"__meta__": "Configure agent assignments"},
+            "prompts": {"__meta__": "Configure AI prompts"},
+            "quality-gates": {"__meta__": "Configure quality gate settings"},
             "set": {
                 "__meta__": "Set a configuration value",
                 "theme": {"__meta__": "option"},
@@ -1453,7 +1456,10 @@ class InteractiveMode:
         if not args:
             # Show subcommands help
             help_table = create_modern_table(["Subcommand", "Description"])
-            help_table.add_row("[accent]show[/accent]", "View configuration details")
+            help_table.add_row("[accent]show[/accent]", "Display all configurable settings")
+            help_table.add_row("[accent]agents[/accent]", "Configure agent assignments")
+            help_table.add_row("[accent]prompts[/accent]", "Configure AI prompts")
+            help_table.add_row("[accent]quality-gates[/accent]", "Configure quality gate settings")
             help_table.add_row("[accent]/theme <name>[/accent]", "Change color scheme")
             help_table.add_row("[accent]/model <name>[/accent]", "Select active AI agent")
 
@@ -1481,20 +1487,259 @@ class InteractiveMode:
         parts = args.split()
         subcmd = parts[0].lower()
 
-        if subcmd == "show" and project:
-            import yaml
-
-            config_dict = project.config.to_dict()
-            self.console.print(
-                Panel(
-                    f"[muted]{yaml.dump(config_dict, default_flow_style=False)}[/muted]",
-                    title="[header]Full Configuration[/header]",
-                    border_style="border",
-                    box=box.ROUNDED,
-                )
-            )
+        if subcmd == "show":
+            self._settings_show(project)
+        elif subcmd == "agents":
+            self._settings_agents(project)
+        elif subcmd == "prompts":
+            self._settings_prompts(project, parts[1:] if len(parts) > 1 else [])
+        elif subcmd == "quality-gates":
+            self._settings_quality_gates(project)
         else:
             self.console.print(f"[warning]Unknown settings subcommand:[/warning] {subcmd}")
+            self.console.print("[muted]Try: show, agents, prompts, quality-gates[/muted]")
+
+    def _settings_show(self, project: Any) -> None:
+        """Show all configurable settings."""
+        from cascade.cli.commands.settings import (
+            _show_agent_settings,
+            _show_prompt_settings,
+            _show_quality_settings,
+        )
+
+        if not project:
+            self.console.print("[warning]Not in a Cascade project.[/warning]")
+            return
+
+        self.console.print()
+        _show_agent_settings(project.config)
+        self.console.print()
+        _show_prompt_settings(project.config)
+        self.console.print()
+        _show_quality_settings(project.config)
+        self.console.print()
+
+    def _settings_agents(self, project: Any) -> None:
+        """Configure agent assignments."""
+        if not project:
+            self.console.print("[warning]Not in a Cascade project.[/warning]")
+            return
+
+        from cascade.agents.registry import list_agents
+
+        available_agents = list_agents()
+
+        # Show menu
+        choices = [
+            "Configure default agent",
+            "Configure next command agent",
+            "Configure ticket type orchestration",
+            "Back",
+        ]
+
+        choice = questionary.select(
+            "What would you like to configure?", choices=choices
+        ).ask()
+
+        if choice == "Configure default agent":
+            agent = questionary.select(
+                "Select default agent:", choices=available_agents
+            ).ask()
+            if agent:
+                project.config.agent.default = agent
+                project.save_config()
+                self.console.print(
+                    f"[success]✓[/success] Default agent set to [accent]{agent}[/accent]"
+                )
+
+        elif choice == "Configure next command agent":
+            agents_with_default = ["Use default"] + available_agents
+            agent = questionary.select(
+                "Select agent for 'next' command:", choices=agents_with_default
+            ).ask()
+            if agent:
+                project.config.agent.next_command_agent = (
+                    None if agent == "Use default" else agent
+                )
+                project.save_config()
+                self.console.print(
+                    f"[success]✓[/success] Next command agent set to [accent]{agent}[/accent]"
+                )
+
+        elif choice == "Configure ticket type orchestration":
+            from cascade.models.enums import TicketType
+
+            ticket_type = questionary.select(
+                "Select ticket type:",
+                choices=[t.value for t in TicketType] + ["Clear all", "Back"],
+            ).ask()
+
+            if ticket_type and ticket_type not in ["Clear all", "Back"]:
+                agents_with_default = ["Use default"] + available_agents
+                agent = questionary.select(
+                    f"Select agent for {ticket_type} tickets:",
+                    choices=agents_with_default,
+                ).ask()
+                if agent:
+                    if agent == "Use default":
+                        project.config.agent.orchestration.pop(
+                            ticket_type.lower(), None
+                        )
+                    else:
+                        project.config.agent.orchestration[ticket_type.lower()] = agent
+                    project.save_config()
+                    self.console.print(
+                        f"[success]✓[/success] {ticket_type} tickets will use [accent]{agent}[/accent]"
+                    )
+            elif ticket_type == "Clear all":
+                project.config.agent.orchestration = {}
+                project.save_config()
+                self.console.print(
+                    "[success]✓[/success] Cleared all ticket type orchestration"
+                )
+
+    def _settings_prompts(self, project: Any, args: list[str]) -> None:
+        """Configure AI prompts."""
+        if not project:
+            self.console.print("[warning]Not in a Cascade project.[/warning]")
+            return
+
+        from cascade.models.enums import TicketType
+
+        # Show menu
+        choices = (
+            [f"{t.value} tickets" for t in TicketType]
+            + ["Next command", "Reset all prompts", "Back"]
+        )
+
+        choice = questionary.select(
+            "What prompts would you like to configure?", choices=choices
+        ).ask()
+
+        if choice == "Back" or not choice:
+            return
+        elif choice == "Reset all prompts":
+            if questionary.confirm("Reset all prompts to defaults?").ask():
+                project.config.prompts.task_focus = {}
+                project.config.prompts.instructions = {}
+                project.config.prompts.response_format = {}
+                project.config.prompts.next_command_prompt = None
+                project.save_config()
+                self.console.print("[success]✓[/success] All prompts reset to defaults")
+        elif choice == "Next command":
+            self.console.print(
+                "[info]Opening editor for next command prompt...[/info]"
+            )
+            from cascade.core.prompt_templates import DEFAULT_NEXT_COMMAND_PROMPT
+            import click
+
+            current = (
+                project.config.prompts.next_command_prompt
+                or DEFAULT_NEXT_COMMAND_PROMPT
+            )
+            edited = click.edit(current)
+            if edited and edited.strip():
+                project.config.prompts.next_command_prompt = edited.strip()
+                project.save_config()
+                self.console.print(
+                    "[success]✓[/success] Next command prompt updated"
+                )
+        else:
+            # Configure ticket type prompt
+            for t in TicketType:
+                if choice == f"{t.value} tickets":
+                    self._configure_ticket_type_prompt(project, t)
+                    break
+
+    def _configure_ticket_type_prompt(self, project: Any, ticket_type: TicketType) -> None:
+        """Configure prompts for a specific ticket type."""
+        from cascade.core.prompt_templates import get_template
+        import click
+
+        template = get_template(ticket_type)
+        ticket_type_key = ticket_type.value
+
+        what = questionary.select(
+            f"Configure {ticket_type.value} prompts:",
+            choices=[
+                "Task Focus (objective)",
+                "Instructions (guidance)",
+                "Response Format (output)",
+                "Reset to defaults",
+                "Back",
+            ],
+        ).ask()
+
+        if what == "Task Focus (objective)":
+            current = project.config.prompts.task_focus.get(
+                ticket_type_key, template.get_task_focus()
+            )
+            edited = click.edit(current)
+            if edited and edited.strip():
+                project.config.prompts.task_focus[ticket_type_key] = edited.strip()
+                project.save_config()
+                self.console.print("[success]✓[/success] Task focus updated")
+
+        elif what == "Instructions (guidance)":
+            current_list = project.config.prompts.instructions.get(
+                ticket_type_key, template.get_instructions()
+            )
+            current_text = "\n".join(f"{i+1}. {instr}" for i, instr in enumerate(current_list))
+            edited = click.edit(current_text)
+            if edited and edited.strip():
+                lines = [
+                    line.strip().lstrip("0123456789. ")
+                    for line in edited.strip().split("\n")
+                    if line.strip()
+                ]
+                project.config.prompts.instructions[ticket_type_key] = lines
+                project.save_config()
+                self.console.print("[success]✓[/success] Instructions updated")
+
+        elif what == "Response Format (output)":
+            current = project.config.prompts.response_format.get(
+                ticket_type_key, template.get_response_format()
+            )
+            edited = click.edit(current)
+            if edited and edited.strip():
+                project.config.prompts.response_format[ticket_type_key] = edited.strip()
+                project.save_config()
+                self.console.print("[success]✓[/success] Response format updated")
+
+        elif what == "Reset to defaults":
+            if questionary.confirm(f"Reset {ticket_type.value} prompts to defaults?").ask():
+                project.config.prompts.task_focus.pop(ticket_type_key, None)
+                project.config.prompts.instructions.pop(ticket_type_key, None)
+                project.config.prompts.response_format.pop(ticket_type_key, None)
+                project.save_config()
+                self.console.print(
+                    f"[success]✓[/success] {ticket_type.value} prompts reset to defaults"
+                )
+
+    def _settings_quality_gates(self, project: Any) -> None:
+        """Configure quality gate settings."""
+        if not project:
+            self.console.print("[warning]Not in a Cascade project.[/warning]")
+            return
+
+        gates = [
+            ("Static Analysis", "static_analysis"),
+            ("Unit Tests", "unit_tests"),
+            ("Security Scan", "security_scan"),
+        ]
+
+        for name, key in gates:
+            gate = getattr(project.config.quality, key)
+            current = "Enabled" if gate.enabled else "Disabled"
+
+            enable = questionary.confirm(
+                f"{name} gate? (currently {current})", default=gate.enabled
+            ).ask()
+
+            gate.enabled = enable
+
+        project.save_config()
+        self.console.print("[success]✓[/success] Quality gates configuration updated")
 
     def _cmd_model(self, args: str) -> None:
         """Change AI agent."""

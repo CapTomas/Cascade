@@ -114,6 +114,24 @@ Automatic extraction and management of institutional knowledge:
 - **Code Patterns**: Reusable templates learned from successful implementations
 - **Conventions**: Project-wide coding standards and practices
 
+### Proactive Discovery & Auto-Ticket Creation
+
+AI doesn't just complete tasks - it **actively discovers** and **creates tickets** for follow-up work:
+
+- **🔍 Active Discovery**: While working, AI identifies bugs, security issues, tech debt, and improvements
+- **📝 Automatic Ticketing**: Discovered work is automatically converted into categorized, prioritized tickets
+- **🎯 Smart Categorization**: Auto-inferred ticket types (BUG, SECURITY, TEST, DOC, TASK) and severity
+- **🔗 Contextual Linking**: Created tickets link back to parent ticket for full traceability
+- **🧠 Self-Improving Backlog**: Your backlog grows organically with real, discovered issues
+
+**Example**: AI fixes a login bug and auto-creates tickets for:
+- Similar validation missing in signup (BUG, HIGH)
+- Missing rate limiting on auth endpoints (SECURITY, CRITICAL)
+- Integration tests needed for OAuth flow (TEST, MEDIUM)
+- Outdated API authentication docs (DOC, MEDIUM)
+
+See [AUTO_TICKET_CREATION.md](AUTO_TICKET_CREATION.md) for details.
+
 ---
 
 ### Metrics & Analytics
@@ -354,6 +372,107 @@ Topics provide organizational grouping for related tickets. Examples include "Au
 | `cascade metrics --quality`  | Quality gate performance           |
 | `cascade metrics --activity` | Daily activity log                 |
 
+### Settings Commands
+
+| Command                            | Description                             |
+|------------------------------------|-----------------------------------------|
+| `cascade settings show`            | Display all configurable settings       |
+| `cascade settings agents`          | Configure agent assignments             |
+| `cascade settings prompts`         | Configure AI prompts                    |
+| `cascade settings quality-gates`   | Configure quality gate settings         |
+| `cascade settings edit-config`     | Open config.yaml in editor              |
+
+---
+
+## Sophisticated Prompting System
+
+**New in v2.0**: Cascade features a sophisticated, type-aware prompting system that tailors AI instructions based on ticket type and provides structured response formats for better tracking and knowledge extraction.
+
+### Type-Specific Prompts
+
+Each ticket type (BUG, STORY, TASK, TEST, SECURITY, DOC, EPIC) has optimized prompts that guide the AI agent to:
+
+- **BUG**: Focus on root cause analysis, minimal fixes, and regression tests
+- **STORY**: Prioritize user value, acceptance criteria, and UX consistency
+- **TASK**: Emphasize clean implementation and following project patterns
+- **TEST**: Maximize meaningful coverage, edge cases, and test clarity
+- **SECURITY**: Ensure thorough vulnerability elimination and system-wide checking
+- **DOC**: Verify technical accuracy and provide clear, practical examples
+- **EPIC**: Consider architectural decisions and suggest breakdowns if needed
+
+### Structured Response Format
+
+AI agents are instructed to provide structured responses with:
+
+```xml
+<execution_summary>
+ROOT_CAUSE: (for BUGs) Brief explanation of what caused the bug
+FIX_APPROACH: How you fixed it
+FILES_MODIFIED: List of changed files
+TESTS_ADDED: Tests added/updated
+TICKET_STATUS: COMPLETE | BLOCKED | NEEDS_BREAKDOWN
+BLOCKERS: (If BLOCKED) What prevents completion
+NEW_TICKETS_NEEDED: (Optional) Related work discovered
+</execution_summary>
+```
+
+This structured format enables:
+- Automatic ticket status tracking
+- Knowledge extraction from completed work
+- Better visibility into what was accomplished
+- Identification of blockers and follow-up work
+
+### Configurable Prompts
+
+All prompts are fully configurable via the `cascade settings` command:
+
+```bash
+# Configure prompts interactively
+cascade settings prompts
+
+# Configure prompts for specific ticket type
+cascade settings prompts --ticket-type bug
+
+# Configure the 'next' command prompt
+cascade settings prompts --next
+
+# Reset all prompts to optimized defaults
+cascade settings prompts --reset
+```
+
+Customize:
+- **Task Focus**: The objective/goal statement for each ticket type
+- **Instructions**: Step-by-step guidance tailored to the ticket type
+- **Response Format**: Expected output structure
+- **Next Command**: Prompt used by `cascade next` to suggest tickets
+
+### Agent Orchestration
+
+Assign different AI agents to specific ticket types or commands:
+
+```bash
+cascade settings agents
+```
+
+This allows you to:
+- Use Claude Code for complex logic tasks
+- Use Codex for test writing
+- Use Gemini for documentation
+- Configure a specific agent for the `cascade next` command
+
+Configuration is stored in `.cascade/config.yaml`:
+
+```yaml
+agent:
+  default: claude-code
+  next_command_agent: gemini-cli  # Optional: override for 'next' command
+  orchestration:
+    bug: codex-api
+    test: codex-api
+    doc: generic
+    story: claude-cli
+```
+
 ---
 
 ## Agent Configuration
@@ -434,11 +553,44 @@ Configure different agents for specific ticket types in `.cascade/config.yaml`:
 ```yaml
 agent:
   default: claude-cli
+  next_command_agent: gemini-cli  # Optional: specific agent for 'cascade next'
   orchestration:
-    docs: generic
-    bug: codex-api
-    story: claude-cli
+    bug: codex-api      # Use Codex for bugs
+    test: codex-api     # Use Codex for tests
+    doc: generic        # Use generic agent for docs
+    story: claude-cli   # Use Claude for stories
 ```
+
+### Prompt Customization
+
+Configure AI prompts in `.cascade/config.yaml`:
+
+```yaml
+prompts:
+  enabled: true  # Use custom prompts
+  include_knowledge_extraction: true  # Include knowledge proposal format
+
+  # Custom prompt for 'next' command
+  next_command_prompt: |
+    You are a technical project manager...
+
+  # Custom prompts per ticket type
+  task_focus:
+    BUG: "Custom bug-fixing focus..."
+
+  instructions:
+    TEST:
+      - "Custom test instruction 1"
+      - "Custom test instruction 2"
+
+  response_format:
+    STORY: |
+      <execution_summary>
+      Custom format for stories...
+      </execution_summary>
+```
+
+Use `cascade settings` for interactive configuration instead of manual YAML editing.
 
 ---
 

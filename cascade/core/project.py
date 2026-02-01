@@ -137,7 +137,7 @@ class CascadeProject:
     def prompt_builder(self) -> PromptBuilder:
         """Get prompt builder (lazy loaded)."""
         if self._prompt_builder is None:
-            self._prompt_builder = PromptBuilder()
+            self._prompt_builder = PromptBuilder(self.config.prompts)
         return self._prompt_builder
 
     @property

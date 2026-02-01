@@ -46,6 +46,7 @@ class ProjectAgentConfig(BaseModel):
     fallback: str = "generic"
     orchestration: dict[str, str] = Field(default_factory=dict)
     configurations: dict[str, dict[str, str]] = Field(default_factory=dict)
+    next_command_agent: str | None = None  # Override agent for 'next' command
 
 
 class ConstraintsConfig(BaseModel):
@@ -63,6 +64,23 @@ class LoggingConfig(BaseModel):
     file: str = ".cascade/logs/cascade.log"
 
 
+class PromptConfig(BaseModel):
+    """Prompt customization configuration."""
+
+    enabled: bool = True  # Use custom prompts if True, otherwise use defaults
+    task_focus: dict[str, str] = Field(
+        default_factory=dict
+    )  # Custom task focus per ticket type
+    instructions: dict[str, list[str]] = Field(
+        default_factory=dict
+    )  # Custom instructions per ticket type
+    response_format: dict[str, str] = Field(
+        default_factory=dict
+    )  # Custom response format per ticket type
+    next_command_prompt: str | None = None  # Custom prompt for 'next' command
+    include_knowledge_extraction: bool = True  # Include knowledge proposal format
+
+
 class ProjectConfig(BaseModel):
     """
     Complete project configuration.
@@ -78,6 +96,7 @@ class ProjectConfig(BaseModel):
     quality: QualityConfig = Field(default_factory=QualityConfig)
     constraints: ConstraintsConfig = Field(default_factory=ConstraintsConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+    prompts: PromptConfig = Field(default_factory=PromptConfig)
 
     @classmethod
     def load(cls, config_path: Path) -> ProjectConfig:
@@ -100,6 +119,7 @@ class ProjectConfig(BaseModel):
         quality_data = data.get("quality_gates", {})
         constraints_data = data.get("constraints", {})
         logging_data = data.get("logging", {})
+        prompts_data = data.get("prompts", {})
 
         # Build nested data for Pydantic
         config_data = {
@@ -116,6 +136,7 @@ class ProjectConfig(BaseModel):
             },
             "constraints": constraints_data,
             "logging": logging_data,
+            "prompts": prompts_data,
         }
 
         # Filter out empty dicts so Pydantic uses defaults
@@ -144,6 +165,7 @@ class ProjectConfig(BaseModel):
             },
             "constraints": model_dict["constraints"],
             "logging": model_dict["logging"],
+            "prompts": model_dict["prompts"],
         }
 
     def save(self, config_path: Path) -> None:

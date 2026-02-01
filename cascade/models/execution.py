@@ -65,6 +65,7 @@ class ExecutionResult:
     proposals: list[dict[str, Any]] = field(default_factory=list)
     gate_results: GateResults | None = None
     affected_ticket_ids: list[int] = field(default_factory=list)
+    created_ticket_ids: list[int] = field(default_factory=list)
 
 
 @dataclass

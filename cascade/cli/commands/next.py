@@ -62,7 +62,12 @@ def next_cmd(
             return
 
         # 2. Call AI for selection
-        agent_name = agent or project.config.agent.default
+        # Use custom next command agent if configured, otherwise use default
+        agent_name = (
+            agent
+            or project.config.agent.next_command_agent
+            or project.config.agent.default
+        )
         agent_instance = get_agent(agent_name)
 
         print_banner("AI Suggestion")

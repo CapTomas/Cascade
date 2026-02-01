@@ -13,6 +13,8 @@ from cascade.core.knowledge_base import KnowledgeBase
 from cascade.core.knowledge_extractor import KnowledgeExtractor
 from cascade.core.prompt_builder import PromptBuilder
 from cascade.core.quality_gates import QualityGates
+from cascade.core.response_parser import parse_execution_summary
+from cascade.core.ticket_creator import TicketCreator
 from cascade.core.ticket_manager import TicketManager
 from cascade.models.enums import ContextMode, TicketStatus
 from cascade.models.execution import ExecutionResult
@@ -41,6 +43,7 @@ class TicketExecutor:
         quality_gates: QualityGates,
         knowledge_base: KnowledgeBase,
         knowledge_extractor: KnowledgeExtractor | None = None,
+        ticket_creator: TicketCreator | None = None,
         git_provider: GitProvider | None = None,
     ):
         """
@@ -51,6 +54,10 @@ class TicketExecutor:
             context_builder: Component to build execution context
             prompt_builder: Component to build AI prompts
             ticket_manager: Component to manage ticket state
+            quality_gates: Component to run quality gates
+            knowledge_base: Component to store knowledge
+            knowledge_extractor: Component to extract knowledge from responses
+            ticket_creator: Component to create tickets from discoveries
             git_provider: Provider for git operations (optional)
         """
         self.agent = agent
@@ -60,6 +67,7 @@ class TicketExecutor:
         self.quality_gates = quality_gates
         self.kb = knowledge_base
         self.knowledge_extractor = knowledge_extractor or KnowledgeExtractor()
+        self.ticket_creator = ticket_creator or TicketCreator(ticket_manager)
         self.git_provider = git_provider
 
     def execute(
@@ -177,6 +185,15 @@ class TicketExecutor:
                 execution_time_ms = int((time.time() - start_time) * 1000)
 
                 if response.success:
+                    # Parse execution summary for better logging
+                    execution_summary = parse_execution_summary(response.content, ticket_id)
+                    if execution_summary:
+                        logger.info(
+                            f"Execution summary for ticket #{ticket_id}: "
+                            f"Status={execution_summary.status}, "
+                            f"Details={execution_summary.summary}"
+                        )
+
                     # Run quality gates (Phase 4)
                     gate_results = self.quality_gates.run_all(ticket, response)
 
@@ -229,12 +246,35 @@ class TicketExecutor:
                                     ticket_id, "KNOWLEDGE_EXTRACTION_ERROR", details=str(ke)
                                 )
 
+                        # Auto-create tickets from discoveries
+                        created_ticket_ids = []
+                        if execution_summary and execution_summary.suggested_tickets:
+                            try:
+                                created_ticket_ids = self.ticket_creator.create_from_discoveries(
+                                    execution_summary.suggested_tickets,
+                                    parent_ticket_id=ticket_id,
+                                )
+                                if created_ticket_ids:
+                                    logger.info(
+                                        f"Auto-created {len(created_ticket_ids)} tickets from discoveries: {created_ticket_ids}"
+                                    )
+                                    self.log_action(
+                                        ticket_id,
+                                        "TICKETS_AUTO_CREATED",
+                                        details=f"Created {len(created_ticket_ids)} follow-up tickets: {created_ticket_ids}",
+                                    )
+                            except Exception as te:
+                                logger.error(f"Ticket creation from discoveries failed: {te}")
+                                self.log_action(
+                                    ticket_id, "TICKET_CREATION_ERROR", details=str(te)
+                                )
+
                         self.log_action(
                             ticket_id,
                             "EXECUTION_SUCCESS",
                             agent=self.agent.get_name(),
                             context_mode=mode,
-                            details=f"Modified {len(response.files_modified)} files. All quality gates passed. Extracted {len(proposals)} knowledge proposals.",
+                            details=f"Modified {len(response.files_modified)} files. All quality gates passed. Extracted {len(proposals)} knowledge proposals. Created {len(created_ticket_ids)} follow-up tickets.",
                             token_count=response.token_count,
                             execution_time_ms=execution_time_ms,
                         )
@@ -248,6 +288,7 @@ class TicketExecutor:
                             execution_time_ms=execution_time_ms,
                             gate_results=gate_results,
                             proposals=proposals,
+                            created_ticket_ids=created_ticket_ids,
                         )
                     else:
                         failed_gate_names = [r.gate_name for r in gate_results.failed_gates]
