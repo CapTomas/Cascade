@@ -1,11 +1,12 @@
-from __future__ import annotations
 """Generic agent implementation via stdin/stdout."""
+from __future__ import annotations
 
 import logging
 import os
 import shlex
 import subprocess
 import time
+from collections.abc import Callable
 
 from cascade.agents.interface import (
     AgentCapabilities,

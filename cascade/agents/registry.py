@@ -1,6 +1,5 @@
-from __future__ import annotations
 """Agent registry and helpers."""
-
+from __future__ import annotations
 
 from cascade.agents.anthropic.claude_api import ClaudeApiAgent
 from cascade.agents.anthropic.claude_cli import ClaudeCliAgent

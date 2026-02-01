@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from cascade.agents.interface import (
     AgentCapabilities,
     AgentCapability,

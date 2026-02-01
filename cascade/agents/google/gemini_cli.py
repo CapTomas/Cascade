@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import shutil
 import subprocess
 import time
+from collections.abc import Callable
 
 from cascade.agents.interface import (
     AgentCapabilities,

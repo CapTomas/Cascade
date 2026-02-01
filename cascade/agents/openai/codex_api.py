@@ -1,5 +1,5 @@
-from __future__ import annotations
 """Codex agent implementation via OpenAI API."""
+from __future__ import annotations
 
 import json
 import logging
@@ -7,6 +7,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 
 from cascade.agents.interface import (
     AgentCapabilities,

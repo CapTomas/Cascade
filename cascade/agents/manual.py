@@ -1,10 +1,11 @@
-from __future__ import annotations
 """Manual agent implementation for human-in-the-loop flows."""
+from __future__ import annotations
 
 import logging
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 
 from rich.console import Console
 from rich.panel import Panel

@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import json
 import os
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 
 from cascade.agents.interface import (
     AgentCapabilities,

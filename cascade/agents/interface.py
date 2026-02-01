@@ -1,9 +1,9 @@
 from __future__ import annotations
-from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable
 
 
 class AgentCapability(str, Enum):
