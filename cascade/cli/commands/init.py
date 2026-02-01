@@ -102,7 +102,8 @@ def init_cmd(
 
         if project.is_initialized:
             console.print(Panel(
-                f"[warning]⚠[/warning] Project already initialized at [accent]{project_path}[/accent]",
+                f"[warning]⚠[/warning] Project already initialized at [accent]{project_path}[/accent]\n\n"
+                f"[muted]If this project is broken, run [white]cascade destroy[/white] first.[/muted]",
                 border_style="warning",
                 box=box.ROUNDED,
             ))
@@ -130,7 +131,8 @@ def init_cmd(
             progress.update(task, completed=100, description="[success]Project created[/success]")
 
         # 2. Interactive Agent Configuration (Do this BEFORE planning)
-        _configure_agent(console, project)
+        from cascade.cli.onboarding import configure_agent
+        configure_agent(console, project)
 
         # 3. Planning if requirements provided
         if requirements:
@@ -266,163 +268,3 @@ def _display_success_summary(console: Console, project: CascadeProject, project_
     ))
 
 
-def _configure_agent(console: Console, project: CascadeProject) -> None:
-    """Interactively configure the default agent."""
-    from cascade.agents.registry import get_agent
-    import click
-
-    console.print()
-    console.print(Panel(
-        "[header]Agent Configuration[/header]\n\n"
-        "[muted]Checking for installed AI tools...[/muted]",
-        border_style="border",
-        box=box.ROUNDED,
-        padding=(0, 2),
-    ))
-
-    # Check for CLI tools
-    available_clis = []
-    cli_agents = ["claude-cli", "gemini-cli", "codex-cli"]
-
-    for name in cli_agents:
-        try:
-            agent = get_agent(name)
-            if agent.is_available():
-                available_clis.append(name)
-        except Exception:
-            pass
-
-    selected_agent = None
-
-    if len(available_clis) == 1:
-        # Only one CLI found - Use it
-        selected_agent = available_clis[0]
-        console.print(f"[success]✓[/success] Detected [accent]{selected_agent}[/accent]. Setting as default.")
-        project.config.agent.default = selected_agent
-        project.save_config()
-        return
-
-    elif len(available_clis) > 1:
-        # Multiple CLIs found - Ask user (if interactive)
-        console.print(f"[success]✓[/success] Detected: {', '.join(f'[accent]{a}[/accent]' for a in available_clis)}")
-
-        # Check if we're in an interactive environment
-        import sys
-        if sys.stdin.isatty():
-            import questionary
-            selected_agent = questionary.select(
-                "Which agent would you like to use as default?",
-                choices=available_clis
-            ).ask()
-            if selected_agent:
-                project.config.agent.default = selected_agent
-                project.save_config()
-                return
-
-        # Non-interactive or user cancelled - use first available
-        selected_agent = available_clis[0]
-        console.print(f"[info]ℹ[/info] Using [accent]{selected_agent}[/accent] as default.")
-        project.config.agent.default = selected_agent
-        project.save_config()
-        return
-
-    # No CLIs found - Prompt for API configuration (if interactive)
-    console.print("[warning]⚠[/warning] No local CLI tools detected.")
-
-    import sys
-    if not sys.stdin.isatty():
-        # Non-interactive - use generic agent
-        console.print("[info]ℹ[/info] Using [accent]generic[/accent] agent as default.")
-        project.config.agent.default = "generic"
-        project.save_config()
-        return
-
-    console.print("[muted]Please select an AI provider to configure (API Key required):[/muted]")
-
-    import questionary
-    provider_choice = questionary.select(
-        "Select Provider:",
-        choices=[
-            "Anthropic (Claude)",
-            "Google (Gemini)",
-            "OpenAI (Codex)"
-        ]
-    ).ask()
-
-    if not provider_choice:
-        # User cancelled
-        print_warning("No provider selected. Using Generic agent as fallback.")
-        project.config.agent.default = "generic"
-        project.save_config()
-        return
-
-    provider_map = {
-        "Anthropic (Claude)": ("claude", "ANTHROPIC_API_KEY"),
-        "Google (Gemini)": ("google", "ANTIGRAVITY_API_KEY"),
-        "OpenAI (Codex)": ("openai", "OPENAI_API_KEY")
-    }
-
-    provider_key, env_var_name = provider_map[provider_choice]
-
-    console.print(f"\n[muted]You can find your API key in your {provider_choice.split()[0]} account settings.[/muted]")
-    api_key = questionary.password(f"Enter your {env_var_name}:").ask()
-
-    if not api_key:
-        print_warning("No API key provided. Using Generic agent as fallback.")
-        project.config.agent.default = "generic"
-        project.save_config()
-        return
-
-    # 1. Update Config (Mode = API)
-    if provider_key not in project.config.agent.configurations:
-        project.config.agent.configurations[provider_key] = {}
-    project.config.agent.configurations[provider_key]["mode"] = "api"
-
-    agent_name_map = {
-        "claude": "claude-api",
-        "google": "gemini-api",
-        "openai": "codex-api"
-    }
-    project.config.agent.default = agent_name_map[provider_key]
-    project.save_config()
-
-    # 2. Save Securely to .env
-    _save_to_env(project.cascade_dir.parent, env_var_name, api_key)
-    console.print(f"[success]✓[/success] API key saved securely to [muted].env[/muted]")
-    console.print(f"[success]✓[/success] Default agent set to [accent]{project.config.agent.default}[/accent]")
-
-
-def _save_to_env(project_root: Path, key: str, value: str) -> None:
-    """Save variable to .env file and ensure it is gitignored."""
-    env_path = project_root / ".env"
-
-    # Read existing
-    lines = []
-    if env_path.exists():
-        lines = env_path.read_text().splitlines()
-
-    # Update or Append
-    updated = False
-    new_lines = []
-    for line in lines:
-        if line.startswith(f"{key}="):
-            new_lines.append(f"{key}={value}")
-            updated = True
-        else:
-            new_lines.append(line)
-
-    if not updated:
-        new_lines.append(f"{key}={value}")
-
-    # Write back
-    env_path.write_text("\n".join(new_lines) + "\n")
-
-    # Update .gitignore
-    gitignore_path = project_root / ".gitignore"
-    if gitignore_path.exists():
-        content = gitignore_path.read_text()
-        if ".env" not in content:
-            with open(gitignore_path, "a") as f:
-                f.write("\n.env\n")
-    else:
-        gitignore_path.write_text(".env\n")

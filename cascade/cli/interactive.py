@@ -17,7 +17,7 @@ from rich.text import Text
 from rich import box
 
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter, NestedCompleter
+from prompt_toolkit.completion import WordCompleter, NestedCompleter, Completion
 from prompt_toolkit.styles import Style as PTStyle
 from prompt_toolkit.formatted_text import HTML
 
@@ -32,6 +32,76 @@ from cascade.cli.ui import (
 )
 from cascade.models.enums import TicketType, Severity, TicketStatus
 from cascade.utils.git import GitProvider
+
+
+class MetaNestedCompleter(NestedCompleter):
+    """A nested completer that supports display_meta for its options."""
+
+    def __init__(self, options, meta_dict=None):
+        super().__init__(options)
+        self.meta_dict = meta_dict or {}
+
+    @classmethod
+    def from_meta_dict(cls, data):
+        """Build from a dict that includes metadata.
+
+        Format:
+        {
+            "command": {
+                "__meta__": "Command description",
+                "subcommand": {
+                    "__meta__": "Subcommand description",
+                }
+            }
+        }
+        OR
+        {
+            "command": (sub_dict, "Command description")
+        }
+        """
+        options = {}
+        meta_dict = {}
+
+        for key, value in data.items():
+            if isinstance(value, tuple):
+                sub_data, description = value
+            elif isinstance(value, dict):
+                description = value.get("__meta__")
+                # Create a sub-copy without the meta if it's a dict
+                sub_data = {k: v for k, v in value.items() if k != "__meta__"}
+            else:
+                description = None
+                sub_data = value
+
+            meta_dict[key] = description
+
+            if isinstance(sub_data, dict):
+                options[key] = cls.from_meta_dict(sub_data)
+            else:
+                options[key] = sub_data
+
+        return cls(options, meta_dict)
+
+    def get_completions(self, document, complete_event):
+        # Determine if we are completing the current level or a sub-level
+        text = document.text_before_cursor.lstrip()
+        parts = text.split()
+
+        # If there's only one word or we are at the end of a word that is a command,
+        # we might be completing the keys of this level.
+        if len(parts) <= 1:
+            for completion in super().get_completions(document, complete_event):
+                if completion.text in self.meta_dict:
+                    yield Completion(
+                        completion.text,
+                        start_position=completion.start_position,
+                        display_meta=self.meta_dict[completion.text]
+                    )
+                else:
+                    yield completion
+        else:
+            # Delegate to parent which handles nested completions
+            yield from super().get_completions(document, complete_event)
 
 
 class SlashCommand:
@@ -96,6 +166,7 @@ class InteractiveMode:
             SlashCommand("model", "Change AI agent", self._cmd_model),
             SlashCommand("theme", "Change color theme", self._cmd_theme),
             SlashCommand("docs", "Open documentation", self._cmd_docs),
+            SlashCommand("destroy", "Uninitialize Cascade project", self._cmd_destroy),
             SlashCommand("clear", "Clear screen", self._cmd_clear, ["cls"]),
             SlashCommand("quit", "Exit Cascade", self._cmd_quit, ["exit", "q"]),
         ]
@@ -105,61 +176,81 @@ class InteractiveMode:
             for alias in cmd.aliases:
                 self.commands[alias] = cmd
 
-    def _build_completer(self) -> NestedCompleter:
+    def _build_completer(self) -> MetaNestedCompleter:
         """Build nested completer for subcommands."""
-        # Define basic subcommands
+        # Define subcommands with descriptions and hints
         ticket_subs = {
-            "list": None,
-            "show": None,
-            "create": None,
-            "update": None,
-            "ready": None,
-            "block": None,
-            "delete": None,
-            "execute": None,
-            "depends": None,
+            "__meta__": "Manage tickets and tasks",
+            "list": {"__meta__": "List all tickets"},
+            "show": {"__meta__": "Show ticket details", "<id>": {"__meta__": "argument"}},
+            "create": {"__meta__": "Create a new ticket"},
+            "update": {"__meta__": "Update ticket fields", "<id>": {"__meta__": "argument"}},
+            "ready": {"__meta__": "Mark tickets as ready", "<ids...>": {"__meta__": "argument"}},
+            "block": {"__meta__": "Mark ticket as blocked", "<id>": {"__meta__": "argument"}},
+            "delete": {"__meta__": "Delete a ticket", "<id>": {"__meta__": "argument"}},
+            "execute": {"__meta__": "Execute a ticket with AI agent", "<id>": {"__meta__": "argument"}},
+            "depends": {"__meta__": "Manage ticket dependencies", "<id>": {"__meta__": "argument"}},
         }
-        topic_subs = {"list": None, "create": None, "delete": None}
-        kb_subs = {"pending": None, "approve": None, "conventions": None}
-        git_subs = {"status": None, "branch": None, "commit": None, "diff": None}
-        settings_subs = {"show": None, "set": None}
+        topic_subs = {
+            "__meta__": "Manage knowledge topics",
+            "list": {"__meta__": "List all topics"},
+            "create": {"__meta__": "Create a new topic", "<name>": {"__meta__": "argument"}},
+            "delete": {"__meta__": "Delete a topic", "<name>": {"__meta__": "argument"}},
+        }
+        kb_subs = {
+            "__meta__": "View and manage knowledge base",
+            "pending": {"__meta__": "View pending knowledge items"},
+            "approve": {"__meta__": "Approve knowledge items", "pattern": {"__meta__": "type"}, "adr": {"__meta__": "type"}},
+            "conventions": {"__meta__": "List all conventions"},
+        }
+        git_subs = {
+            "__meta__": "Git integration commands",
+            "status": {"__meta__": "Show git status"},
+            "branch": {"__meta__": "List or create branches"},
+            "commit": {"__meta__": "Commit changes", "<message>": {"__meta__": "argument"}},
+            "diff": {"__meta__": "Show changes"},
+        }
+        settings_subs = {
+            "__meta__": "Configure Cascade settings",
+            "show": {"__meta__": "Show current configuration"},
+            "set": {"__meta__": "Set a configuration value", "theme": {"__meta__": "option"}, "agent": {"__meta__": "option"}},
+        }
 
-        # Build nested dict including aliases and slash versions
-        completion_dict = {}
-
-        # Base commands
-        main_commands = {
-            "help": None,
-            "status": None,
+        # Build nested data
+        main_commands_data = {
+            "help": {"__meta__": "Show available commands"},
+            "status": {"__meta__": "Show project dashboard"},
             "ticket": ticket_subs,
             "t": ticket_subs,
             "topic": topic_subs,
             "knowledge": kb_subs,
             "kb": kb_subs,
-            "metrics": None,
+            "metrics": {"__meta__": "Show project metrics"},
             "git": git_subs,
-            "next": None,
-            "execute": None,
-            "e": None,
+            "next": {"__meta__": "AI suggests next ticket"},
+            "execute": {"__meta__": "Execute ready tickets", "<id>": {"__meta__": "argument"}},
+            "e": {"__meta__": "Execute ready tickets", "<id>": {"__meta__": "argument"}},
             "settings": settings_subs,
-            "model": None, # Could list agents here if static
-            "theme": None,
-            "docs": None,
-            "clear": None,
-            "cls": None,
-            "quit": None,
-            "exit": None,
-            "q": None,
+            "model": {"__meta__": "Change AI agent", "claude-code": {"__meta__": "agent"}, "codex-cli": {"__meta__": "agent"}, "gemini-cli": {"__meta__": "agent"}},
+            "theme": {"__meta__": "Change color theme", "studio": {"__meta__": "theme"}, "modern": {"__meta__": "theme"}, "classic": {"__meta__": "theme"}},
+            "docs": {"__meta__": "Open documentation"},
+            "destroy": {"__meta__": "Uninitialize Cascade project"},
+            "clear": {"__meta__": "Clear screen"},
+            "cls": {"__meta__": "Clear screen"},
+            "quit": {"__meta__": "Exit Cascade"},
+            "exit": {"__meta__": "Exit Cascade"},
+            "q": {"__meta__": "Exit Cascade"},
+            "?": {"__meta__": "Show keyboard shortcuts"},
         }
 
         # Add both slash and non-slash versions
-        for cmd, subs in main_commands.items():
-            completion_dict[cmd] = subs
-            completion_dict["/" + cmd] = subs
+        completion_data = {}
+        for cmd, data in main_commands_data.items():
+            completion_data[cmd] = data
+            if not cmd.startswith("?"):
+                completion_data["/" + cmd] = data
 
-        completion_dict["?"] = None
-
-        return NestedCompleter.from_nested_dict(completion_dict)
+        return MetaNestedCompleter.from_meta_dict(completion_data)
 
     def _get_project(self):
         """Lazy load project."""
@@ -167,7 +258,7 @@ class InteractiveMode:
             try:
                 from cascade.core.project import get_project
                 self._project = get_project()
-            except FileNotFoundError:
+            except (FileNotFoundError, Exception):
                 pass
         return self._project
 
@@ -222,18 +313,34 @@ class InteractiveMode:
             user_input = self.session.prompt(prompt_html)
             return user_input.strip()
         except (KeyboardInterrupt, EOFError):
-            return "/quit"
+            return "quit"
 
     def run(self) -> None:
         """Run the interactive REPL."""
         self.running = True
-        self.show_welcome()
-
-        # Show hint
-        self.console.print("[muted]  Type /help for commands  [/muted]", justify="center")
-        self.console.print()
 
         while self.running:
+            # Check for project and run onboarding if needed
+            project = self._get_project()
+            if project is None:
+                from cascade.cli.onboarding import run_onboarding
+                if run_onboarding(self.console, Path.cwd()):
+                    # Project was initialized, reset lazy loaded project
+                    self._project = None
+                    project = self._get_project()
+                else:
+                    # Onboarding failed or was cancelled
+                    self.running = False
+                    return
+
+            # Show welcome only once or after reset
+            if not getattr(self, "_welcome_shown", False):
+                self.show_welcome()
+                # Show hint
+                self.console.print("[muted]  Type help for commands  [/muted]", justify="center")
+                self.console.print()
+                self._welcome_shown = True
+
             try:
                 user_input = self.show_prompt()
 
@@ -257,7 +364,7 @@ class InteractiveMode:
                     self._handle_natural_input(user_input)
 
             except KeyboardInterrupt:
-                self.console.print("\n[muted]Type /quit to exit[/muted]")
+                self.console.print("\n[muted]Type quit to exit[/muted]")
             except Exception as e:
                 self.console.print(f"[error]Error:[/error] {e}")
 
@@ -270,17 +377,17 @@ class InteractiveMode:
         if cmd_name in self.commands:
             self.commands[cmd_name].handler(args)
         else:
-            self.console.print(f"[warning]Unknown command:[/warning] /{cmd_name}")
-            self.console.print("[muted]Type /help for available commands[/muted]")
+            self.console.print(f"[warning]Unknown command:[/warning] {cmd_name}")
+            self.console.print("[muted]Type help for available commands[/muted]")
 
     def _handle_natural_input(self, input_str: str) -> None:
         """Handle natural language input."""
         self.console.print(Panel(
             f"[muted]Natural language mode coming soon![/muted]\n\n"
-            f"For now, use slash commands:\n"
-            f"  [accent]/status[/accent]  - View project dashboard\n"
-            f"  [accent]/ticket[/accent]  - Manage tickets\n"
-            f"  [accent]/help[/accent]    - See all commands",
+            f"For now, use commands:\n"
+            f"  [accent]status[/accent]  - View project dashboard\n"
+            f"  [accent]ticket[/accent]  - Manage tickets\n"
+            f"  [accent]help[/accent]    - See all commands",
             border_style="border",
             box=box.ROUNDED,
         ))
@@ -296,9 +403,13 @@ class InteractiveMode:
                 continue
             seen.add(cmd.name)
 
-            cmd_str = f"[accent]/{cmd.name}[/accent]"
+            # Skip hidden commands or aliases if they clutter help
+            if cmd.name in ["?", "cls", "q", "exit", "destroy"]:
+                continue
+
+            cmd_str = f"[accent]{cmd.name}[/accent]"
             if cmd.aliases:
-                cmd_str += f" [muted]({', '.join('/' + a for a in cmd.aliases)})[/muted]"
+                cmd_str += f" [muted]({', '.join(cmd.aliases)})[/muted]"
 
             table.add_row(cmd_str, cmd.description)
 
@@ -1323,6 +1434,49 @@ class InteractiveMode:
         """Clear the screen."""
         self.console.clear()
         self.show_welcome()
+
+    def _cmd_destroy(self, args: str) -> None:
+        """Destroy the current Cascade project."""
+        project = self._get_project()
+        if not project:
+            from cascade.cli.ui import print_warning_box
+            print_warning_box(self.console, "No Cascade project found to destroy.")
+            return
+
+        from cascade.cli.ui import print_warning_box, print_success_box, print_error_box
+        from rich.panel import Panel
+        from rich import box
+        import shutil
+
+        cascade_dir = project.cascade_dir
+
+        self.console.print(Panel(
+            f"[warning]⚠[/warning] This will permanently delete the Cascade project at [accent]{cascade_dir}[/accent]\n"
+            f"[muted]All tickets, topics, and configuration will be lost.[/muted]",
+            title="[error]Permanent Destruction[/error]",
+            border_style="error",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        ))
+
+        if questionary.confirm("Are you sure you want to continue?", default=False).ask():
+            try:
+                # We need to be careful about file handles.
+                # Closing DB might be needed if held open.
+                if hasattr(project, "_db") and project._db:
+                    project._db.close()
+
+                shutil.rmtree(cascade_dir)
+                print_success_box(self.console, "Project uninitialized successfully.", "Restored")
+
+                # Reset project state to trigger re-onboarding in the loop
+                self._project = None
+                self._welcome_shown = False
+
+            except Exception as e:
+                print_error_box(self.console, f"Failed to destroy project: {e}")
+        else:
+            self.console.print("[muted]  Operation cancelled.  [/muted]")
 
     def _cmd_quit(self, args: str) -> None:
         """Exit the REPL."""

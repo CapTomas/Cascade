@@ -144,11 +144,11 @@ def create_welcome_box(
     # Right side: Tips and recent activity
     right_content = Text()
     right_content.append("Tips for getting started\n", style="header")
-    right_content.append("Run ", style="muted")
-    right_content.append("/help", style="accent")
+    right_content.append("Type ", style="muted")
+    right_content.append("help", style="accent")
     right_content.append(" to see available commands\n", style="muted")
-    right_content.append("Run ", style="muted")
-    right_content.append("/status", style="accent")
+    right_content.append("Type ", style="muted")
+    right_content.append("status", style="accent")
     right_content.append(" to view project dashboard\n", style="muted")
 
     right_content.append("\n" + BoxChars.H * 40 + "\n", style="border")
@@ -308,7 +308,8 @@ def print_keyboard_shortcuts(console: Console) -> None:
     """Print keyboard shortcuts help."""
     shortcuts = [
         ("?", "Show this help"),
-        ("/", "Open command palette"),
+        ("Type help", "To see all commands"),
+        ("Type status", "To see project dashboard"),
         ("↑/↓", "Navigate history"),
         ("Tab", "Autocomplete"),
         ("Ctrl+C", "Cancel / Exit"),
