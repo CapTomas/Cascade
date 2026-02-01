@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Metrics command for Cascade CLI."""
 
 from datetime import datetime, timedelta
@@ -75,7 +76,10 @@ def metrics(
         raise SystemExit(1)
 
 
-def _show_overview(metrics, days: int) -> None:
+from typing import Any
+
+
+def _show_overview(metrics: Any, days: int) -> None:
     """Show metrics overview."""
     exec_metrics = metrics.execution
     ticket_metrics = metrics.tickets
@@ -144,7 +148,7 @@ def _show_overview(metrics, days: int) -> None:
             )
 
 
-def _show_ticket_metrics(metrics) -> None:
+def _show_ticket_metrics(metrics: Any) -> None:
     """Show detailed ticket metrics."""
     print_banner("Ticket Breakdown")
 
@@ -170,7 +174,7 @@ def _show_ticket_metrics(metrics) -> None:
     console.print(status_table)
 
 
-def _show_quality_metrics(metrics) -> None:
+def _show_quality_metrics(metrics: Any) -> None:
     """Show quality gate metrics."""
     print_banner("Quality Gates")
 

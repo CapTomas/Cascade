@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Status command for Cascade CLI."""
 
 import click
@@ -5,6 +6,7 @@ from rich import box
 from rich.panel import Panel
 from rich.text import Text
 
+from typing import Any
 from cascade.cli.styles import (
     console,
     create_table,
@@ -12,7 +14,7 @@ from cascade.cli.styles import (
 from cascade.cli.ui import (
     create_status_hud,
 )
-from cascade.core.project import get_project
+from cascade.core.project import CascadeProject, get_project
 from cascade.models.enums import TicketStatus
 
 
@@ -50,7 +52,10 @@ def status(ctx: click.Context, health: bool) -> None:
         raise SystemExit(1)
 
 
-def _display_dashboard(status_data: dict, agent: str) -> None:
+from typing import Any
+
+
+def _display_dashboard(status_data: dict[str, Any], agent: str) -> None:
     """Display the main dashboard."""
     tickets = status_data["tickets"]
 
@@ -125,7 +130,7 @@ def _display_dashboard(status_data: dict, agent: str) -> None:
     _display_recommendations(tickets)
 
 
-def _display_recommendations(tickets: dict) -> None:
+def _display_recommendations(tickets: dict[str, int]) -> None:
     """Display recommended next actions."""
     from cascade.core.project import get_project
     project = get_project()
@@ -189,7 +194,7 @@ def _display_recommendations(tickets: dict) -> None:
             ))
 
 
-def _show_health(project) -> None:
+def _show_health(project: CascadeProject) -> None:
     """Show system health check."""
     checks = []
 
@@ -231,7 +236,7 @@ def _show_health(project) -> None:
     console.print(table)
 
 
-def _severity_color(severity) -> str:
+def _severity_color(severity: Any) -> str:
     """Get color for severity level."""
     from cascade.models.enums import Severity
 

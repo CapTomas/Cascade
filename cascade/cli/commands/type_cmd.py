@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Type commands for Cascade CLI."""
 
 

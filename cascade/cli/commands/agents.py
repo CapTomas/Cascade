@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Agents commands for Cascade CLI."""
 
 import click

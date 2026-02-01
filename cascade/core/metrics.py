@@ -1,7 +1,9 @@
+from __future__ import annotations
 """Metrics service for aggregating execution and ticket data."""
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Any
 
 from cascade.storage.database import Database
 
@@ -74,7 +76,7 @@ class MetricsService:
 
         # Build query with optional time filters
         query = "SELECT agent, context_mode, token_count, execution_time_ms FROM execution_log WHERE 1=1"
-        params: list = []
+        params: list[Any] = []
 
         if since:
             query += " AND timestamp >= ?"
@@ -140,10 +142,10 @@ class MetricsService:
             FROM tickets
             WHERE status = 'DONE'
         """
-        row = self.db.fetch_one(effort_query)
-        if row:
-            metrics.estimated_effort = row["estimated"] or 0
-            metrics.actual_effort = row["actual"] or 0
+        res = self.db.fetch_one(effort_query)
+        if res:
+            metrics.estimated_effort = res["estimated"] or 0
+            metrics.actual_effort = res["actual"] or 0
             if metrics.estimated_effort > 0:
                 metrics.effort_accuracy = metrics.actual_effort / metrics.estimated_effort
 
@@ -194,7 +196,7 @@ class MetricsService:
             period_end=until,
         )
 
-    def get_daily_activity(self, days: int = 7) -> list[dict]:
+    def get_daily_activity(self, days: int = 7) -> list[dict[str, Any]]:
         """Get daily execution activity for the last N days."""
         since = datetime.now() - timedelta(days=days)
 

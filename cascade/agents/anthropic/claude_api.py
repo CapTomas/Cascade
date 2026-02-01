@@ -48,7 +48,7 @@ class ClaudeApiAgent(AgentInterface):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         # Placeholder for actual API implementation
         return AgentResponse(

@@ -1,7 +1,7 @@
-"""Topic model for Cascade."""
-
+from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 
 
 @dataclass
@@ -22,7 +22,7 @@ class Topic:
         """Normalize topic name."""
         self.name = self.name.strip().lower().replace(" ", "-")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "id": self.id,
@@ -32,7 +32,7 @@ class Topic:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Topic":
+    def from_dict(cls, data: dict[str, Any]) -> "Topic":
         """Create topic from dictionary."""
         if data.get("created_at") and isinstance(data["created_at"], str):
             data["created_at"] = datetime.fromisoformat(data["created_at"])

@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 import shutil
 import subprocess
 import time
 from collections.abc import Callable
+from typing import Any
 
 from cascade.agents.interface import (
     AgentCapabilities,
@@ -63,7 +62,7 @@ class GeminiCliAgent(AgentInterface):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         """
         Execute prompt via Gemini CLI.
@@ -114,25 +113,31 @@ class GeminiCliAgent(AgentInterface):
             stderr_lines = []
 
             # Send prompt and close stdin
-            process.stdin.write(prompt)
-            process.stdin.close()
+            if process.stdin:
+                process.stdin.write(prompt)
+                process.stdin.close()
 
             # Read stdout line by line for streaming
             import select
 
             while True:
                 # Use select to wait for output with timeout
-                reads = [process.stdout, process.stderr]
+                reads = []
+                if process.stdout:
+                    reads.append(process.stdout)
+                if process.stderr:
+                    reads.append(process.stderr)
+
                 ready, _, _ = select.select(reads, [], [], 0.1)
 
-                if process.stdout in ready:
+                if process.stdout and process.stdout in ready:
                     line = process.stdout.readline()
                     if line:
                         stdout_lines.append(line)
                         if callback:
                             callback(line)
 
-                if process.stderr in ready:
+                if process.stderr and process.stderr in ready:
                     line = process.stderr.readline()
                     if line:
                         stderr_lines.append(line)
@@ -140,15 +145,17 @@ class GeminiCliAgent(AgentInterface):
                 # Check if process is done
                 if process.poll() is not None:
                     # Read any remaining output
-                    remaining_stdout = process.stdout.read()
-                    if remaining_stdout:
-                        stdout_lines.append(remaining_stdout)
-                        if callback:
-                            callback(remaining_stdout)
+                    if process.stdout:
+                        remaining_stdout = process.stdout.read()
+                        if remaining_stdout:
+                            stdout_lines.append(remaining_stdout)
+                            if callback:
+                                callback(remaining_stdout)
 
-                    remaining_stderr = process.stderr.read()
-                    if remaining_stderr:
-                        stderr_lines.append(remaining_stderr)
+                    if process.stderr:
+                        remaining_stderr = process.stderr.read()
+                        if remaining_stderr:
+                            stderr_lines.append(remaining_stderr)
                     break
 
                 # Check for timeout
@@ -199,7 +206,7 @@ class GeminiCliAgent(AgentInterface):
 
     def _parse_response(
         self,
-        result: subprocess.CompletedProcess,
+        result: subprocess.CompletedProcess[str],
         execution_time: int,
     ) -> AgentResponse:
         """Parse subprocess result into AgentResponse."""

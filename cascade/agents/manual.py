@@ -1,5 +1,5 @@
-"""Manual agent implementation for human-in-the-loop flows."""
 from __future__ import annotations
+"""Manual agent implementation for human-in-the-loop flows."""
 
 import logging
 import subprocess
@@ -77,7 +77,7 @@ class ManualAgent(AgentInterface):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         """
         Facilitate manual execution by human.

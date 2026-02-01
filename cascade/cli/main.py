@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Main CLI entry point for Cascade."""
 
 import sys
@@ -25,6 +26,7 @@ from cascade.cli.commands import (
 from cascade.cli.themes import get_current_theme
 from cascade.core.project import get_project
 from cascade.utils.logger import get_logger, setup_logging
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
@@ -69,14 +71,16 @@ def cli(ctx: click.Context) -> None:
     try:
         project = get_project()
         log_file = project.cascade_dir / "logs" / "cascade.log"
+        level_name = project.config.logging.level if hasattr(project.config, "logging") else "INFO"
+        level = getattr(logging, level_name.upper(), logging.INFO)
         setup_logging(
-            level=project.config.logging.level if hasattr(project.config, "logging") else "INFO",
+            level=level,
             log_file=log_file,
             console=False,  # We use rich directly in CLI
         )
     except (FileNotFoundError, Exception):
         # Not in a project or config error, just setup basic logging
-        setup_logging(level="INFO", console=False)
+        setup_logging(level=logging.INFO, console=False)
 
     # If no command specified, enter interactive mode
     if ctx.invoked_subcommand is None:

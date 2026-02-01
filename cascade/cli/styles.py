@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Premium styling utilities for Cascade CLI.
 
 Integrates with the theme system for consistent styling across commands.

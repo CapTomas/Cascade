@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Next command for Cascade CLI."""
 
 import re
@@ -35,6 +36,7 @@ def next_cmd(
             if not t:
                 print_error(f"Topic '{topic_name}' not found")
                 return
+            assert t.id is not None
             tickets = project.topics.get_tickets(t.id, status=TicketStatus.READY)
         elif ticket_type:
             ttype = TicketType(ticket_type.upper())
@@ -48,6 +50,7 @@ def next_cmd(
 
         if len(tickets) == 1:
             ticket = tickets[0]
+            assert ticket.id is not None
             console.print(f"[info]Only one ticket is READY:[/info] [id]#{ticket.id}[/id]: {ticket.title}")
             if click.confirm("\nExecute it?"):
                 from cascade.cli.commands.ticket import execute
@@ -102,8 +105,8 @@ def next_cmd(
             titles = "\n".join([f"- [id]#{t.id}[/id]: {t.title}" for t in selected_tickets])
             msg = f"[bold white]Recommended Batch:[/bold white]\n{titles}\n\n[bold white]Rationale:[/bold white]\n{rationale}"
         else:
-            t = selected_tickets[0]
-            msg = f"[bold white]Selected Ticket:[/bold white] [id]#{t.id}[/id]: {t.title}\n\n[bold white]Rationale:[/bold white]\n{rationale}"
+            sel_t = selected_tickets[0]
+            msg = f"[bold white]Selected Ticket:[/bold white] [id]#{sel_t.id}[/id]: {sel_t.title}\n\n[bold white]Rationale:[/bold white]\n{rationale}"
 
         console.print(create_panel(
             msg,

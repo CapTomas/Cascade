@@ -1,5 +1,5 @@
-"""Generic agent implementation via stdin/stdout."""
 from __future__ import annotations
+"""Generic agent implementation via stdin/stdout."""
 
 import logging
 import os
@@ -57,7 +57,7 @@ class GenericAgent(AgentInterface):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:

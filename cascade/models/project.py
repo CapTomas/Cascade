@@ -1,9 +1,11 @@
+from __future__ import annotations
 """Project configuration model for Cascade."""
 
 from pathlib import Path
 
 import yaml
 from pydantic import BaseModel, Field
+from typing import Any
 
 
 class QualityGateConfig(BaseModel):
@@ -36,7 +38,7 @@ class ContextConfig(BaseModel):
     )
 
 
-class AgentConfig(BaseModel):
+class ProjectAgentConfig(BaseModel):
     """Agent configuration."""
 
     default: str = "claude-code"
@@ -70,7 +72,7 @@ class ProjectConfig(BaseModel):
     name: str = ""
     description: str = ""
     tech_stack: list[str] = Field(default_factory=list)
-    agent: AgentConfig = Field(default_factory=AgentConfig)
+    agent: ProjectAgentConfig = Field(default_factory=ProjectAgentConfig)
     context: ContextConfig = Field(default_factory=ContextConfig)
     quality: QualityConfig = Field(default_factory=QualityConfig)
     constraints: ConstraintsConfig = Field(default_factory=ConstraintsConfig)
@@ -88,7 +90,7 @@ class ProjectConfig(BaseModel):
         return cls._from_dict(data)
 
     @classmethod
-    def _from_dict(cls, data: dict) -> "ProjectConfig":
+    def _from_dict(cls, data: dict[str, Any]) -> "ProjectConfig":
         """Create config from dictionary with legacy support."""
         # Map legacy top-level keys if they exist
         project_data = data.get("project", {})
@@ -116,14 +118,14 @@ class ProjectConfig(BaseModel):
         }
 
         # Filter out empty dicts so Pydantic uses defaults
-        def clean(d):
+        def clean(d: Any) -> Any:
             if not isinstance(d, dict):
                 return d
             return {k: clean(v) for k, v in d.items() if v is not None}
 
         return cls.model_validate(clean(config_data))
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for YAML serialization (maintaining legacy structure)."""
         model_dict = self.model_dump()
         return {

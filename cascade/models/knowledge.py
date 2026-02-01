@@ -1,7 +1,7 @@
-"""Knowledge models for Cascade (ADRs, Patterns, Conventions)."""
-
+from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 from cascade.models.enums import KnowledgeStatus
 
@@ -39,7 +39,7 @@ class ADR:
         """Check if ADR is approved for use in context."""
         return self.status == KnowledgeStatus.APPROVED
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "id": self.id,
@@ -57,7 +57,7 @@ class ADR:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ADR":
+    def from_dict(cls, data: dict[str, Any]) -> "ADR":
         """Create ADR from dictionary."""
         for field_name in ("created_at", "approved_at"):
             if data.get(field_name) and isinstance(data[field_name], str):
@@ -104,7 +104,7 @@ class Pattern:
         """Check if pattern is approved for use in context."""
         return self.status == KnowledgeStatus.APPROVED
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "id": self.id,
@@ -121,7 +121,7 @@ class Pattern:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Pattern":
+    def from_dict(cls, data: dict[str, Any]) -> "Pattern":
         """Create pattern from dictionary."""
         import json
 
@@ -166,7 +166,7 @@ class Convention:
     priority: int = 0  # Higher = load first
     created_at: datetime | None = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "id": self.id,
@@ -179,7 +179,7 @@ class Convention:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Convention":
+    def from_dict(cls, data: dict[str, Any]) -> "Convention":
         """Create convention from dictionary."""
         if data.get("created_at") and isinstance(data["created_at"], str):
             data["created_at"] = datetime.fromisoformat(data["created_at"])

@@ -1,7 +1,7 @@
-"""Ticket model for Cascade."""
-
+from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 from cascade.models.enums import ContextMode, Severity, TicketStatus, TicketType
 
@@ -32,7 +32,7 @@ class Ticket:
     affected_files: list[str] = field(default_factory=list)
     acceptance_criteria: str = ""
     context_mode: ContextMode = ContextMode.MINIMAL
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate and normalize ticket data."""
@@ -60,7 +60,7 @@ class Ticket:
         """Check if ticket is blocked."""
         return self.status == TicketStatus.BLOCKED
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
             "id": self.id,
@@ -83,7 +83,7 @@ class Ticket:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Ticket":
+    def from_dict(cls, data: dict[str, Any]) -> "Ticket":
         """Create ticket from dictionary."""
         # Handle datetime fields
         for field_name in ("created_at", "updated_at", "completed_at"):

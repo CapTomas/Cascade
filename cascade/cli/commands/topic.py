@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Topic commands for Cascade CLI."""
 
 
@@ -63,6 +64,7 @@ def list_topics(ctx: click.Context) -> None:
         table = create_table(["NAME", "TICKETS", "DONE", "PROGRESS"])
 
         for t in topics:
+            assert t.id is not None
             progress = project.topics.get_progress(t.id)
             pct = progress["percentage"]
 
@@ -114,6 +116,7 @@ def show(ctx: click.Context, name: str, status: str | None, execute_next: bool) 
 
         if execute_next:
             # Find next ready ticket in topic
+            assert t.id is not None
             tickets = project.topics.get_tickets(t.id, status=TicketStatus.READY)
             if not tickets:
                 tickets = project.topics.get_tickets(t.id, status=TicketStatus.DEFINED)
@@ -127,6 +130,7 @@ def show(ctx: click.Context, name: str, status: str | None, execute_next: bool) 
             ctx.invoke(execute, ticket_id=ticket.id)
             return
 
+        assert t.id is not None
         progress = project.topics.get_progress(t.id)
 
         print_banner(f"Topic: {t.name}")
@@ -141,6 +145,7 @@ def show(ctx: click.Context, name: str, status: str | None, execute_next: bool) 
         console.print(create_panel(info, border_style="dim"))
 
         # Tickets in topic
+        assert t.id is not None
         tickets = project.topics.get_tickets(
             t.id,
             status=TicketStatus(status) if status else None,
@@ -187,6 +192,7 @@ def assign(ctx: click.Context, topic_name: str, ticket_id: int) -> None:
             print_error(f"Ticket [id]#{ticket_id}[/id] not found")
             raise SystemExit(1)
 
+        assert t.id is not None
         project.topics.assign_ticket(t.id, ticket_id)
         print_success(f"Assigned ticket [id]#{ticket_id}[/id] to topic [accent]{t.name}[/accent]")
 
@@ -209,6 +215,7 @@ def unassign(ctx: click.Context, topic_name: str, ticket_id: int) -> None:
             print_error(f"Topic '{topic_name}' not found")
             raise SystemExit(1)
 
+        assert t.id is not None
         removed = project.topics.unassign_ticket(t.id, ticket_id)
 
         if removed:
@@ -235,6 +242,7 @@ def delete(ctx: click.Context, name: str, force: bool) -> None:
             print_error(f"Topic '{name}' not found")
             raise SystemExit(1)
 
+        assert t.id is not None
         ticket_count = project.topics.count_tickets(t.id)
 
         if not force:
@@ -245,6 +253,7 @@ def delete(ctx: click.Context, name: str, force: bool) -> None:
                 console.print("[dim]Cancelled[/dim]")
                 return
 
+        assert t.id is not None
         project.topics.delete(t.id)
         print_success(f"Deleted topic [accent]{name}[/accent]")
 

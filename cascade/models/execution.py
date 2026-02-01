@@ -1,7 +1,9 @@
+from __future__ import annotations
 """Models for ticket execution results and logging."""
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 from cascade.models.enums import ContextMode
 
@@ -59,7 +61,7 @@ class ExecutionResult:
     error: str | None = None
     execution_time_ms: int = 0
     token_usage: int = 0
-    proposals: list[dict] = field(default_factory=list)
+    proposals: list[dict[str, Any]] = field(default_factory=list)
     gate_results: GateResults | None = None
     affected_ticket_ids: list[int] = field(default_factory=list)
 

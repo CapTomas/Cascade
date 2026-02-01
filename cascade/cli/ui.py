@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Modern UI components for Cascade CLI.
 
 Box-drawing utilities and screen layouts inspired by Claude, Codex, and Gemini CLIs.

@@ -1,7 +1,9 @@
+from __future__ import annotations
 """Project management and initialization for Cascade."""
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from cascade.agents.registry import get_agent
 from cascade.core.context_builder import ContextBuilder
@@ -247,7 +249,7 @@ class CascadeProject:
         """Save current configuration to disk."""
         self.config.save(self.config_path)
 
-    def get_status(self) -> dict:
+    def get_status(self) -> dict[str, Any]:
         """
         Get project status summary.
 

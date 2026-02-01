@@ -1,7 +1,10 @@
+from __future__ import annotations
 """Ticket management for Cascade."""
 
 import json
+import logging
 from datetime import datetime
+from typing import Any
 
 from cascade.models.enums import Severity, TicketStatus, TicketType
 from cascade.models.ticket import Ticket, TicketDependency
@@ -60,7 +63,7 @@ class TicketManager:
             "description": description,
             "status": status.value,
             "severity": severity.value if severity else None,
-            "priority_score": self._calculate_priority(severity),
+            "priority_score": float(self._calculate_priority(severity)),
             "parent_ticket_id": parent_ticket_id,
             "created_at": now,
             "updated_at": now,
@@ -80,7 +83,7 @@ class TicketManager:
             description=description,
             status=status,
             severity=severity,
-            priority_score=data["priority_score"],
+            priority_score=float(data["priority_score"]), # type: ignore
             parent_ticket_id=parent_ticket_id,
             created_at=now,
             updated_at=now,
@@ -210,7 +213,7 @@ class TicketManager:
             List of matching tickets
         """
         conditions = []
-        params: list = []
+        params: list[Any] = []
 
         if status:
             conditions.append("status = ?")
@@ -231,7 +234,7 @@ class TicketManager:
         rows = self.db.fetch_all(query, tuple(params))
         return [self._row_to_ticket(row) for row in rows]
 
-    def update(self, ticket_id: int, **updates) -> Ticket | None:
+    def update(self, ticket_id: int, **updates: Any) -> Ticket | None:
         """
         Update ticket fields.
 
@@ -429,7 +432,7 @@ class TicketManager:
             Count of matching tickets
         """
         conditions = []
-        params: list = []
+        params: list[Any] = []
 
         if status:
             conditions.append("status = ?")
@@ -441,7 +444,7 @@ class TicketManager:
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         return self.db.count("tickets", where_clause, tuple(params))
 
-    def _row_to_ticket(self, row) -> Ticket:
+    def _row_to_ticket(self, row: Any) -> Ticket:
         """Convert database row to Ticket object."""
         data = dict(row)
 

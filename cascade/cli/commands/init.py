@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Init command for Cascade CLI."""
 
 from pathlib import Path
@@ -177,7 +178,10 @@ def init_cmd(
         raise SystemExit(1)
 
 
-def _display_proposed_plan(console: Console, plan) -> None:
+from typing import Any
+
+
+def _display_proposed_plan(console: Console, plan: Any) -> None:
     """Display the proposed project plan in styled boxes."""
     # Project overview
     tech_stack = ", ".join(f"[accent]{t}[/accent]" for t in plan.tech_stack)
@@ -212,7 +216,7 @@ def _display_proposed_plan(console: Console, plan) -> None:
         ticket_table = create_table(["Type", "Title", "Severity", "Subtasks"])
         ticket_table.title = "[header]Proposed Tickets[/header]"
 
-        def add_to_table(tickets, indent=0):
+        def add_to_table(tickets: list[Any], indent: int = 0) -> None:
             for t in tickets:
                 type_str = "  " * indent + t.ticket_type.value.lower()
                 sev_str = t.severity.value.upper() if t.severity else "MEDIUM"

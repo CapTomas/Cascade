@@ -1,11 +1,15 @@
+from __future__ import annotations
 """Token counting utility for Cascade."""
 
 import logging
+from typing import Any
 
 try:
     import tiktoken
+    HAS_TIKTOKEN = True
 except ImportError:
-    tiktoken = None
+    tiktoken = None  # type: ignore
+    HAS_TIKTOKEN = False
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +52,7 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
     if not text:
         return 0
 
-    if tiktoken:
+    if HAS_TIKTOKEN and tiktoken:
         try:
             # Map common names to tiktoken encodings
             model_lower = model.lower()
@@ -69,7 +73,7 @@ def count_tokens(text: str, model: str = "gpt-4") -> int:
     return len(text) // 4
 
 
-def estimate_context_tokens(context, model: str = "gpt-4") -> int:
+def estimate_context_tokens(context: Any, model: str = "gpt-4") -> int:
     """
     Estimate total tokens in a TicketContext.
 

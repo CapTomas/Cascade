@@ -126,7 +126,7 @@ class AgentInterface(ABC):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         """
         Execute a prompt and return the response.

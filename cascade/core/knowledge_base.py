@@ -1,8 +1,10 @@
+from __future__ import annotations
 """Knowledge base management for Cascade (conventions, patterns, ADRs)."""
 
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -138,7 +140,7 @@ class KnowledgeBase:
             return
 
         conventions = self.get_conventions()
-        grouped: dict[str, dict] = {}
+        grouped: dict[str, dict[str, Any]] = {}
 
         for conv in conventions:
             if conv.category not in grouped:
@@ -491,7 +493,7 @@ class KnowledgeBase:
 
     # ==================== PENDING REVIEW ====================
 
-    def get_pending_knowledge(self) -> dict:
+    def get_pending_knowledge(self) -> dict[str, Any]:
         """
         Get all knowledge items pending human review.
 

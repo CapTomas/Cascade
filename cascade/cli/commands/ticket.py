@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Ticket commands for Cascade CLI."""
 
 
@@ -6,6 +7,7 @@ from rich import box
 from rich.console import Console
 from rich.panel import Panel
 
+from typing import Any
 from cascade.agents.registry import get_agent, resolve_agent_name
 from cascade.cli.styles import (
     console,
@@ -96,6 +98,8 @@ def create(
         # Assign to topics
         for topic_name in topic:
             t = project.topics.get_or_create(topic_name)
+            assert t.id is not None
+            assert new_ticket.id is not None
             project.topics.assign_ticket(t.id, new_ticket.id)
 
         print_success(f"Created ticket [ticket.id]#{new_ticket.id}[/ticket.id]: {new_ticket.title}")
@@ -354,7 +358,7 @@ def mark_blocked(ctx: click.Context, ticket_id: int, reason: str) -> None:
     try:
         project = get_project()
 
-        updates = {"status": TicketStatus.BLOCKED}
+        updates: dict[str, Any] = {"status": TicketStatus.BLOCKED}
         if reason:
             t = project.tickets.get(ticket_id)
             if t:
@@ -491,7 +495,7 @@ def execute(
             git_provider=GitProvider(project.root),
         )
 
-        def confirm_callback(tickets: list, prompt: str) -> bool:
+        def confirm_callback(tickets: list[Any], prompt: str) -> bool:
             if yes:
                 return True
             console.print(create_panel(prompt, title="AGENT PROMPT", border_style="dim"))
@@ -528,7 +532,7 @@ def execute(
             with get_progress() as progress:
                 task = progress.add_task("[dim]Initializing...", total=100)
 
-                def wrapped_confirm(tickets, prompt) -> bool:
+                def wrapped_confirm(tickets: list[Any], prompt: str) -> bool:
                     progress.stop()
                     res = confirm_callback(tickets, prompt)
                     progress.start()

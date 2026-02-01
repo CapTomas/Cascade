@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Knowledge extraction logic for Cascade."""
 
 import json
@@ -43,7 +44,7 @@ class KnowledgeExtractor:
         r"<knowledge_proposal>(.*?)</knowledge_proposal>", re.DOTALL | re.IGNORECASE
     )
 
-    def extract_proposals(self, response_text: str, ticket_id: int | None = None) -> list[Any]:
+    def extract_proposals(self, response_text: str, ticket_id: int | None = None) -> list[Pattern | ADR]:
         """
         Parse the agent response for knowledge proposals.
 
@@ -54,7 +55,7 @@ class KnowledgeExtractor:
         Returns:
             List of Pattern or ADR objects in PROPOSED status.
         """
-        proposals = []
+        proposals: list[Any] = []
         matches = self.PROPOSAL_REGEX.findall(response_text)
 
         for match_text in matches:

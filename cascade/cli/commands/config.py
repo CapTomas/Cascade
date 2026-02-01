@@ -1,6 +1,8 @@
+from __future__ import annotations
 """Config commands for Cascade CLI."""
 
 import click
+from typing import Any
 import yaml
 from rich import box
 from rich.panel import Panel
@@ -272,7 +274,7 @@ def set_theme(ctx: click.Context, name: str | None, scope: str) -> None:
         console.print("[muted]Usage: cascade config theme <name> [--scope user|project][/muted]")
 
 
-def _convert_value(value: str):
+def _convert_value(value: str) -> Any:
     """Convert string value to appropriate type."""
     # Boolean
     if value.lower() in ("true", "yes", "1", "on"):

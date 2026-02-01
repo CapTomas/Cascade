@@ -64,7 +64,7 @@ class GeminiApiAgent(AgentInterface):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:
@@ -161,6 +161,12 @@ class GeminiApiAgent(AgentInterface):
                     error=f"Unexpected error: {str(e)}",
                     execution_time_ms=int((time.time() - start_time) * 1000),
                 )
+
+        return AgentResponse(
+            success=False,
+            content="",
+            error="All execution attempts failed",
+        )
 
     def _get_api_key(self) -> str | None:
         return (

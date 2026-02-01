@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Centralized logging for Cascade."""
 
 import logging
@@ -34,7 +35,7 @@ def setup_logging(
         log_dir = Path.cwd()
         log_file = log_dir / "cascade.log"
 
-    handlers = []
+    handlers: list[logging.Handler] = []
 
     # File handler with rotation (10MB per file, keep 5 copies)
     file_handler = RotatingFileHandler(

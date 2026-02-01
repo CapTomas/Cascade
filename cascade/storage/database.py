@@ -1,9 +1,8 @@
-"""Database connection and management for Cascade."""
-
 import logging
 import sqlite3
 import time
 from collections.abc import Generator
+from typing import Any
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -94,7 +93,7 @@ class Database:
                 raise
 
     def execute(
-        self, query: str, params: tuple = (), *, fetch: bool = False
+        self, query: str, params: tuple[Any, ...] = (), *, fetch: bool = False
     ) -> list[sqlite3.Row] | None:
         """
         Execute a query and optionally fetch results.
@@ -119,7 +118,7 @@ class Database:
             if duration > 0.5:
                 logger.warning(f"Slow query ({duration:.3f}s): {query}")
 
-    def execute_many(self, query: str, params_list: list[tuple]) -> None:
+    def execute_many(self, query: str, params_list: list[tuple[Any, ...]]) -> None:
         """
         Execute a query multiple times with different parameters.
 
@@ -130,7 +129,7 @@ class Database:
         with self.transaction() as conn:
             conn.executemany(query, params_list)
 
-    def fetch_one(self, query: str, params: tuple = ()) -> sqlite3.Row | None:
+    def fetch_one(self, query: str, params: tuple[Any, ...] = ()) -> sqlite3.Row | None:
         """
         Execute query and fetch single result.
 
@@ -143,9 +142,10 @@ class Database:
         """
         with self.connection() as conn:
             cursor = conn.execute(query, params)
-            return cursor.fetchone()
+            row = cursor.fetchone()
+            return row if row else None
 
-    def fetch_all(self, query: str, params: tuple = ()) -> list[sqlite3.Row]:
+    def fetch_all(self, query: str, params: tuple[Any, ...] = ()) -> list[sqlite3.Row]:
         """
         Execute query and fetch all results.
 
@@ -160,7 +160,7 @@ class Database:
             cursor = conn.execute(query, params)
             return cursor.fetchall()
 
-    def insert(self, table: str, data: dict) -> int:
+    def insert(self, table: str, data: dict[str, Any]) -> int:
         """
         Insert a row and return the new ID.
 
@@ -179,7 +179,7 @@ class Database:
             cursor = conn.execute(query, tuple(data.values()))
             return cursor.lastrowid or 0
 
-    def update(self, table: str, data: dict, where: str, params: tuple) -> int:
+    def update(self, table: str, data: dict[str, Any], where: str, params: tuple[Any, ...]) -> int:
         """
         Update rows matching condition.
 
@@ -200,7 +200,7 @@ class Database:
             cursor = conn.execute(query, all_params)
             return cursor.rowcount
 
-    def delete(self, table: str, where: str, params: tuple) -> int:
+    def delete(self, table: str, where: str, params: tuple[Any, ...]) -> int:
         """
         Delete rows matching condition.
 
@@ -218,7 +218,7 @@ class Database:
             cursor = conn.execute(query, params)
             return cursor.rowcount
 
-    def exists(self, table: str, where: str, params: tuple) -> bool:
+    def exists(self, table: str, where: str, params: tuple[Any, ...]) -> bool:
         """
         Check if any rows match condition.
 
@@ -234,7 +234,7 @@ class Database:
         result = self.fetch_one(query, params)
         return result is not None
 
-    def count(self, table: str, where: str = "1=1", params: tuple = ()) -> int:
+    def count(self, table: str, where: str = "1=1", params: tuple[Any, ...] = ()) -> int:
         """
         Count rows matching condition.
 

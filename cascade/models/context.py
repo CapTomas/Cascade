@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Context models for ticket execution."""
 
 from dataclasses import dataclass, field

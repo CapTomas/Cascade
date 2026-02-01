@@ -1,6 +1,6 @@
-"""Models for the planning phase of a Cascade project."""
-
+from __future__ import annotations
 from dataclasses import dataclass, field
+from typing import Any
 
 from cascade.models.enums import Severity, TicketType
 
@@ -37,4 +37,4 @@ class PlanningResult:
     tech_stack: list[str] = field(default_factory=list)
     topics: list[ProposedTopic] = field(default_factory=list)
     tickets: list[ProposedTicket] = field(default_factory=list)
-    suggested_adrs: list[dict] = field(default_factory=list)  # ADR structure
+    suggested_adrs: list[dict[str, Any]] = field(default_factory=list)  # ADR structure

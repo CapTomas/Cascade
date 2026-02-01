@@ -1,3 +1,4 @@
+from __future__ import annotations
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -389,6 +390,7 @@ class TicketExecutor:
                     results_map = {}
                     for t in tickets:
                         # Even if agent says success, we run gates
+                        assert t.id is not None
                         gate_results = self.quality_gates.run_all(t, response)
                         results_map[t.id] = gate_results
 

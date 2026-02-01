@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Destroy command for Cascade CLI."""
 
 import shutil

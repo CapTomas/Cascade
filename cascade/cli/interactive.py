@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Interactive REPL mode for Cascade CLI.
 
 Provides a modern interactive shell with slash commands like Claude/Codex/Gemini CLIs.
@@ -7,6 +8,7 @@ import os
 import shutil
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import questionary
 from prompt_toolkit import PromptSession
@@ -33,12 +35,12 @@ from cascade.utils.git import GitProvider
 class MetaNestedCompleter(NestedCompleter):
     """A nested completer that supports display_meta for its options."""
 
-    def __init__(self, options, meta_dict=None):
+    def __init__(self, options: dict[str, Any], meta_dict: dict[str, str | None] | None = None) -> None:
         super().__init__(options)
         self.meta_dict = meta_dict or {}
 
     @classmethod
-    def from_meta_dict(cls, data):
+    def from_meta_dict(cls, data: dict[str, Any]) -> MetaNestedCompleter:
         """Build from a dict that includes metadata.
 
         Format:
@@ -78,7 +80,8 @@ class MetaNestedCompleter(NestedCompleter):
 
         return cls(options, meta_dict)
 
-    def get_completions(self, document, complete_event):
+    def get_completions(self, document: Any, complete_event: Any) -> Any:
+        """Get completions for nested CLI commands."""
         # Determine if we are completing the current level or a sub-level
         text = document.text_before_cursor.lstrip()
         parts = text.split()
@@ -107,7 +110,7 @@ class SlashCommand:
         self,
         name: str,
         description: str,
-        handler: Callable,
+        handler: Callable[..., Any],
         aliases: list[str] | None = None,
     ):
         self.name = name
@@ -118,6 +121,7 @@ class SlashCommand:
 
 class InteractiveMode:
     """Interactive REPL with slash commands."""
+    _project: Any | None
 
     def __init__(self, console: Console):
         self.console = console
@@ -141,7 +145,7 @@ class InteractiveMode:
             "completion-menu.completion.current": f"bg:{theme.primary} #ffffff",
         })
 
-        self.session = PromptSession(
+        self.session: PromptSession[str] = PromptSession(
             completer=self.completer,
             style=self.pt_style,
         )
@@ -248,7 +252,7 @@ class InteractiveMode:
 
         return MetaNestedCompleter.from_meta_dict(completion_data)
 
-    def _get_project(self):
+    def _get_project(self) -> Any:
         """Lazy load project."""
         if self._project is None:
             try:
@@ -677,13 +681,13 @@ class InteractiveMode:
             tid = int(subargs[0])
             reason = " ".join(subargs[1:]) if len(subargs) > 1 else ""
 
-            updates = {"status": TicketStatus.BLOCKED}
+            updates: dict[str, Any] = {"status": TicketStatus.BLOCKED}
             if reason:
                 t = project.tickets.get(tid)
                 if t:
-                    metadata = t.metadata or {}
-                    metadata["block_reason"] = reason
-                    updates["metadata"] = metadata
+                    meta = t.metadata or {}
+                    meta["block_reason"] = reason
+                    updates["metadata"] = meta
 
             if project.tickets.update(tid, **updates):
                 self.console.print(f"[success]✓[/success] Ticket [accent]#{tid}[/accent] marked [error]BLOCKED[/error]")
@@ -1116,7 +1120,7 @@ class InteractiveMode:
         elif subcmd == "branch":
             if not subargs:
                 # List branches
-                res = git.run_git(["branch"])
+                res = git._run_git(["branch"])
                 if res.success:
                     self.console.print(Panel(res.output, title="Branches", border_style="border"))
                 else:
@@ -1124,21 +1128,21 @@ class InteractiveMode:
             else:
                 # Create/switch branch
                 name = subargs[0]
-                res = git.run_git(["checkout", "-b", name] if "-b" in subargs else ["checkout", name])
+                res = git._run_git(["checkout", "-b", name] if "-b" in subargs else ["checkout", name])
                 if res.success:
                     self.console.print(f"[success]✓[/success] Switched to branch [accent]{name}[/accent]")
                 else:
                     # Try creating if checkout failed and not already tried
                     if "-b" not in subargs:
                         if questionary.confirm(f"Branch '{name}' not found. Create it?").ask():
-                            res = git.run_git(["checkout", "-b", name])
+                            res = git._run_git(["checkout", "-b", name])
                             if res.success:
                                 self.console.print(f"[success]✓[/success] Created and switched to branch [accent]{name}[/accent]")
                                 return
                     self.console.print(f"[error]Git error: {res.error}[/error]")
 
         elif subcmd == "diff":
-            res = git.run_git(["diff", "--stat"])
+            res = git._run_git(["diff", "--stat"])
             if res.success:
                 self.console.print(Panel(res.output or "[muted]No changes[/muted]", title="Git Diff Stat", border_style="border"))
             else:
@@ -1150,8 +1154,8 @@ class InteractiveMode:
                 return
 
             # stage all
-            git.run_git(["add", "."])
-            res = git.run_git(["commit", "-m", msg])
+            git._run_git(["add", "."])
+            res = git._run_git(["commit", "-m", msg])
             if res.success:
                 self.console.print(f"[success]✓[/success] Committed: [muted]{msg}[/muted]")
             else:
@@ -1226,7 +1230,7 @@ class InteractiveMode:
         # Global confirmation state for this execution session
         has_confirmed = False
 
-        def confirm_callback(tickets, prompt) -> bool:
+        def confirm_callback(tickets: list[Any], prompt: str) -> bool:
             nonlocal has_confirmed
             if has_confirmed:
                 return True
@@ -1239,7 +1243,7 @@ class InteractiveMode:
             res = questionary.confirm("Execute ticket(s)?").ask()
             if res:
                 has_confirmed = True
-            return res
+            return bool(res)
 
         if len(ids) > 1:
             # Handle batch execution natively
@@ -1253,7 +1257,7 @@ class InteractiveMode:
                 ) as progress:
                     progress.add_task(description="Running batch execution...", total=None)
 
-                    def wrapped_confirm(ts, p) -> bool:
+                    def batch_confirm(ts: list[Any], p: str) -> bool:
                         progress.stop()
                         res = confirm_callback(ts, p)
                         progress.start()
@@ -1261,7 +1265,7 @@ class InteractiveMode:
 
                     result = executor.execute_batch(
                         ids,
-                        confirm_callback=wrapped_confirm
+                        confirm_callback=batch_confirm
                     )
 
                 if result.success:
@@ -1287,18 +1291,17 @@ class InteractiveMode:
                 ) as progress:
                     progress.add_task(description=f"Agent working on #{tid}...", total=None)
 
-                    def wrapped_confirm(ts, p) -> bool:
+                    from cascade.models.ticket import Ticket
+
+                    def single_confirm(ts: Ticket, p: str) -> bool:
                         progress.stop()
-                        if isinstance(ts, list):
-                            res = confirm_callback(ts, p)
-                        else:
-                            res = confirm_callback([ts], p)
+                        res = confirm_callback([ts], p)
                         progress.start()
                         return res
 
                     result = executor.execute(
                         tid,
-                        confirm_callback=wrapped_confirm
+                        confirm_callback=single_confirm
                     )
 
                 if result.success:
@@ -1482,16 +1485,17 @@ class InteractiveMode:
         self.running = False
         self.console.print("\n[muted]Goodbye! 👋[/muted]\n")
 
-    def _status_style(self, status) -> str:
+    def _status_style(self, status: str | TicketStatus) -> str:
         """Get style for ticket status."""
         from cascade.models.enums import TicketStatus
+        st = status.value if isinstance(status, TicketStatus) else status.upper()
         return {
-            TicketStatus.DEFINED: "muted",
-            TicketStatus.READY: "status.ready",
-            TicketStatus.IN_PROGRESS: "status.progress",
-            TicketStatus.DONE: "success",
-            TicketStatus.BLOCKED: "error",
-        }.get(status, "muted")
+            "DEFINED": "muted",
+            "READY": "status.ready",
+            "IN_PROGRESS": "status.progress",
+            "DONE": "success",
+            "BLOCKED": "error",
+        }.get(st, "muted")
 
 
 def start_interactive_mode(console: Console) -> None:

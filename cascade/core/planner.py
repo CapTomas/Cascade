@@ -1,8 +1,10 @@
+from __future__ import annotations
 """Planner for analyzing requirements and generating a project plan."""
 
 import json
 import logging
 import re
+from typing import Any
 
 from cascade.agents.interface import AgentInterface
 from cascade.core.knowledge_base import KnowledgeBase
@@ -95,15 +97,16 @@ class Planner:
             raise ValueError("No tickets were generated")
 
         # Check for circular dependencies or missing references
-        all_titles = set()
-        def collect_titles(tickets):
+        all_titles: set[str] = set()
+
+        def collect_titles(tickets: list[ProposedTicket]) -> None:
             for t in tickets:
                 all_titles.add(t.title)
                 collect_titles(t.children)
 
         collect_titles(result.tickets)
 
-        def check_deps(tickets):
+        def check_deps(tickets: list[ProposedTicket]) -> None:
             for t in tickets:
                 for dep in t.dependencies:
                     if dep not in all_titles:
@@ -120,7 +123,7 @@ class Planner:
             result: The proposed plan to implement
         """
         # 1. Create topics
-        topic_map = {}
+        topic_map: dict[str, int | None] = {}
         for prop_topic in result.topics:
             topic = self.topic_manager.create(
                 name=prop_topic.name,
@@ -129,9 +132,9 @@ class Planner:
             topic_map[prop_topic.name] = topic.id
 
         # 2. Create tickets (recursively)
-        created_tickets = {}  # title -> id
+        created_tickets: dict[str, int | None] = {}  # title -> id
 
-        def create_recursive(prop_ticket: ProposedTicket, parent_id: int | None = None):
+        def create_recursive(prop_ticket: ProposedTicket, parent_id: int | None = None) -> None:
             # Determine initial status: READY if no dependencies and no children, else DEFINED
             initial_status = TicketStatus.READY
             if prop_ticket.dependencies or prop_ticket.children:
@@ -152,7 +155,10 @@ class Planner:
             # Assign topics
             for t_name in prop_ticket.topics:
                 if t_name in topic_map:
-                    self.topic_manager.assign_ticket(topic_map[t_name], ticket.id)
+                    topic_id = topic_map[t_name]
+                    assert topic_id is not None
+                    assert ticket.id is not None
+                    self.topic_manager.assign_ticket(topic_id, ticket.id)
 
             # Recurse children
             for child in prop_ticket.children:
@@ -163,7 +169,7 @@ class Planner:
 
         # 3. Handle dependencies
         # This is a bit tricky since we need to match by title
-        def process_dependencies(prop_ticket: ProposedTicket):
+        def process_dependencies(prop_ticket: ProposedTicket) -> None:
             current_id = created_tickets.get(prop_ticket.title)
             if current_id:
                 for dep_title in prop_ticket.dependencies:
@@ -231,7 +237,7 @@ class Planner:
             suggested_adrs=data.get("suggested_adrs", []),
         )
 
-    def _parse_tickets(self, tickets_data: list) -> list[ProposedTicket]:
+    def _parse_tickets(self, tickets_data: list[dict[str, Any]]) -> list[ProposedTicket]:
         """Recursively parse tickets from JSON data."""
         tickets = []
         for t_data in tickets_data:

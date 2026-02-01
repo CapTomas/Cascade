@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Onboarding and initialization utilities for Cascade CLI.
 
 Extracted from init.py to be shared with interactive mode.
@@ -247,7 +248,10 @@ def run_onboarding(console: Console, project_path: Path) -> bool:
         return False
 
 
-def _display_proposed_plan(console: Console, plan) -> None:
+from typing import Any
+
+
+def _display_proposed_plan(console: Console, plan: Any) -> None:
     """Display the proposed project plan (copied from init.py for independence)."""
     from rich import box
 
@@ -278,7 +282,7 @@ def _display_proposed_plan(console: Console, plan) -> None:
         ticket_table = create_table(["Type", "Title", "Severity", "Subtasks"])
         ticket_table.title = "[header]Proposed Tickets[/header]"
 
-        def add_to_table(tickets, indent=0):
+        def add_to_table(tickets: list[Any], indent: int = 0) -> None:
             for t in tickets:
                 type_str = "  " * indent + t.ticket_type.value.lower()
                 sev_str = t.severity.value.upper() if t.severity else "MEDIUM"

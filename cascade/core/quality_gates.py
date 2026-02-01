@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Quality gate framework for enforcing project standards."""
 
 import logging
@@ -243,7 +244,7 @@ class QualityGates:
         self.gates: list[BaseGate] = []
         self._load_gates()
 
-    def _load_gates(self):
+    def _load_gates(self) -> None:
         """Load enabled gates from configuration."""
         q = self.config.quality
 

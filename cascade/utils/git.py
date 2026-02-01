@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Git provider for repository operations."""
 
 import subprocess

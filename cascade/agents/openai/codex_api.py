@@ -1,5 +1,5 @@
-"""Codex agent implementation via OpenAI API."""
 from __future__ import annotations
+"""Codex agent implementation via OpenAI API."""
 
 import json
 import logging
@@ -58,7 +58,7 @@ class CodexApiAgent(AgentInterface):
         self,
         prompt: str,
         working_dir: str | None = None,
-        callback: Callable | None = None,
+        callback: Callable[[str], None] | None = None,
     ) -> AgentResponse:
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:

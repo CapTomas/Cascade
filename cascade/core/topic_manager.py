@@ -1,6 +1,8 @@
+from __future__ import annotations
 """Topic management for Cascade."""
 
 from datetime import datetime
+from typing import Any
 
 from cascade.models.enums import TicketStatus
 from cascade.models.ticket import Ticket
@@ -120,7 +122,7 @@ class TopicManager:
         rows = self.db.fetch_all("SELECT * FROM topics ORDER BY name")
         return [self._row_to_topic(row) for row in rows]
 
-    def update(self, topic_id: int, **updates) -> Topic | None:
+    def update(self, topic_id: int, **updates: Any) -> Topic | None:
         """
         Update topic fields.
 
@@ -316,7 +318,7 @@ class TopicManager:
             )
         return result[0] if result else 0
 
-    def get_progress(self, topic_id: int) -> dict:
+    def get_progress(self, topic_id: int) -> dict[str, Any]:
         """
         Get progress statistics for a topic.
 
@@ -339,6 +341,6 @@ class TopicManager:
             "percentage": (done / total * 100) if total > 0 else 0,
         }
 
-    def _row_to_topic(self, row) -> Topic:
+    def _row_to_topic(self, row: Any) -> Topic:
         """Convert database row to Topic object."""
         return Topic.from_dict(dict(row))

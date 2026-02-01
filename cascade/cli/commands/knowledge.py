@@ -1,6 +1,8 @@
+from __future__ import annotations
 """Knowledge commands for Cascade CLI."""
 
 import click
+from typing import Any
 
 from cascade.cli.styles import (
     console,
@@ -157,7 +159,7 @@ def conventions(ctx: click.Context, category: str | None) -> None:
         print_banner("Project Conventions")
 
         # Group by category
-        grouped: dict[str, list] = {}
+        grouped: dict[str, list[Any]] = {}
         for c in convs:
             grouped.setdefault(c.category, []).append(c)
 

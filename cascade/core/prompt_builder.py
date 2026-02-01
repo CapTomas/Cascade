@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Prompt builder for ticket execution."""
 
 import logging

@@ -1,5 +1,5 @@
-"""Agent registry and helpers."""
 from __future__ import annotations
+"""Agent registry and helpers."""
 
 from cascade.agents.anthropic.claude_api import ClaudeApiAgent
 from cascade.agents.anthropic.claude_cli import ClaudeCliAgent
@@ -8,6 +8,7 @@ from cascade.agents.google.gemini_api import GeminiApiAgent
 from cascade.agents.google.gemini_cli import GeminiCliAgent
 from cascade.agents.interface import AgentConfig, AgentInterface
 from cascade.agents.manual import ManualAgent
+from typing import Any, cast
 from cascade.agents.openai.codex_api import CodexApiAgent
 from cascade.agents.openai.codex_cli import CodexCliAgent
 
@@ -100,7 +101,7 @@ def get_agent(name: str, config: AgentConfig | None = None) -> AgentInterface:
     return _AGENT_INSTANCES[name]
 
 
-def resolve_agent_name(ticket_type: str, agent_config: AgentConfig) -> str:
+def resolve_agent_name(ticket_type: str, agent_config: Any) -> str:
     """
     Resolve agent name based on ticket type and configuration.
 
@@ -116,9 +117,9 @@ def resolve_agent_name(ticket_type: str, agent_config: AgentConfig) -> str:
         orch = {k.lower(): v for k, v in agent_config.orchestration.items()}
         type_key = ticket_type.lower()
         if type_key in orch:
-            return orch[type_key]
+            return cast(str, orch[type_key])
 
-    return agent_config.default
+    return cast(str, agent_config.default)
 
 
 def get_agent_class_for_provider(provider: str, mode: str) -> type[AgentInterface]:

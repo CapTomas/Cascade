@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Modern theme system for Cascade CLI.
 
 Provides customizable color schemes inspired by Claude, Codex, and Gemini CLIs.
@@ -6,6 +7,7 @@ Provides customizable color schemes inspired by Claude, Codex, and Gemini CLIs.
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from rich.theme import Theme
 
@@ -139,7 +141,7 @@ class ThemeManager:
 
     def __init__(self) -> None:
         self._current_theme: ColorTheme | None = None
-        self._user_config: dict = {}
+        self._user_config: dict[str, Any] = {}
         self._load_user_config()
 
     def _load_user_config(self) -> None:
@@ -192,11 +194,11 @@ class ThemeManager:
         """List available theme names."""
         return list(THEMES.keys())
 
-    def get_user_preference(self, key: str, default: any = None) -> any:
+    def get_user_preference(self, key: str, default: Any = None) -> Any:
         """Get a user preference."""
         return self._user_config.get(key, default)
 
-    def set_user_preference(self, key: str, value: any) -> None:
+    def set_user_preference(self, key: str, value: Any) -> None:
         """Set a user preference."""
         self._user_config[key] = value
         self._save_user_config()
