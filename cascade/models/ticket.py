@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -83,7 +84,7 @@ class Ticket:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Ticket":
+    def from_dict(cls, data: dict[str, Any]) -> Ticket:
         """Create ticket from dictionary."""
         # Handle datetime fields
         for field_name in ("created_at", "updated_at", "completed_at"):

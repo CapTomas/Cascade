@@ -12,6 +12,7 @@ from cascade.cli.main import cli
 def runner():
     return CliRunner()
 
+
 @pytest.fixture
 def temp_project(tmp_path):
     """Create a temporary project for CLI tests."""
@@ -19,6 +20,7 @@ def temp_project(tmp_path):
     project_dir.mkdir()
     os.chdir(project_dir)
     return project_dir
+
 
 def test_cli_init(runner, temp_project):
     """Test 'cascade init' command."""
@@ -28,6 +30,7 @@ def test_cli_init(runner, temp_project):
     assert "✓" in result.output or "INITIALIZED" in result.output
     assert os.path.exists(".cascade")
 
+
 def test_cli_status(runner, temp_project):
     """Test 'cascade status' command."""
     runner.invoke(cli, ["init", "--name", "Test Status Project"])
@@ -36,6 +39,7 @@ def test_cli_status(runner, temp_project):
     # New dashboard-style output shows project name and ticket info
     assert "Project" in result.output or "Ticket" in result.output
 
+
 def test_cli_ticket_list(runner, temp_project):
     """Test 'cascade ticket list' command."""
     runner.invoke(cli, ["init", "--name", "Test Ticket Project"])
@@ -43,6 +47,7 @@ def test_cli_ticket_list(runner, temp_project):
     assert result.exit_code == 0
     # Empty state message or ticket catalog header
     assert "ticket" in result.output.lower()
+
 
 def test_cli_topic_create_list(runner, temp_project):
     """Test topic creation and listing."""
@@ -53,6 +58,7 @@ def test_cli_topic_create_list(runner, temp_project):
     assert result.exit_code == 0
     assert "auth" in result.output.lower()
 
+
 def test_cli_type_command(runner, temp_project):
     """Test 'cascade type' command."""
     runner.invoke(cli, ["init", "--name", "Test Type Project"])
@@ -60,6 +66,7 @@ def test_cli_type_command(runner, temp_project):
     assert result.exit_code == 0
     # Check for bug type or no tickets message
     assert "bug" in result.output.lower() or "no" in result.output.lower()
+
 
 def test_cli_config_show(runner, temp_project):
     """Test 'cascade config show' command."""

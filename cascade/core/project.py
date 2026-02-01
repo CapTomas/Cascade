@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Project management and initialization for Cascade."""
+
+from __future__ import annotations
 
 import logging
 from pathlib import Path
@@ -288,9 +289,7 @@ def get_project(project_root: Path | None = None) -> CascadeProject:
     project = CascadeProject(project_root)
 
     if not project.is_initialized and project_root is None:
-        raise FileNotFoundError(
-            "No Cascade project found. Run 'cascade init' to initialize."
-        )
+        raise FileNotFoundError("No Cascade project found. Run 'cascade init' to initialize.")
 
     return project
 

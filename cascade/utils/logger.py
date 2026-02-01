@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Centralized logging for Cascade."""
+
+from __future__ import annotations
 
 import logging
 import sys
@@ -8,9 +9,7 @@ from pathlib import Path
 
 
 def setup_logging(
-    level: int = logging.INFO,
-    log_file: Path | None = None,
-    console: bool = True
+    level: int = logging.INFO, log_file: Path | None = None, console: bool = True
 ) -> None:
     """
     Configure global logging for Cascade.
@@ -39,14 +38,9 @@ def setup_logging(
 
     # File handler with rotation (10MB per file, keep 5 copies)
     file_handler = RotatingFileHandler(
-        log_file,
-        maxBytes=10 * 1024 * 1024,
-        backupCount=5,
-        encoding="utf-8"
+        log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
     )
-    file_fmt = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    file_fmt = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(file_fmt)
     handlers.append(file_handler)
 
@@ -54,9 +48,7 @@ def setup_logging(
     if console:
         console_handler = logging.StreamHandler(sys.stdout)
         # Professional CLI format: just level and message for console
-        console_fmt = logging.Formatter(
-            "%(levelname)s: %(message)s"
-        )
+        console_fmt = logging.Formatter("%(levelname)s: %(message)s")
         console_handler.setFormatter(console_fmt)
         handlers.append(console_handler)
 
@@ -64,7 +56,7 @@ def setup_logging(
     logging.basicConfig(
         level=level,
         handlers=handlers,
-        force=True  # Ensure we override any existing basicConfig
+        force=True,  # Ensure we override any existing basicConfig
     )
 
     logging.info(f"Logging initialized at level {logging.getLevelName(level)}")

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -17,7 +18,7 @@ class ProposedTicket:
     estimated_effort: int | None = None
     topics: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)  # Titles of dependent tickets
-    children: list["ProposedTicket"] = field(default_factory=list)
+    children: list[ProposedTicket] = field(default_factory=list)
 
 
 @dataclass

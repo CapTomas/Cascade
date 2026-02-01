@@ -2,7 +2,6 @@ import shutil
 import subprocess
 import time
 from collections.abc import Callable
-from typing import Any
 
 from cascade.agents.interface import (
     AgentCapabilities,
@@ -84,11 +83,7 @@ class GeminiCliAgent(AgentInterface):
             return AgentResponse(success=False, content="", error=error)
 
         if not self.is_available():
-            return AgentResponse(
-                success=False,
-                content="",
-                error="Gemini CLI not found"
-            )
+            return AgentResponse(success=False, content="", error="Gemini CLI not found")
 
         start_time = time.time()
 
@@ -185,7 +180,7 @@ class GeminiCliAgent(AgentInterface):
             logger.exception("Unexpected error executing Gemini CLI")
             return AgentResponse(
                 success=False,
-                content="".join(stdout_lines) if 'stdout_lines' in locals() else "",
+                content="".join(stdout_lines) if "stdout_lines" in locals() else "",
                 error=f"Unexpected error: {str(e)}",
                 execution_time_ms=int((time.time() - start_time) * 1000),
             )
@@ -199,7 +194,7 @@ class GeminiCliAgent(AgentInterface):
 
         if self.config.extra_args:
             for arg in self.config.extra_args:
-                if not any(char in arg for char in [';', '&', '|', '>', '<']):
+                if not any(char in arg for char in [";", "&", "|", ">", "<"]):
                     cmd.append(arg)
 
         return cmd

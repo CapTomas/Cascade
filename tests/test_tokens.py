@@ -9,17 +9,20 @@ class TestCountTokens:
     def test_empty_string_returns_zero(self):
         """Empty string should return 0 tokens."""
         from cascade.utils.tokens import count_tokens
+
         assert count_tokens("") == 0
 
     def test_none_returns_zero(self):
         """None/empty should return 0 tokens."""
         from cascade.utils.tokens import count_tokens
+
         # Empty string test
         assert count_tokens("") == 0
 
     def test_simple_text_with_tiktoken(self):
         """Test token counting with tiktoken available."""
         from cascade.utils.tokens import count_tokens
+
         # Simple sentence should return reasonable token count
         result = count_tokens("Hello, world!")
         assert result > 0
@@ -28,6 +31,7 @@ class TestCountTokens:
     def test_longer_text(self):
         """Test counting tokens in longer text."""
         from cascade.utils.tokens import count_tokens
+
         long_text = "This is a longer piece of text that should have more tokens. " * 10
         result = count_tokens(long_text)
         assert result > 50  # Should be significantly more than simple text
@@ -35,6 +39,7 @@ class TestCountTokens:
     def test_different_models(self):
         """Test token counting with different model names."""
         from cascade.utils.tokens import count_tokens
+
         text = "Hello, world!"
 
         # All should use cl100k_base encoding (as per implementation)
@@ -58,6 +63,7 @@ class TestCountTokens:
             tokens.tiktoken = None
 
             from cascade.utils.tokens import count_tokens
+
             text = "This is a test string with exactly forty characters!"
             result = count_tokens(text)
 
@@ -82,6 +88,7 @@ class TestCountTokens:
             tokens.tiktoken = mock_tiktoken
 
             from cascade.utils.tokens import count_tokens
+
             text = "Test text for error handling"
             result = count_tokens(text)
 

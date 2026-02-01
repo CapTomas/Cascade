@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Prompt builder for ticket execution."""
+
+from __future__ import annotations
 
 import logging
 
@@ -96,35 +97,37 @@ class PromptBuilder:
                 prompt.append(f"{t.description}")
                 prompt.append("")
 
-        prompt.extend([
-            "## Instructions",
-            "1. **Implement exactly** what the ticket describes. Do not over-engineer.",
-            "2. **Strictly follow** the project conventions provided above.",
-            "3. **Test-Driven Development**: If you are adding new functionality, ensure corresponding unit tests are created or updated.",
-            "4. **Isolation**: Do not modify unrelated code. If you discover a bug elsewhere, note it but do not fix it unless it blocks this ticket.",
-            "5. **Clean Code**: Ensure your code is professional, documented, and follows the tech stack best practices.",
-            "6. **Summary**: Provide a concise summary of your changes (files changed, main logic) after implementation.",
-            "7. **Propose Knowledge**: If you identify a reusable pattern or a significant architectural decision, propose it using the following format at the end of your response:",
-            "",
-            "<knowledge_proposal>",
-            "---",
-            "type: PATTERN",
-            "name: Pattern Name",
-            "description: What it does",
-            "template: |",
-            "  Code template here",
-            "tags: [tag1, tag2]",
-            "examples: [file1.py]",
-            "---",
-            "type: ADR",
-            "title: Decision Title",
-            "context: Why now?",
-            "decision: What decided?",
-            "rationale: Why this?",
-            "consequences: What next?",
-            "alternatives: What else?",
-            "</knowledge_proposal>"
-        ])
+        prompt.extend(
+            [
+                "## Instructions",
+                "1. **Implement exactly** what the ticket describes. Do not over-engineer.",
+                "2. **Strictly follow** the project conventions provided above.",
+                "3. **Test-Driven Development**: If you are adding new functionality, ensure corresponding unit tests are created or updated.",
+                "4. **Isolation**: Do not modify unrelated code. If you discover a bug elsewhere, note it but do not fix it unless it blocks this ticket.",
+                "5. **Clean Code**: Ensure your code is professional, documented, and follows the tech stack best practices.",
+                "6. **Summary**: Provide a concise summary of your changes (files changed, main logic) after implementation.",
+                "7. **Propose Knowledge**: If you identify a reusable pattern or a significant architectural decision, propose it using the following format at the end of your response:",
+                "",
+                "<knowledge_proposal>",
+                "---",
+                "type: PATTERN",
+                "name: Pattern Name",
+                "description: What it does",
+                "template: |",
+                "  Code template here",
+                "tags: [tag1, tag2]",
+                "examples: [file1.py]",
+                "---",
+                "type: ADR",
+                "title: Decision Title",
+                "context: Why now?",
+                "decision: What decided?",
+                "rationale: Why this?",
+                "consequences: What next?",
+                "alternatives: What else?",
+                "</knowledge_proposal>",
+            ]
+        )
 
         return "\n".join(prompt)
 
@@ -150,18 +153,20 @@ class PromptBuilder:
             description = self._sanitize(ticket.description)
             ac = self._sanitize(ticket.acceptance_criteria)
 
-            prompt.extend([
-                f"## Ticket #{ticket.id}: {title}",
-                f"Type: {ticket.ticket_type.value}",
-                f"Priority: {ticket.severity.value if ticket.severity else 'MEDIUM'}",
-                "",
-                "### Description",
-                f"{description}",
-                "",
-                "### Acceptance Criteria",
-                f"{ac or 'None specified'}",
-                "",
-            ])
+            prompt.extend(
+                [
+                    f"## Ticket #{ticket.id}: {title}",
+                    f"Type: {ticket.ticket_type.value}",
+                    f"Priority: {ticket.severity.value if ticket.severity else 'MEDIUM'}",
+                    "",
+                    "### Description",
+                    f"{description}",
+                    "",
+                    "### Acceptance Criteria",
+                    f"{ac or 'None specified'}",
+                    "",
+                ]
+            )
 
         prompt.append("## Project Conventions")
         prompt.append(context.conventions_text)
@@ -177,19 +182,21 @@ class PromptBuilder:
             prompt.append(context.adrs_text)
             prompt.append("")
 
-        prompt.extend([
-            "## Instructions",
-            "1. **Implement all tickets** described above.",
-            "2. **Strictly follow** the project conventions provided.",
-            "3. **Test-Driven Development**: Ensure corresponding unit tests are created or updated for ALL changes.",
-            "4. **Batch Summary**: You MUST provide a status summary for EACH ticket using the following XML format at the end of your response:",
-            "",
-            "<batch_summary>",
-            "- TICKET #ID: [SUCCESS|FAILED] - Brief explanation",
-            "</batch_summary>",
-            "",
-            "5. **Propose Knowledge**: If applicable, use the `<knowledge_proposal>` format as described in project conventions.",
-        ])
+        prompt.extend(
+            [
+                "## Instructions",
+                "1. **Implement all tickets** described above.",
+                "2. **Strictly follow** the project conventions provided.",
+                "3. **Test-Driven Development**: Ensure corresponding unit tests are created or updated for ALL changes.",
+                "4. **Batch Summary**: You MUST provide a status summary for EACH ticket using the following XML format at the end of your response:",
+                "",
+                "<batch_summary>",
+                "- TICKET #ID: [SUCCESS|FAILED] - Brief explanation",
+                "</batch_summary>",
+                "",
+                "5. **Propose Knowledge**: If applicable, use the `<knowledge_proposal>` format as described in project conventions.",
+            ]
+        )
 
         return "\n".join(prompt)
 
@@ -303,18 +310,20 @@ Ensure the JSON is valid and follows the schema strictly.
                 prompt.append(f"Acceptance Criteria: {t.acceptance_criteria}")
             prompt.append("")
 
-        prompt.extend([
-            "## Instructions",
-            "1. Analyze dependencies and priorities.",
-            "2. Select the single most impactful ticket OR a BATCH of 2-4 highly related tickets that should be tackled next.",
-            "3. Provide your selection in the following format:",
-            "",
-            "SELECTION: #ID1, #ID2 (if batch) or SELECTION: #ID",
-            "TYPE: [SINGLE|BATCH]",
-            "RATIONALE: Detailed reasoning why this ticket or batch is next.",
-            "",
-            "4. Do not include any other text except the selection, type, and rationale."
-        ])
+        prompt.extend(
+            [
+                "## Instructions",
+                "1. Analyze dependencies and priorities.",
+                "2. Select the single most impactful ticket OR a BATCH of 2-4 highly related tickets that should be tackled next.",
+                "3. Provide your selection in the following format:",
+                "",
+                "SELECTION: #ID1, #ID2 (if batch) or SELECTION: #ID",
+                "TYPE: [SINGLE|BATCH]",
+                "RATIONALE: Detailed reasoning why this ticket or batch is next.",
+                "",
+                "4. Do not include any other text except the selection, type, and rationale.",
+            ]
+        )
 
         return "\n".join(prompt)
 

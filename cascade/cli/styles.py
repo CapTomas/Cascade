@@ -1,8 +1,9 @@
-from __future__ import annotations
 """Premium styling utilities for Cascade CLI.
 
 Integrates with the theme system for consistent styling across commands.
 """
+
+from __future__ import annotations
 
 from rich import box
 from rich.console import Console
@@ -35,7 +36,9 @@ CASCADE_THEME = _get_cascade_theme()
 
 def print_banner(title: str) -> None:
     """Print a minimalist section banner."""
-    console.print(f"\n[accent]●[/accent] [header]{title.upper()}[/header] " + "─" * (40 - len(title)))
+    console.print(
+        f"\n[accent]●[/accent] [header]{title.upper()}[/header] " + "─" * (40 - len(title))
+    )
 
 
 def create_hud(items: list[tuple[str, str]], title: str = "SYSTEM STATUS") -> Panel:
@@ -50,7 +53,7 @@ def create_hud(items: list[tuple[str, str]], title: str = "SYSTEM STATUS") -> Pa
         title=f"[muted]{title}[/muted]",
         border_style="border",
         box=box.ROUNDED,
-        padding=(0, 1)
+        padding=(0, 1),
     )
 
 
@@ -77,13 +80,7 @@ def print_step(message: str, current: int, total: int) -> None:
 
 def create_panel(content: str, title: str | None = None, border_style: str = "border") -> Panel:
     """Create a rich panel with modern styling."""
-    return Panel(
-        content,
-        title=title,
-        border_style=border_style,
-        box=box.ROUNDED,
-        padding=(1, 2)
-    )
+    return Panel(content, title=title, border_style=border_style, box=box.ROUNDED, padding=(1, 2))
 
 
 def print_success(message: str) -> None:
@@ -125,7 +122,7 @@ def get_progress() -> Progress:
         BarColumn(bar_width=None, pulse_style="accent"),
         TaskProgressColumn(),
         console=console,
-        transient=True
+        transient=True,
     )
 
 
@@ -146,6 +143,7 @@ def print_logo() -> None:
 def print_welcome(project_name: str | None = None, agent: str | None = None) -> None:
     """Print a welcome message."""
     from cascade.cli.ui import create_welcome_box
+
     welcome = create_welcome_box(
         console,
         project_name=project_name,

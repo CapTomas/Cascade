@@ -2,7 +2,6 @@ import shutil
 import subprocess
 import time
 from collections.abc import Callable
-from typing import Any
 
 from cascade.agents.interface import (
     AgentCapabilities,
@@ -84,11 +83,7 @@ class CodexCliAgent(AgentInterface):
             return AgentResponse(success=False, content="", error=error)
 
         if not self.is_available():
-            return AgentResponse(
-                success=False,
-                content="",
-                error="Codex CLI not found"
-            )
+            return AgentResponse(success=False, content="", error="Codex CLI not found")
 
         start_time = time.time()
 
@@ -106,7 +101,7 @@ class CodexCliAgent(AgentInterface):
                 stderr=subprocess.PIPE,
                 text=True,
                 cwd=working_dir,
-                env=self._get_environment()
+                env=self._get_environment(),
             )
 
             stdout_lines = []
@@ -180,9 +175,9 @@ class CodexCliAgent(AgentInterface):
             logger.exception("Error running Codex CLI")
             return AgentResponse(
                 success=False,
-                content="".join(stdout_lines) if 'stdout_lines' in locals() else "",
+                content="".join(stdout_lines) if "stdout_lines" in locals() else "",
                 error=str(e),
-                execution_time_ms=int((time.time() - start_time) * 1000)
+                execution_time_ms=int((time.time() - start_time) * 1000),
             )
 
     def _build_command(self, prompt: str) -> list[str]:
@@ -191,12 +186,12 @@ class CodexCliAgent(AgentInterface):
             self.CLI_COMMAND,
             "exec",  # Use exec subcommand for non-interactive execution
             "--dangerously-bypass-approvals-and-sandbox",  # Skip confirmation
-            prompt
+            prompt,
         ]
 
         if self.config.extra_args:
             for arg in self.config.extra_args:
-                if not any(char in arg for char in [';', '&', '|', '>', '<']):
+                if not any(char in arg for char in [";", "&", "|", ">", "<"]):
                     cmd.append(arg)
 
         return cmd

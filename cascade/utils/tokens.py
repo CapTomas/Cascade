@@ -1,11 +1,13 @@
-from __future__ import annotations
 """Token counting utility for Cascade."""
+
+from __future__ import annotations
 
 import logging
 from typing import Any
 
 try:
     import tiktoken
+
     HAS_TIKTOKEN = True
 except ImportError:
     tiktoken = None  # type: ignore

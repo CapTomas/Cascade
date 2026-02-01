@@ -1,6 +1,5 @@
 """Tests for KnowledgeBase."""
 
-
 from cascade.models.enums import KnowledgeStatus
 
 

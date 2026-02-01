@@ -9,11 +9,17 @@ from cascade.utils.git import GitProvider
 
 # --- Metrics Tests ---
 
+
 def test_metrics_aggregation():
     """Test aggregation of execution logic."""
     mock_db = MagicMock()
     mock_db.fetch_all.return_value = [
-        {"agent": "claude", "context_mode": "minimal", "token_count": 100, "execution_time_ms": 1000},
+        {
+            "agent": "claude",
+            "context_mode": "minimal",
+            "token_count": 100,
+            "execution_time_ms": 1000,
+        },
         {"agent": "claude", "context_mode": "full", "token_count": 200, "execution_time_ms": 2000},
     ]
 
@@ -30,6 +36,7 @@ def test_metrics_aggregation():
 
 # --- Git Tests ---
 
+
 @patch("subprocess.run")
 def test_git_provider_create_branch(mock_run):
     """Test git branch creation."""
@@ -42,6 +49,7 @@ def test_git_provider_create_branch(mock_run):
     # Expect sanitized name
     args = mock_run.call_args[0][0]
     assert args[1:] == ["checkout", "-b", "feature-test"]
+
 
 @patch("subprocess.run")
 def test_git_provider_commit(mock_run):
@@ -60,17 +68,18 @@ def test_git_provider_commit(mock_run):
 
 # --- Orchestration Tests ---
 
+
 @dataclass
 class MockAgentConfig:
     default: str
     orchestration: dict
 
+
 def test_resolve_agent_name():
     """Test agent name resolution."""
     # Use a mock config similar to ProjectConfig's AgentConfig
     config = MockAgentConfig(
-        default="default-agent",
-        orchestration={"docs": "doc-agent", "bug": "bug-agent"}
+        default="default-agent", orchestration={"docs": "doc-agent", "bug": "bug-agent"}
     )
 
     # Matching type

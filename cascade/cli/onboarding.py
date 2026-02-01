@@ -1,10 +1,12 @@
-from __future__ import annotations
 """Onboarding and initialization utilities for Cascade CLI.
 
 Extracted from init.py to be shared with interactive mode.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
 
 from rich import box
 from rich.console import Console
@@ -23,13 +25,15 @@ def configure_agent(console: Console, project: CascadeProject) -> None:
     from cascade.agents.registry import get_agent
 
     console.print()
-    console.print(Panel(
-        "[header]Agent Configuration[/header]\n\n"
-        "[muted]Checking for installed AI tools...[/muted]",
-        border_style="border",
-        box=box.ROUNDED,
-        padding=(0, 2),
-    ))
+    console.print(
+        Panel(
+            "[header]Agent Configuration[/header]\n\n"
+            "[muted]Checking for installed AI tools...[/muted]",
+            border_style="border",
+            box=box.ROUNDED,
+            padding=(0, 2),
+        )
+    )
 
     # Check for CLI tools
     available_clis = []
@@ -48,20 +52,23 @@ def configure_agent(console: Console, project: CascadeProject) -> None:
     if len(available_clis) == 1:
         # Only one CLI found - Use it
         selected_agent = available_clis[0]
-        console.print(f"[success]✓[/success] Detected [accent]{selected_agent}[/accent]. Setting as default.")
+        console.print(
+            f"[success]✓[/success] Detected [accent]{selected_agent}[/accent]. Setting as default."
+        )
         project.config.agent.default = selected_agent
         project.save_config()
         return
 
     elif len(available_clis) > 1:
         # Multiple CLIs found - Ask user (if interactive)
-        console.print(f"[success]✓[/success] Detected: {', '.join(f'[accent]{a}[/accent]' for a in available_clis)}")
+        console.print(
+            f"[success]✓[/success] Detected: {', '.join(f'[accent]{a}[/accent]' for a in available_clis)}"
+        )
 
         # Check if we're in an interactive environment
         if sys.stdin.isatty():
             selected_agent = questionary.select(
-                "Which agent would you like to use as default?",
-                choices=available_clis
+                "Which agent would you like to use as default?", choices=available_clis
             ).ask()
             if selected_agent:
                 project.config.agent.default = selected_agent
@@ -88,12 +95,7 @@ def configure_agent(console: Console, project: CascadeProject) -> None:
     console.print("[muted]Please select an AI provider to configure (API Key required):[/muted]")
 
     provider_choice = questionary.select(
-        "Select Provider:",
-        choices=[
-            "Anthropic (Claude)",
-            "Google (Gemini)",
-            "OpenAI (Codex)"
-        ]
+        "Select Provider:", choices=["Anthropic (Claude)", "Google (Gemini)", "OpenAI (Codex)"]
     ).ask()
 
     if not provider_choice:
@@ -106,12 +108,14 @@ def configure_agent(console: Console, project: CascadeProject) -> None:
     provider_map = {
         "Anthropic (Claude)": ("claude", "ANTHROPIC_API_KEY"),
         "Google (Gemini)": ("google", "ANTIGRAVITY_API_KEY"),
-        "OpenAI (Codex)": ("openai", "OPENAI_API_KEY")
+        "OpenAI (Codex)": ("openai", "OPENAI_API_KEY"),
     }
 
     provider_key, env_var_name = provider_map[provider_choice]
 
-    console.print(f"\n[muted]You can find your API key in your {provider_choice.split()[0]} account settings.[/muted]")
+    console.print(
+        f"\n[muted]You can find your API key in your {provider_choice.split()[0]} account settings.[/muted]"
+    )
     api_key = questionary.password(f"Enter your {env_var_name}:").ask()
 
     if not api_key:
@@ -125,18 +129,16 @@ def configure_agent(console: Console, project: CascadeProject) -> None:
         project.config.agent.configurations[provider_key] = {}
     project.config.agent.configurations[provider_key]["mode"] = "api"
 
-    agent_name_map = {
-        "claude": "claude-api",
-        "google": "gemini-api",
-        "openai": "codex-api"
-    }
+    agent_name_map = {"claude": "claude-api", "google": "gemini-api", "openai": "codex-api"}
     project.config.agent.default = agent_name_map[provider_key]
     project.save_config()
 
     # 2. Save Securely to .env
     save_to_env(project.cascade_dir.parent, env_var_name, api_key)
     console.print("[success]✓[/success] API key saved securely to [muted].env[/muted]")
-    console.print(f"[success]✓[/success] Default agent set to [accent]{project.config.agent.default}[/accent]")
+    console.print(
+        f"[success]✓[/success] Default agent set to [accent]{project.config.agent.default}[/accent]"
+    )
 
 
 def run_onboarding(console: Console, project_path: Path) -> bool:
@@ -151,15 +153,17 @@ def run_onboarding(console: Console, project_path: Path) -> bool:
 
     from cascade.cli.styles import get_progress, print_error, print_info, print_success
 
-    console.print(Panel(
-        "[header]Welcome to Cascade![/header]\n\n"
-        "AI assists, human directs. It looks like this directory is not yet\n"
-        "initialized as a Cascade project.\n\n"
-        "[muted]Initialize now to start building with AI orchestration?[/muted]",
-        border_style="accent",
-        box=box.ROUNDED,
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            "[header]Welcome to Cascade![/header]\n\n"
+            "AI assists, human directs. It looks like this directory is not yet\n"
+            "initialized as a Cascade project.\n\n"
+            "[muted]Initialize now to start building with AI orchestration?[/muted]",
+            border_style="accent",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        )
+    )
 
     if not questionary.confirm("Initialize Cascade project here?", default=True).ask():
         print_info("Onboarding cancelled. You can run 'cascade init' later.")
@@ -198,42 +202,51 @@ def run_onboarding(console: Console, project_path: Path) -> bool:
         requirements = None
 
         if detected_req_file:
-            if questionary.confirm(f"Detected [accent]{detected_req_file.name}[/accent]. Use it as project requirements?", default=True).ask():
+            if questionary.confirm(
+                f"Detected [accent]{detected_req_file.name}[/accent]. Use it as project requirements?",
+                default=True,
+            ).ask():
                 try:
                     requirements = detected_req_file.read_text(encoding="utf-8")
                 except Exception as e:
                     print_error(f"Failed to read file: {str(e)}")
 
         if not requirements:
-            if questionary.confirm("Would you like AI to analyze your requirements and generate a plan?", default=False).ask():
-                requirements = questionary.text("Describe what you want to build (or leave empty to skip):").ask()
+            if questionary.confirm(
+                "Would you like AI to analyze your requirements and generate a plan?", default=False
+            ).ask():
+                requirements = questionary.text(
+                    "Describe what you want to build (or leave empty to skip):"
+                ).ask()
 
         if requirements:
-                with get_progress() as progress:
-                    task = progress.add_task("[muted]Analyzing requirements with AI...", total=100)
-                    try:
-                        plan = project.planner.plan(requirements)
-                        progress.update(task, completed=100, description="[success]Analysis complete[/success]")
+            with get_progress() as progress:
+                task = progress.add_task("[muted]Analyzing requirements with AI...", total=100)
+                try:
+                    plan = project.planner.plan(requirements)
+                    progress.update(
+                        task, completed=100, description="[success]Analysis complete[/success]"
+                    )
 
-                        # Update project config
-                        project.config.name = plan.project_name
-                        project.config.description = plan.project_description
-                        project.config.tech_stack = plan.tech_stack
-                        project.save_config()
+                    # Update project config
+                    project.config.name = plan.project_name
+                    project.config.description = plan.project_description
+                    project.config.tech_stack = plan.tech_stack
+                    project.save_config()
 
-                        # Display and confirm plan
-                        console.print()
-                        _display_proposed_plan(console, plan)
+                    # Display and confirm plan
+                    console.print()
+                    _display_proposed_plan(console, plan)
 
-                        if questionary.confirm("Generate this project plan?", default=True).ask():
-                            with get_progress() as progress:
-                                task = progress.add_task("[muted]Generating tickets...", total=100)
-                                project.planner.generate_tickets(plan)
-                                progress.update(task, completed=100)
-                            print_success("Project plan generated successfully.")
-                    except Exception as e:
-                        progress.update(task, description="[error]Analysis failed[/error]")
-                        print_error(f"Failed to generate plan: {str(e)}")
+                    if questionary.confirm("Generate this project plan?", default=True).ask():
+                        with get_progress() as progress:
+                            task = progress.add_task("[muted]Generating tickets...", total=100)
+                            project.planner.generate_tickets(plan)
+                            progress.update(task, completed=100)
+                        print_success("Project plan generated successfully.")
+                except Exception as e:
+                    progress.update(task, description="[error]Analysis failed[/error]")
+                    print_error(f"Failed to generate plan: {str(e)}")
 
         console.print()
         print_success("Initialization complete! Entering interactive mode...")
@@ -248,9 +261,6 @@ def run_onboarding(console: Console, project_path: Path) -> bool:
         return False
 
 
-from typing import Any
-
-
 def _display_proposed_plan(console: Console, plan: Any) -> None:
     """Display the proposed project plan (copied from init.py for independence)."""
     from rich import box
@@ -259,15 +269,17 @@ def _display_proposed_plan(console: Console, plan: Any) -> None:
 
     tech_stack = ", ".join(f"[accent]{t}[/accent]" for t in plan.tech_stack)
 
-    console.print(Panel(
-        f"[header]{plan.project_name}[/header]\n\n"
-        f"[muted]{plan.project_description}[/muted]\n\n"
-        f"[label]Tech Stack:[/label] {tech_stack}",
-        title="[accent]Proposed Project[/accent]",
-        border_style="accent",
-        box=box.ROUNDED,
-        padding=(1, 2),
-    ))
+    console.print(
+        Panel(
+            f"[header]{plan.project_name}[/header]\n\n"
+            f"[muted]{plan.project_description}[/muted]\n\n"
+            f"[label]Tech Stack:[/label] {tech_stack}",
+            title="[accent]Proposed Project[/accent]",
+            border_style="accent",
+            box=box.ROUNDED,
+            padding=(1, 2),
+        )
+    )
 
     if plan.topics:
         console.print()
@@ -288,12 +300,7 @@ def _display_proposed_plan(console: Console, plan: Any) -> None:
                 sev_str = t.severity.value.upper() if t.severity else "MEDIUM"
                 subtasks = str(len(t.children)) if t.children else "-"
 
-                ticket_table.add_row(
-                    f"[muted]{type_str}[/muted]",
-                    t.title,
-                    sev_str,
-                    subtasks
-                )
+                ticket_table.add_row(f"[muted]{type_str}[/muted]", t.title, sev_str, subtasks)
                 if t.children:
                     add_to_table(t.children, indent + 1)
 

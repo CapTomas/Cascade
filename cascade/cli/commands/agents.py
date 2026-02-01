@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Agents commands for Cascade CLI."""
+
+from __future__ import annotations
 
 import click
 
@@ -69,7 +70,8 @@ def show_cmd(ctx: click.Context, name: str) -> None:
         f"[label]Token Limit:[/label] {agent.get_token_limit()}\n"
         f"[label]Streaming:[/label]   {'[success]YES[/success]' if caps.supports_streaming else '[dim]NO[/dim]'}\n"
         f"[label]Tools:[/label]       {'[success]YES[/success]' if caps.supports_tools else '[dim]NO[/dim]'}\n\n"
-        f"[label]Capabilities:[/label]\n [dim]•[/dim] " + "\n [dim]•[/dim] ".join(sorted(c.value for c in caps.capabilities))
+        f"[label]Capabilities:[/label]\n [dim]•[/dim] "
+        + "\n [dim]•[/dim] ".join(sorted(c.value for c in caps.capabilities))
     )
 
     console.print(create_panel(info, border_style="dim"))

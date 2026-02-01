@@ -1,6 +1,6 @@
-from __future__ import annotations
 """Topic commands for Cascade CLI."""
 
+from __future__ import annotations
 
 import click
 
@@ -26,7 +26,8 @@ def topic(ctx: click.Context) -> None:
 @topic.command("create")
 @click.argument("name")
 @click.option(
-    "--description", "-d",
+    "--description",
+    "-d",
     default="",
     help="Topic description",
 )
@@ -77,10 +78,7 @@ def list_topics(ctx: click.Context) -> None:
                 pct_str = f"[dim]{pct:.0f}%[/dim]"
 
             table.add_row(
-                f"[accent]{t.name}[/accent]",
-                str(progress["total"]),
-                str(progress["done"]),
-                pct_str
+                f"[accent]{t.name}[/accent]", str(progress["total"]), str(progress["done"]), pct_str
             )
 
         console.print(table)
@@ -93,13 +91,15 @@ def list_topics(ctx: click.Context) -> None:
 @topic.command("show")
 @click.argument("name")
 @click.option(
-    "--status", "-s",
+    "--status",
+    "-s",
     type=click.Choice([s.value for s in TicketStatus], case_sensitive=False),
     default=None,
     help="Filter tickets by status",
 )
 @click.option(
-    "--next", "execute_next",
+    "--next",
+    "execute_next",
     is_flag=True,
     help="Execute the next priority ticket in this topic",
 )
@@ -127,6 +127,7 @@ def show(ctx: click.Context, name: str, status: str | None, execute_next: bool) 
 
             ticket = tickets[0]
             from cascade.cli.commands.ticket import execute
+
             ctx.invoke(execute, ticket_id=ticket.id)
             return
 
@@ -156,6 +157,7 @@ def show(ctx: click.Context, name: str, status: str | None, execute_next: bool) 
 
             for ticket in tickets:
                 from cascade.cli.commands.ticket import _status_style
+
                 st_style = _status_style(ticket.status)
 
                 table.add_row(
@@ -219,9 +221,13 @@ def unassign(ctx: click.Context, topic_name: str, ticket_id: int) -> None:
         removed = project.topics.unassign_ticket(t.id, ticket_id)
 
         if removed:
-            print_success(f"Removed ticket [id]#{ticket_id}[/id] from topic [accent]{t.name}[/accent]")
+            print_success(
+                f"Removed ticket [id]#{ticket_id}[/id] from topic [accent]{t.name}[/accent]"
+            )
         else:
-            console.print(f"[warning]TICKET #{ticket_id}[/warning] was not assigned to [accent]{t.name}[/accent]")
+            console.print(
+                f"[warning]TICKET #{ticket_id}[/warning] was not assigned to [accent]{t.name}[/accent]"
+            )
 
     except FileNotFoundError as e:
         print_error(str(e))

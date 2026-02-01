@@ -62,12 +62,19 @@ quality_gates:
         """Test creating a ticket with basic info."""
         with runner.isolated_filesystem(temp_dir=project_dir):
             os.chdir(project_dir)
-            result = runner.invoke(cli, [
-                "ticket", "create",
-                "--title", "Test ticket",
-                "--type", "TASK",
-                "--description", "This is a test"
-            ])
+            result = runner.invoke(
+                cli,
+                [
+                    "ticket",
+                    "create",
+                    "--title",
+                    "Test ticket",
+                    "--type",
+                    "TASK",
+                    "--description",
+                    "This is a test",
+                ],
+            )
 
             # Check creation was attempted
             assert result.exit_code in [0, 1]  # May fail due to DB not being initialized
@@ -273,11 +280,16 @@ agent:
         """Test creating a topic."""
         with runner.isolated_filesystem(temp_dir=project_dir):
             os.chdir(project_dir)
-            result = runner.invoke(cli, [
-                "topic", "create",
-                "authentication",
-                "--description", "User authentication features"
-            ])
+            result = runner.invoke(
+                cli,
+                [
+                    "topic",
+                    "create",
+                    "authentication",
+                    "--description",
+                    "User authentication features",
+                ],
+            )
 
             # Should attempt to create
             assert result.exit_code in [0, 1]

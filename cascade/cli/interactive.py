@@ -1,8 +1,9 @@
-from __future__ import annotations
 """Interactive REPL mode for Cascade CLI.
 
 Provides a modern interactive shell with slash commands like Claude/Codex/Gemini CLIs.
 """
+
+from __future__ import annotations
 
 import os
 import shutil
@@ -35,7 +36,9 @@ from cascade.utils.git import GitProvider
 class MetaNestedCompleter(NestedCompleter):
     """A nested completer that supports display_meta for its options."""
 
-    def __init__(self, options: dict[str, Any], meta_dict: dict[str, str | None] | None = None) -> None:
+    def __init__(
+        self, options: dict[str, Any], meta_dict: dict[str, str | None] | None = None
+    ) -> None:
         super().__init__(options)
         self.meta_dict = meta_dict or {}
 
@@ -94,7 +97,7 @@ class MetaNestedCompleter(NestedCompleter):
                     yield Completion(
                         completion.text,
                         start_position=completion.start_position,
-                        display_meta=self.meta_dict[completion.text]
+                        display_meta=self.meta_dict[completion.text],
                     )
                 else:
                     yield completion
@@ -121,6 +124,7 @@ class SlashCommand:
 
 class InteractiveMode:
     """Interactive REPL with slash commands."""
+
     _project: Any | None
 
     def __init__(self, console: Console):
@@ -138,12 +142,14 @@ class InteractiveMode:
         self.completer = self._build_completer()
 
         # prompt_toolkit style
-        self.pt_style = PTStyle.from_dict({
-            "prompt": theme.primary,
-            "arrow": f"bold {theme.primary}",
-            "completion-menu.completion": "bg:#333333 #ffffff",
-            "completion-menu.completion.current": f"bg:{theme.primary} #ffffff",
-        })
+        self.pt_style = PTStyle.from_dict(
+            {
+                "prompt": theme.primary,
+                "arrow": f"bold {theme.primary}",
+                "completion-menu.completion": "bg:#333333 #ffffff",
+                "completion-menu.completion.current": f"bg:{theme.primary} #ffffff",
+            }
+        )
 
         self.session: PromptSession[str] = PromptSession(
             completer=self.completer,
@@ -188,7 +194,10 @@ class InteractiveMode:
             "ready": {"__meta__": "Mark tickets as ready", "<ids...>": {"__meta__": "argument"}},
             "block": {"__meta__": "Mark ticket as blocked", "<id>": {"__meta__": "argument"}},
             "delete": {"__meta__": "Delete a ticket", "<id>": {"__meta__": "argument"}},
-            "execute": {"__meta__": "Execute a ticket with AI agent", "<id>": {"__meta__": "argument"}},
+            "execute": {
+                "__meta__": "Execute a ticket with AI agent",
+                "<id>": {"__meta__": "argument"},
+            },
             "depends": {"__meta__": "Manage ticket dependencies", "<id>": {"__meta__": "argument"}},
         }
         topic_subs = {
@@ -200,7 +209,11 @@ class InteractiveMode:
         kb_subs = {
             "__meta__": "View and manage knowledge base",
             "pending": {"__meta__": "View pending knowledge items"},
-            "approve": {"__meta__": "Approve knowledge items", "pattern": {"__meta__": "type"}, "adr": {"__meta__": "type"}},
+            "approve": {
+                "__meta__": "Approve knowledge items",
+                "pattern": {"__meta__": "type"},
+                "adr": {"__meta__": "type"},
+            },
             "conventions": {"__meta__": "List all conventions"},
         }
         git_subs = {
@@ -213,7 +226,11 @@ class InteractiveMode:
         settings_subs = {
             "__meta__": "Configure Cascade settings",
             "show": {"__meta__": "Show current configuration"},
-            "set": {"__meta__": "Set a configuration value", "theme": {"__meta__": "option"}, "agent": {"__meta__": "option"}},
+            "set": {
+                "__meta__": "Set a configuration value",
+                "theme": {"__meta__": "option"},
+                "agent": {"__meta__": "option"},
+            },
         }
 
         # Build nested data
@@ -231,8 +248,18 @@ class InteractiveMode:
             "execute": {"__meta__": "Execute ready tickets", "<id>": {"__meta__": "argument"}},
             "e": {"__meta__": "Execute ready tickets", "<id>": {"__meta__": "argument"}},
             "settings": settings_subs,
-            "model": {"__meta__": "Change AI agent", "claude-code": {"__meta__": "agent"}, "codex-cli": {"__meta__": "agent"}, "gemini-cli": {"__meta__": "agent"}},
-            "theme": {"__meta__": "Change color theme", "studio": {"__meta__": "theme"}, "modern": {"__meta__": "theme"}, "classic": {"__meta__": "theme"}},
+            "model": {
+                "__meta__": "Change AI agent",
+                "claude-code": {"__meta__": "agent"},
+                "codex-cli": {"__meta__": "agent"},
+                "gemini-cli": {"__meta__": "agent"},
+            },
+            "theme": {
+                "__meta__": "Change color theme",
+                "studio": {"__meta__": "theme"},
+                "modern": {"__meta__": "theme"},
+                "classic": {"__meta__": "theme"},
+            },
             "docs": {"__meta__": "Open documentation"},
             "destroy": {"__meta__": "Uninitialize Cascade project"},
             "clear": {"__meta__": "Clear screen"},
@@ -257,6 +284,7 @@ class InteractiveMode:
         if self._project is None:
             try:
                 from cascade.core.project import get_project
+
                 self._project = get_project()
             except (FileNotFoundError, Exception):
                 pass
@@ -289,12 +317,14 @@ class InteractiveMode:
 
         # Warning if in home directory
         if Path.cwd() == Path.home():
-            self.console.print(Panel(
-                "[warning]⚠[/warning] You are running Cascade in your home directory.\n"
-                "[muted]For best experience, run it in a project directory.[/muted]",
-                border_style="warning",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    "[warning]⚠[/warning] You are running Cascade in your home directory.\n"
+                    "[muted]For best experience, run it in a project directory.[/muted]",
+                    border_style="warning",
+                    box=box.ROUNDED,
+                )
+            )
 
         self.console.print()
 
@@ -322,6 +352,7 @@ class InteractiveMode:
             project = self._get_project()
             if project is None:
                 from cascade.cli.onboarding import run_onboarding
+
                 if run_onboarding(self.console, Path.cwd()):
                     # Project was initialized, reset lazy loaded project
                     self._project = None
@@ -380,15 +411,17 @@ class InteractiveMode:
 
     def _handle_natural_input(self, input_str: str) -> None:
         """Handle natural language input."""
-        self.console.print(Panel(
-            "[muted]Natural language mode coming soon![/muted]\n\n"
-            "For now, use commands:\n"
-            "  [accent]status[/accent]  - View project dashboard\n"
-            "  [accent]ticket[/accent]  - Manage tickets\n"
-            "  [accent]help[/accent]    - See all commands",
-            border_style="border",
-            box=box.ROUNDED,
-        ))
+        self.console.print(
+            Panel(
+                "[muted]Natural language mode coming soon![/muted]\n\n"
+                "For now, use commands:\n"
+                "  [accent]status[/accent]  - View project dashboard\n"
+                "  [accent]ticket[/accent]  - Manage tickets\n"
+                "  [accent]help[/accent]    - See all commands",
+                border_style="border",
+                box=box.ROUNDED,
+            )
+        )
 
     # Command handlers
     def _cmd_help(self, args: str) -> None:
@@ -411,12 +444,14 @@ class InteractiveMode:
 
             table.add_row(cmd_str, cmd.description)
 
-        self.console.print(Panel(
-            table,
-            title="[header]Available Commands[/header]",
-            border_style="border",
-            box=box.ROUNDED,
-        ))
+        self.console.print(
+            Panel(
+                table,
+                title="[header]Available Commands[/header]",
+                border_style="border",
+                box=box.ROUNDED,
+            )
+        )
 
     def _cmd_status(self, args: str) -> None:
         """Show project status."""
@@ -434,12 +469,15 @@ class InteractiveMode:
 
         # 1. Top HUD
         from cascade.cli.ui import create_status_hud
-        hud = create_status_hud([
-            ("Project", status_data['name']),
-            ("Agent", agent),
-            ("Topics", str(status_data['topics'])),
-            ("Tickets", str(metrics.tickets.total)),
-        ])
+
+        hud = create_status_hud(
+            [
+                ("Project", status_data["name"]),
+                ("Agent", agent),
+                ("Topics", str(status_data["topics"])),
+                ("Tickets", str(metrics.tickets.total)),
+            ]
+        )
         self.console.print(Panel(hud, border_style="border", box=box.ROUNDED, padding=(0, 1)))
 
         # 2. Main Body (Columns)
@@ -457,39 +495,61 @@ class InteractiveMode:
         pass_rate = metrics.quality.pass_rate * 100
         quality_info.append("Pass Rate: ", style="muted")
         quality_info.append(f"{pass_rate:.1f}%", style="success" if pass_rate > 80 else "warning")
-        quality_info.append(f"\nTests Run: [accent]{metrics.quality.total_runs}[/accent]", style="muted")
+        quality_info.append(
+            f"\nTests Run: [accent]{metrics.quality.total_runs}[/accent]", style="muted"
+        )
 
         left_group = Group(
             Text("\nTicket Status", style="header"),
             ticket_stats,
             Text("\nQuality Gates", style="header"),
-            quality_info
+            quality_info,
         )
 
         # Right: Activity & Knowledge
         activity_stats = Text()
-        activity_stats.append(f"Executions: [accent]{metrics.execution.total_executions}[/accent]\n", style="muted")
-        activity_stats.append(f"Total Tokens: [accent]{metrics.execution.total_tokens}[/accent]\n", style="muted")
-        activity_stats.append(f"Avg Time:     [accent]{metrics.execution.avg_time_ms_per_execution/1000:.1f}s[/accent]\n", style="muted")
+        activity_stats.append(
+            f"Executions: [accent]{metrics.execution.total_executions}[/accent]\n", style="muted"
+        )
+        activity_stats.append(
+            f"Total Tokens: [accent]{metrics.execution.total_tokens}[/accent]\n", style="muted"
+        )
+        activity_stats.append(
+            f"Avg Time:     [accent]{metrics.execution.avg_time_ms_per_execution / 1000:.1f}s[/accent]\n",
+            style="muted",
+        )
 
         kb_data = project.kb.get_pending_knowledge()
         kb_pending = len(kb_data["patterns"]) + len(kb_data["adrs"])
         knowledge_stats = Text()
         knowledge_stats.append("Pending Review: ", style="muted")
         knowledge_stats.append(f"{kb_pending}\n", style="warning" if kb_pending > 0 else "muted")
-        knowledge_stats.append(f"Approved Pat:   [accent]{len(project.kb.get_patterns())}[/accent]\n", style="muted")
+        knowledge_stats.append(
+            f"Approved Pat:   [accent]{len(project.kb.get_patterns())}[/accent]\n", style="muted"
+        )
 
         right_group = Group(
             Text("\nActivity Info", style="header"),
             activity_stats,
             Text("\nKnowledge Base", style="header"),
-            knowledge_stats
+            knowledge_stats,
         )
 
-        main_cols = Columns([
-            Panel(left_group, title="[header]Progress[/header]", border_style="border", expand=True),
-            Panel(right_group, title="[header]Vitals[/header]", border_style="border", expand=True)
-        ], equal=True, expand=True)
+        main_cols = Columns(
+            [
+                Panel(
+                    left_group,
+                    title="[header]Progress[/header]",
+                    border_style="border",
+                    expand=True,
+                ),
+                Panel(
+                    right_group, title="[header]Vitals[/header]", border_style="border", expand=True
+                ),
+            ],
+            equal=True,
+            expand=True,
+        )
 
         self.console.print(main_cols)
 
@@ -498,16 +558,18 @@ class InteractiveMode:
         if tickets:
             self.console.print("\n[header]Recent Activity[/header]")
             table = create_modern_table(["#", "Type", "Status", "Title", "Sev"])
-            for t in tickets[:3]: # Show top 3 for compactness
+            for t in tickets[:3]:  # Show top 3 for compactness
                 status_style = self._status_style(t.status)
                 sev_val = t.severity.value if t.severity else "low"
-                sev_display = f"[severity.{sev_val}]{sev_val.upper()}[/]" if t.severity else "[muted]-[ /]"
+                sev_display = (
+                    f"[severity.{sev_val}]{sev_val.upper()}[/]" if t.severity else "[muted]-[ /]"
+                )
                 table.add_row(
                     f"[accent]{t.id}[/accent]",
                     t.ticket_type.value.capitalize(),
                     f"[{status_style}]{t.status.value}[/{status_style}]",
                     t.title[:50],
-                    sev_display
+                    sev_display,
                 )
             self.console.print(table)
         else:
@@ -533,12 +595,14 @@ class InteractiveMode:
             help_table.add_row("[accent]delete <id>[/accent]", "Delete a ticket")
             help_table.add_row("[accent]execute <id>[/accent]", "Execute a ticket with AI agent")
 
-            self.console.print(Panel(
-                help_table,
-                title="[header]Ticket Subcommands[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    help_table,
+                    title="[header]Ticket Subcommands[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
 
             # Auto-list tickets as well
             tickets = project.tickets.list_all(limit=15)
@@ -547,19 +611,25 @@ class InteractiveMode:
                 for t in tickets:
                     status_style = self._status_style(t.status)
                     sev_val = t.severity.value if t.severity else "low"
-                    sev_display = f"[severity.{sev_val}]{sev_val.upper()}[/]" if t.severity else "[muted]-[ /]"
+                    sev_display = (
+                        f"[severity.{sev_val}]{sev_val.upper()}[/]"
+                        if t.severity
+                        else "[muted]-[ /]"
+                    )
                     table.add_row(
                         f"[accent]{t.id}[/accent]",
                         t.ticket_type.value.capitalize(),
                         f"[{status_style}]{t.status.value}[/{status_style}]",
                         t.title[:50] + ("..." if len(t.title) > 50 else ""),
-                        sev_display
+                        sev_display,
                     )
                 self.console.print(table)
 
                 total = project.tickets.count()
                 if total > 15:
-                    self.console.print(f"\n[info]ℹ[/info] Showing 15 of {total} tickets. Use [accent]ticket list[/accent] to browse all tickets with interactive pagination.")
+                    self.console.print(
+                        f"\n[info]ℹ[/info] Showing 15 of {total} tickets. Use [accent]ticket list[/accent] to browse all tickets with interactive pagination."
+                    )
             return
 
         parts = args.split()
@@ -582,22 +652,28 @@ class InteractiveMode:
                 for t in tickets:
                     status_style = self._status_style(t.status)
                     sev_val = t.severity.value if t.severity else "low"
-                    sev_display = f"[severity.{sev_val}]{sev_val.upper()}[/]" if t.severity else "[muted]-[ /]"
+                    sev_display = (
+                        f"[severity.{sev_val}]{sev_val.upper()}[/]"
+                        if t.severity
+                        else "[muted]-[ /]"
+                    )
                     table.add_row(
                         f"[accent]{t.id}[/accent]",
                         t.ticket_type.value.capitalize(),
                         f"[{status_style}]{t.status.value}[/{status_style}]",
                         t.title[:50] + ("..." if len(t.title) > 50 else ""),
-                        sev_display
+                        sev_display,
                     )
 
                 self.console.clear()
-                self.console.print(Panel(
-                    table,
-                    title=f"[header]Ticket List - Page {page + 1}/{max(1, total_pages)}[/header]",
-                    border_style="border",
-                    box=box.ROUNDED,
-                ))
+                self.console.print(
+                    Panel(
+                        table,
+                        title=f"[header]Ticket List - Page {page + 1}/{max(1, total_pages)}[/header]",
+                        border_style="border",
+                        box=box.ROUNDED,
+                    )
+                )
 
                 if total_pages <= 1:
                     break
@@ -609,10 +685,7 @@ class InteractiveMode:
                     choices.append("Previous Page")
                 choices.append("Exit Pager")
 
-                action = questionary.select(
-                    "Navigation:",
-                    choices=choices
-                ).ask()
+                action = questionary.select("Navigation:", choices=choices).ask()
 
                 if action == "Next Page":
                     page += 1
@@ -622,7 +695,11 @@ class InteractiveMode:
                     break
 
         elif subcmd == "show" or (len(parts) == 1 and parts[0].isdigit()):
-            ticket_id_str = subargs[0] if subcmd == "show" and subargs else (parts[0] if parts[0].isdigit() else None)
+            ticket_id_str = (
+                subargs[0]
+                if subcmd == "show" and subargs
+                else (parts[0] if parts[0].isdigit() else None)
+            )
             if not ticket_id_str:
                 self.console.print("[error]Usage: ticket show <id>[/error]")
                 return
@@ -631,7 +708,9 @@ class InteractiveMode:
             if t:
                 status_style = self._status_style(t.status)
                 sev_val = t.severity.value if t.severity else "low"
-                sev_display = f"[severity.{sev_val}]{sev_val.upper()}[/]" if t.severity else "[muted]-[ /]"
+                sev_display = (
+                    f"[severity.{sev_val}]{sev_val.upper()}[/]" if t.severity else "[muted]-[ /]"
+                )
 
                 content = (
                     f"[label]Type:[/label]      {t.ticket_type.value}\n"
@@ -642,12 +721,14 @@ class InteractiveMode:
                 if t.acceptance_criteria:
                     content += f"\n[header]Acceptance Criteria[/header]\n{t.acceptance_criteria}"
 
-                self.console.print(Panel(
-                    content.strip(),
-                    title=f"[header]#{t.id}[/header] {t.title}",
-                    border_style="border",
-                    box=box.ROUNDED,
-                ))
+                self.console.print(
+                    Panel(
+                        content.strip(),
+                        title=f"[header]#{t.id}[/header] {t.title}",
+                        border_style="border",
+                        box=box.ROUNDED,
+                    )
+                )
             else:
                 self.console.print(f"[error]Ticket #{ticket_id_str} not found[/error]")
 
@@ -662,10 +743,14 @@ class InteractiveMode:
                     continue
                 tid = int(tid_str)
                 if project.tickets.has_unmet_dependencies(tid):
-                    self.console.print(f"[warning]Ticket #{tid} is blocked by unmet dependencies.[/warning]")
+                    self.console.print(
+                        f"[warning]Ticket #{tid} is blocked by unmet dependencies.[/warning]"
+                    )
                     continue
                 if project.tickets.update_status(tid, TicketStatus.READY):
-                    self.console.print(f"[success]✓[/success] Ticket [accent]#{tid}[/accent] marked [status.ready]READY[/status.ready]")
+                    self.console.print(
+                        f"[success]✓[/success] Ticket [accent]#{tid}[/accent] marked [status.ready]READY[/status.ready]"
+                    )
                     success_count += 1
                 else:
                     self.console.print(f"[error]Ticket #{tid} not found[/error]")
@@ -690,7 +775,9 @@ class InteractiveMode:
                     updates["metadata"] = meta
 
             if project.tickets.update(tid, **updates):
-                self.console.print(f"[success]✓[/success] Ticket [accent]#{tid}[/accent] marked [error]BLOCKED[/error]")
+                self.console.print(
+                    f"[success]✓[/success] Ticket [accent]#{tid}[/accent] marked [error]BLOCKED[/error]"
+                )
             else:
                 self.console.print(f"[error]Ticket #{tid} not found[/error]")
 
@@ -705,7 +792,9 @@ class InteractiveMode:
                 self.console.print(f"[error]Ticket #{tid} not found[/error]")
                 return
 
-            if questionary.confirm(f"Are you sure you want to delete ticket #{tid}: {t.title}?").ask():
+            if questionary.confirm(
+                f"Are you sure you want to delete ticket #{tid}: {t.title}?"
+            ).ask():
                 project.tickets.delete(tid)
                 self.console.print(f"[success]✓[/success] Deleted ticket [accent]#{tid}[/accent]")
             else:
@@ -718,16 +807,13 @@ class InteractiveMode:
                 return
 
             t_type = questionary.select(
-                "Ticket type:",
-                choices=[t.value for t in TicketType],
-                default=TicketType.TASK.value
+                "Ticket type:", choices=[t.value for t in TicketType], default=TicketType.TASK.value
             ).ask()
 
             description = questionary.text("Description (optional):").ask()
 
             severity = questionary.select(
-                "Severity (optional):",
-                choices=["none"] + [s.value for s in Severity]
+                "Severity (optional):", choices=["none"] + [s.value for s in Severity]
             ).ask()
             severity = None if severity == "none" else severity
 
@@ -737,7 +823,9 @@ class InteractiveMode:
                 description=description,
                 severity=Severity(severity) if severity else None,
             )
-            self.console.print(f"[success]✓[/success] Created ticket [accent]#{new_t.id}[/accent]: {new_t.title}")
+            self.console.print(
+                f"[success]✓[/success] Created ticket [accent]#{new_t.id}[/accent]: {new_t.title}"
+            )
 
         elif subcmd == "execute":
             # Delegate to our optimized _cmd_execute
@@ -757,7 +845,7 @@ class InteractiveMode:
             # Interactive update
             field = questionary.select(
                 "Select field to update:",
-                choices=["title", "description", "status", "severity", "cancel"]
+                choices=["title", "description", "status", "severity", "cancel"],
             ).ask()
 
             if field == "cancel":
@@ -765,16 +853,14 @@ class InteractiveMode:
 
             if field == "status":
                 new_val = questionary.select(
-                    "New status:",
-                    choices=[s.value for s in TicketStatus],
-                    default=t.status.value
+                    "New status:", choices=[s.value for s in TicketStatus], default=t.status.value
                 ).ask()
                 updates = {"status": TicketStatus(new_val)}
             elif field == "severity":
                 new_val = questionary.select(
                     "New severity:",
                     choices=["none"] + [s.value for s in Severity],
-                    default=t.severity.value if t.severity else "none"
+                    default=t.severity.value if t.severity else "none",
                 ).ask()
                 updates = {"severity": None if new_val == "none" else Severity(new_val)}
             else:
@@ -804,12 +890,14 @@ class InteractiveMode:
             help_table.add_row("[accent]create <name>[/accent]", "Create a new topic")
             help_table.add_row("[accent]delete <name>[/accent]", "Delete a topic")
 
-            self.console.print(Panel(
-                help_table,
-                title="[header]Topic Subcommands[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    help_table,
+                    title="[header]Topic Subcommands[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
 
             topics = project.topics.list_all()
             if not topics:
@@ -820,9 +908,7 @@ class InteractiveMode:
             for t in topics:
                 ticket_count = len(project.topics.get_tickets(t.id))
                 table.add_row(
-                    f"[accent]{t.name}[/accent]",
-                    str(ticket_count),
-                    (t.description or "-")[:40]
+                    f"[accent]{t.name}[/accent]", str(ticket_count), (t.description or "-")[:40]
                 )
             self.console.print(table)
             return
@@ -840,9 +926,7 @@ class InteractiveMode:
             for t in topics:
                 ticket_count = len(project.topics.get_tickets(t.id))
                 table.add_row(
-                    f"[accent]{t.name}[/accent]",
-                    str(ticket_count),
-                    (t.description or "-")[:40]
+                    f"[accent]{t.name}[/accent]", str(ticket_count), (t.description or "-")[:40]
                 )
             self.console.print(table)
 
@@ -888,15 +972,19 @@ class InteractiveMode:
             # Show subcommands help
             help_table = create_modern_table(["Subcommand", "Description"])
             help_table.add_row("[accent]pending[/accent]", "View pending knowledge items")
-            help_table.add_row("[accent]approve <type> <id>[/accent]", "Approve knowledge (pattern/adr)")
+            help_table.add_row(
+                "[accent]approve <type> <id>[/accent]", "Approve knowledge (pattern/adr)"
+            )
             help_table.add_row("[accent]conventions[/accent]", "List all conventions")
 
-            self.console.print(Panel(
-                help_table,
-                title="[header]Knowledge Subcommands[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    help_table,
+                    title="[header]Knowledge Subcommands[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
 
             # Show summary
             pending_data = project.kb.get_pending_knowledge()
@@ -906,16 +994,18 @@ class InteractiveMode:
             adrs = project.kb.get_adrs(status=KnowledgeStatus.APPROVED)
             conventions = project.kb.get_conventions()
 
-            self.console.print(Panel(
-                f"[label]Pending Review:[/label] [accent]{pending_count}[/accent]\n"
-                f"[label]Patterns:[/label]       [accent]{len(patterns)}[/accent]\n"
-                f"[label]ADRs:[/label]           [accent]{len(adrs)}[/accent]\n"
-                f"[label]Conventions:[/label]    [accent]{len(conventions)}[/accent]\n\n"
-                "[muted]Use knowledge <subcommand> for details[/muted]",
-                title="[header]Knowledge Base Summary[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    f"[label]Pending Review:[/label] [accent]{pending_count}[/accent]\n"
+                    f"[label]Patterns:[/label]       [accent]{len(patterns)}[/accent]\n"
+                    f"[label]ADRs:[/label]           [accent]{len(adrs)}[/accent]\n"
+                    f"[label]Conventions:[/label]    [accent]{len(conventions)}[/accent]\n\n"
+                    "[muted]Use knowledge <subcommand> for details[/muted]",
+                    title="[header]Knowledge Base Summary[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
             return
 
         parts = args.split()
@@ -992,22 +1082,26 @@ class InteractiveMode:
             help_table.add_row("[accent]--quality[/accent]", "Quality gate performance")
             help_table.add_row("[accent]--activity[/accent]", "Daily activity log")
 
-            self.console.print(Panel(
-                help_table,
-                title="[header]Metrics Subcommands[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    help_table,
+                    title="[header]Metrics Subcommands[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
 
-            self.console.print(Panel(
-                f"[label]Total Executions:[/label]  [accent]{metrics.execution.total_executions}[/accent]\n"
-                f"[label]Total Tokens:[/label]      [accent]{metrics.execution.total_tokens}[/accent]\n"
-                f"[label]Avg Duration:[/label]      [accent]{metrics.execution.avg_time_ms_per_execution / 1000.0:.1f}s[/accent]\n"
-                f"[label]Tickets Done:[/label]      [accent]{metrics.tickets.by_status.get('DONE', 0)}[/accent]",
-                title="[header]Project Metrics Overview[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    f"[label]Total Executions:[/label]  [accent]{metrics.execution.total_executions}[/accent]\n"
+                    f"[label]Total Tokens:[/label]      [accent]{metrics.execution.total_tokens}[/accent]\n"
+                    f"[label]Avg Duration:[/label]      [accent]{metrics.execution.avg_time_ms_per_execution / 1000.0:.1f}s[/accent]\n"
+                    f"[label]Tickets Done:[/label]      [accent]{metrics.tickets.by_status.get('DONE', 0)}[/accent]",
+                    title="[header]Project Metrics Overview[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
             self.console.print("[muted]Append options like --tickets to see more detail[/muted]")
             return
 
@@ -1024,14 +1118,21 @@ class InteractiveMode:
             for ttype, count in metrics.tickets.by_type.items():
                 type_table.add_row(ttype, str(count))
 
-            self.console.print(Columns([
-                Panel(status_table, title="By Status", border_style="border"),
-                Panel(type_table, title="By Type", border_style="border")
-            ], equal=True))
+            self.console.print(
+                Columns(
+                    [
+                        Panel(status_table, title="By Status", border_style="border"),
+                        Panel(type_table, title="By Type", border_style="border"),
+                    ],
+                    equal=True,
+                )
+            )
 
             if metrics.tickets.estimated_effort > 0:
                 accuracy = metrics.tickets.effort_accuracy * 100
-                self.console.print(f"\n[label]Effort Estimation Accuracy:[/label] [accent]{accuracy:.1f}%[/accent]")
+                self.console.print(
+                    f"\n[label]Effort Estimation Accuracy:[/label] [accent]{accuracy:.1f}%[/accent]"
+                )
 
         if "--quality" in args:
             self.console.print("\n[header]Quality Gate Performance[/header]")
@@ -1039,7 +1140,9 @@ class InteractiveMode:
             failed = metrics.quality.failed
             rate = metrics.quality.pass_rate * 100
 
-            self.console.print(f"Pass Rate: [accent]{rate:.1f}%[/accent] ({passed} passed, {failed} failed)\n")
+            self.console.print(
+                f"Pass Rate: [accent]{rate:.1f}%[/accent] ({passed} passed, {failed} failed)\n"
+            )
 
             gate_table = create_modern_table(["Gate", "Passed", "Failed", "Rate"])
             for gate, stats in metrics.quality.by_gate.items():
@@ -1049,7 +1152,7 @@ class InteractiveMode:
                     gate,
                     f"[success]{stats['passed']}[/]",
                     f"[error]{stats['failed']}[/]",
-                    f"{g_rate:.1f}%"
+                    f"{g_rate:.1f}%",
                 )
             self.console.print(gate_table)
 
@@ -1086,24 +1189,28 @@ class InteractiveMode:
             help_table.add_row("[accent]commit[/accent]", "Commit changes")
             help_table.add_row("[accent]diff[/accent]", "Show changes")
 
-            self.console.print(Panel(
-                help_table,
-                title="[header]Git Subcommands[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    help_table,
+                    title="[header]Git Subcommands[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
 
             branch = git.get_current_branch()
             res = git.get_status()
             status = res.output if res.success else "[error]Error getting status[/error]"
 
-            self.console.print(Panel(
-                f"[label]Branch:[/label]   [accent]{branch}[/accent]\n"
-                f"[label]Status:[/label]   {status or '[success]Clean[/success]'}",
-                title="[header]Current Git Context[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    f"[label]Branch:[/label]   [accent]{branch}[/accent]\n"
+                    f"[label]Status:[/label]   {status or '[success]Clean[/success]'}",
+                    title="[header]Current Git Context[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
             return
 
         parts = args.split()
@@ -1113,7 +1220,13 @@ class InteractiveMode:
         if subcmd == "status":
             res = git.get_status()
             if res.success:
-                self.console.print(Panel(res.output or "[success]Clean[/success]", title="Git Status", border_style="border"))
+                self.console.print(
+                    Panel(
+                        res.output or "[success]Clean[/success]",
+                        title="Git Status",
+                        border_style="border",
+                    )
+                )
             else:
                 self.console.print(f"[error]Git error: {res.error}[/error]")
 
@@ -1128,23 +1241,35 @@ class InteractiveMode:
             else:
                 # Create/switch branch
                 name = subargs[0]
-                res = git._run_git(["checkout", "-b", name] if "-b" in subargs else ["checkout", name])
+                res = git._run_git(
+                    ["checkout", "-b", name] if "-b" in subargs else ["checkout", name]
+                )
                 if res.success:
-                    self.console.print(f"[success]✓[/success] Switched to branch [accent]{name}[/accent]")
+                    self.console.print(
+                        f"[success]✓[/success] Switched to branch [accent]{name}[/accent]"
+                    )
                 else:
                     # Try creating if checkout failed and not already tried
                     if "-b" not in subargs:
                         if questionary.confirm(f"Branch '{name}' not found. Create it?").ask():
                             res = git._run_git(["checkout", "-b", name])
                             if res.success:
-                                self.console.print(f"[success]✓[/success] Created and switched to branch [accent]{name}[/accent]")
+                                self.console.print(
+                                    f"[success]✓[/success] Created and switched to branch [accent]{name}[/accent]"
+                                )
                                 return
                     self.console.print(f"[error]Git error: {res.error}[/error]")
 
         elif subcmd == "diff":
             res = git._run_git(["diff", "--stat"])
             if res.success:
-                self.console.print(Panel(res.output or "[muted]No changes[/muted]", title="Git Diff Stat", border_style="border"))
+                self.console.print(
+                    Panel(
+                        res.output or "[muted]No changes[/muted]",
+                        title="Git Diff Stat",
+                        border_style="border",
+                    )
+                )
             else:
                 self.console.print(f"[error]Git error: {res.error}[/error]")
 
@@ -1174,14 +1299,16 @@ class InteractiveMode:
         ready = project.tickets.list_all(status=TicketStatus.READY)
         if ready:
             t = ready[0]
-            self.console.print(Panel(
-                f"[header]Suggested Next:[/header]\n\n"
-                f"[accent]#{t.id}[/accent] {t.title}\n\n"
-                f"[muted]{t.description or 'No description'}[/muted]\n\n"
-                f"[accent]›[/accent] Run [white]execute {t.id}[/white]",
-                border_style="accent",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    f"[header]Suggested Next:[/header]\n\n"
+                    f"[accent]#{t.id}[/accent] {t.title}\n\n"
+                    f"[muted]{t.description or 'No description'}[/muted]\n\n"
+                    f"[accent]›[/accent] Run [white]execute {t.id}[/white]",
+                    border_style="accent",
+                    box=box.ROUNDED,
+                )
+            )
         else:
             self.console.print("[muted]No ready tickets to suggest.[/muted]")
 
@@ -1201,14 +1328,18 @@ class InteractiveMode:
         else:
             ready_tickets = project.tickets.list_all(status=TicketStatus.READY)
             if not ready_tickets:
-                self.console.print("[info]No tickets with status [status.ready]READY[/status.ready] found.[/info]")
+                self.console.print(
+                    "[info]No tickets with status [status.ready]READY[/status.ready] found.[/info]"
+                )
                 return
             ids = [t.id for t in ready_tickets]
-            self.console.print(f"[info]Executing all [status.ready]READY[/status.ready] tickets: {', '.join(map(str, ids))}[/info]")
+            self.console.print(
+                f"[info]Executing all [status.ready]READY[/status.ready] tickets: {', '.join(map(str, ids))}[/info]"
+            )
 
         if not ids:
-             self.console.print("[error]No valid ticket IDs provided.[/error]")
-             return
+            self.console.print("[error]No valid ticket IDs provided.[/error]")
+            return
 
         # Native execution logic without CliRunner
         from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -1224,7 +1355,7 @@ class InteractiveMode:
             ticket_manager=project.tickets,
             quality_gates=QualityGates(project.config, project.root),
             knowledge_base=project.kb,
-            git_provider=GitProvider(project.root)
+            git_provider=GitProvider(project.root),
         )
 
         # Global confirmation state for this execution session
@@ -1237,6 +1368,7 @@ class InteractiveMode:
 
             # Inline imports to ensure they are available
             from rich.panel import Panel
+
             print_prompt = f"{prompt}\n\n[accent]Proceed with execution?[/accent]"
             self.console.print(Panel(print_prompt, title="AGENT PROMPT", border_style="dim"))
 
@@ -1247,7 +1379,9 @@ class InteractiveMode:
 
         if len(ids) > 1:
             # Handle batch execution natively
-            self.console.print(f"\n[bold accent]🚀 Executing Batch:[/bold accent] [white]{', '.join(map(str, ids))}[/white]")
+            self.console.print(
+                f"\n[bold accent]🚀 Executing Batch:[/bold accent] [white]{', '.join(map(str, ids))}[/white]"
+            )
             try:
                 with Progress(
                     SpinnerColumn(),
@@ -1263,10 +1397,7 @@ class InteractiveMode:
                         progress.start()
                         return res
 
-                    result = executor.execute_batch(
-                        ids,
-                        confirm_callback=batch_confirm
-                    )
+                    result = executor.execute_batch(ids, confirm_callback=batch_confirm)
 
                 if result.success:
                     self.console.print("[success]✓[/success] Batch executed successfully!")
@@ -1281,7 +1412,9 @@ class InteractiveMode:
                 self.console.print(f"[error]Ticket #{tid} not found[/error]")
                 return
 
-            self.console.print(f"\n[bold accent]🚀 Executing Ticket #{tid}:[/bold accent] [white]{t.title}[/white]")
+            self.console.print(
+                f"\n[bold accent]🚀 Executing Ticket #{tid}:[/bold accent] [white]{t.title}[/white]"
+            )
             try:
                 with Progress(
                     SpinnerColumn(),
@@ -1299,15 +1432,16 @@ class InteractiveMode:
                         progress.start()
                         return res
 
-                    result = executor.execute(
-                        tid,
-                        confirm_callback=single_confirm
-                    )
+                    result = executor.execute(tid, confirm_callback=single_confirm)
 
                 if result.success:
-                    self.console.print(f"[success]✓[/success] Ticket [accent]#{tid}[/accent] executed successfully!")
+                    self.console.print(
+                        f"[success]✓[/success] Ticket [accent]#{tid}[/accent] executed successfully!"
+                    )
                 else:
-                    self.console.print(f"[error]✗[/error] Ticket [accent]#{tid}[/accent] failed: {result.error}")
+                    self.console.print(
+                        f"[error]✗[/error] Ticket [accent]#{tid}[/accent] failed: {result.error}"
+                    )
             except Exception as e:
                 self.console.print(f"[error]Error executing ticket #{tid}:[/error] {e}")
 
@@ -1323,21 +1457,25 @@ class InteractiveMode:
             help_table.add_row("[accent]/theme <name>[/accent]", "Change color scheme")
             help_table.add_row("[accent]/model <name>[/accent]", "Select active AI agent")
 
-            self.console.print(Panel(
-                help_table,
-                title="[header]Configuration Commands[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    help_table,
+                    title="[header]Configuration Commands[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
 
-            self.console.print(Panel(
-                f"[label]Theme:[/label]      [accent]{get_current_theme().name}[/accent]\n"
-                f"[label]Agent:[/label]      [accent]{agent}[/accent]\n"
-                f"[label]Directory:[/label]  [muted]{os.getcwd()}[/muted]",
-                border_style="border",
-                box=box.ROUNDED,
-                title="[header]Current Settings[/header]",
-            ))
+            self.console.print(
+                Panel(
+                    f"[label]Theme:[/label]      [accent]{get_current_theme().name}[/accent]\n"
+                    f"[label]Agent:[/label]      [accent]{agent}[/accent]\n"
+                    f"[label]Directory:[/label]  [muted]{os.getcwd()}[/muted]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                    title="[header]Current Settings[/header]",
+                )
+            )
             return
 
         parts = args.split()
@@ -1345,19 +1483,23 @@ class InteractiveMode:
 
         if subcmd == "show" and project:
             import yaml
+
             config_dict = project.config.to_dict()
-            self.console.print(Panel(
-                f"[muted]{yaml.dump(config_dict, default_flow_style=False)}[/muted]",
-                title="[header]Full Configuration[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    f"[muted]{yaml.dump(config_dict, default_flow_style=False)}[/muted]",
+                    title="[header]Full Configuration[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
         else:
             self.console.print(f"[warning]Unknown settings subcommand:[/warning] {subcmd}")
 
     def _cmd_model(self, args: str) -> None:
         """Change AI agent."""
         from cascade.agents.registry import get_agent, list_agents
+
         agents = list_agents()
 
         if args and args in agents:
@@ -1375,17 +1517,23 @@ class InteractiveMode:
                 try:
                     agent = get_agent(agent_name)
                     available = agent.is_available()
-                    status = "[success]Available[/success]" if available else "[muted]Not available[/muted]"
+                    status = (
+                        "[success]Available[/success]"
+                        if available
+                        else "[muted]Not available[/muted]"
+                    )
                 except Exception:
                     status = "[muted]Unknown[/muted]"
                 table.add_row(f"[accent]{agent_name}[/accent]", status)
 
-            self.console.print(Panel(
-                table,
-                title="[header]Available Agents[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    table,
+                    title="[header]Available Agents[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
             self.console.print("\n[muted]Usage: /model <agent-name>[/muted]")
 
     def _cmd_theme(self, args: str) -> None:
@@ -1398,7 +1546,9 @@ class InteractiveMode:
             scope = parts[1] if len(parts) > 1 else "user"
 
             if tm.set_theme(theme_name, scope):
-                self.console.print(f"[success]✓[/success] Theme set to [accent]{theme_name}[/accent] ({scope})")
+                self.console.print(
+                    f"[success]✓[/success] Theme set to [accent]{theme_name}[/accent] ({scope})"
+                )
             else:
                 self.console.print(f"[warning]Unknown theme:[/warning] {theme_name}")
                 self.console.print(f"[muted]Available: {', '.join(tm.list_themes())}[/muted]")
@@ -1413,17 +1563,20 @@ class InteractiveMode:
                 colors = f"[{theme.primary}]■[/{theme.primary}] [{theme.accent}]■[/{theme.accent}]"
                 table.add_row(f"[accent]{name}[/accent]{marker}", colors)
 
-            self.console.print(Panel(
-                table,
-                title="[header]Available Themes[/header]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            self.console.print(
+                Panel(
+                    table,
+                    title="[header]Available Themes[/header]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
             self.console.print("\n[muted]Usage: /theme <name> [user|project][/muted]")
 
     def _cmd_docs(self, args: str) -> None:
         """Open documentation."""
         import webbrowser
+
         url = "https://github.com/cascade-ai/cascade#readme"
 
         try:
@@ -1442,6 +1595,7 @@ class InteractiveMode:
         project = self._get_project()
         if not project:
             from cascade.cli.ui import print_warning_box
+
             print_warning_box(self.console, "No Cascade project found to destroy.")
             return
 
@@ -1452,14 +1606,16 @@ class InteractiveMode:
 
         cascade_dir = project.cascade_dir
 
-        self.console.print(Panel(
-            f"[warning]⚠[/warning] This will permanently delete the Cascade project at [accent]{cascade_dir}[/accent]\n"
-            f"[muted]All tickets, topics, and configuration will be lost.[/muted]",
-            title="[error]Permanent Destruction[/error]",
-            border_style="error",
-            box=box.ROUNDED,
-            padding=(1, 2),
-        ))
+        self.console.print(
+            Panel(
+                f"[warning]⚠[/warning] This will permanently delete the Cascade project at [accent]{cascade_dir}[/accent]\n"
+                f"[muted]All tickets, topics, and configuration will be lost.[/muted]",
+                title="[error]Permanent Destruction[/error]",
+                border_style="error",
+                box=box.ROUNDED,
+                padding=(1, 2),
+            )
+        )
 
         if questionary.confirm("Are you sure you want to continue?", default=False).ask():
             try:
@@ -1488,6 +1644,7 @@ class InteractiveMode:
     def _status_style(self, status: str | TicketStatus) -> str:
         """Get style for ticket status."""
         from cascade.models.enums import TicketStatus
+
         st = status.value if isinstance(status, TicketStatus) else status.upper()
         return {
             "DEFINED": "muted",

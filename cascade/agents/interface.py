@@ -1,3 +1,5 @@
+"""Interfaces and base classes for AI agents."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -7,8 +9,6 @@ from enum import Enum
 
 
 class AgentCapability(str, Enum):
-    """Capabilities that an agent may support."""
-
     FILE_READ = "file_read"
     FILE_WRITE = "file_write"
     FILE_EDIT = "file_edit"
@@ -197,7 +197,10 @@ class AgentInterface(ABC):
             project_root = Path.cwd().resolve()
 
             if not str(target).startswith(str(project_root)):
-                return False, f"Security violation: working directory '{working_dir}' is outside project root"
+                return (
+                    False,
+                    f"Security violation: working directory '{working_dir}' is outside project root",
+                )
 
             return True, None
         except Exception as e:
@@ -210,6 +213,7 @@ class AgentInterface(ABC):
         Merges system environment with overrides from config.
         """
         import os
+
         env = os.environ.copy()
         if self.config.environment:
             env.update(self.config.environment)

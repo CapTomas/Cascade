@@ -58,7 +58,7 @@ def test_planner_plan_success(mock_agent, mock_managers):
   "suggested_adrs": []
 }
 ```
-"""
+""",
     )
 
     result = planner.plan(requirements)
@@ -91,15 +91,13 @@ def test_planner_generate_tickets(mock_agent, mock_managers):
                         ticket_type=TicketType.STORY,
                         children=[
                             ProposedTicket(
-                                title="Child",
-                                description="C desc",
-                                ticket_type=TicketType.TASK
+                                title="Child", description="C desc", ticket_type=TicketType.TASK
                             )
-                        ]
+                        ],
                     )
-                ]
+                ],
             )
-        ]
+        ],
     )
 
     topic_m.create.return_value = MagicMock(id=1)
@@ -141,8 +139,8 @@ def test_planner_dependencies(mock_agent, mock_managers):
         project_description="Test",
         tickets=[
             ProposedTicket(title="Task A", description="A"),
-            ProposedTicket(title="Task B", description="B", dependencies=["Task A"])
-        ]
+            ProposedTicket(title="Task B", description="B", dependencies=["Task A"]),
+        ],
     )
 
     tm.create.side_effect = [MagicMock(id=1), MagicMock(id=2)]

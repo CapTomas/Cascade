@@ -1,6 +1,8 @@
-from __future__ import annotations
 """Main CLI entry point for Cascade."""
 
+from __future__ import annotations
+
+import logging
 import sys
 
 import click
@@ -26,7 +28,6 @@ from cascade.cli.commands import (
 from cascade.cli.themes import get_current_theme
 from cascade.core.project import get_project
 from cascade.utils.logger import get_logger, setup_logging
-import logging
 
 # Load environment variables from .env file
 load_dotenv()
@@ -85,6 +86,7 @@ def cli(ctx: click.Context) -> None:
     # If no command specified, enter interactive mode
     if ctx.invoked_subcommand is None:
         from cascade.cli.interactive import start_interactive_mode
+
         start_interactive_mode(ctx.obj["console"])
 
 

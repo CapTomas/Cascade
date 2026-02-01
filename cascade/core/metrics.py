@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Metrics service for aggregating execution and ticket data."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -101,17 +102,11 @@ class MetricsService:
             metrics.total_tokens += tokens
             metrics.total_time_ms += time_ms
             metrics.by_agent[agent] = metrics.by_agent.get(agent, 0) + 1
-            metrics.by_context_mode[context_mode] = (
-                metrics.by_context_mode.get(context_mode, 0) + 1
-            )
+            metrics.by_context_mode[context_mode] = metrics.by_context_mode.get(context_mode, 0) + 1
 
         if metrics.total_executions > 0:
-            metrics.avg_tokens_per_execution = (
-                metrics.total_tokens / metrics.total_executions
-            )
-            metrics.avg_time_ms_per_execution = (
-                metrics.total_time_ms / metrics.total_executions
-            )
+            metrics.avg_tokens_per_execution = metrics.total_tokens / metrics.total_executions
+            metrics.avg_time_ms_per_execution = metrics.total_time_ms / metrics.total_executions
 
         return metrics
 

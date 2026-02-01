@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Knowledge extraction logic for Cascade."""
+
+from __future__ import annotations
 
 import json
 import logging
@@ -44,7 +45,9 @@ class KnowledgeExtractor:
         r"<knowledge_proposal>(.*?)</knowledge_proposal>", re.DOTALL | re.IGNORECASE
     )
 
-    def extract_proposals(self, response_text: str, ticket_id: int | None = None) -> list[Pattern | ADR]:
+    def extract_proposals(
+        self, response_text: str, ticket_id: int | None = None
+    ) -> list[Pattern | ADR]:
         """
         Parse the agent response for knowledge proposals.
 

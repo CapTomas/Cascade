@@ -17,9 +17,11 @@ from cascade.models.ticket import Ticket
 def mock_ticket():
     return MagicMock(spec=Ticket, id=1)
 
+
 @pytest.fixture
 def mock_response():
     return MagicMock(spec=AgentResponse)
+
 
 @pytest.fixture
 def project_config():
@@ -27,9 +29,10 @@ def project_config():
     config.quality = QualityConfig(
         static_analysis=QualityGateConfig(enabled=True, tools={"ruff": "ruff check ."}),
         unit_tests=QualityGateConfig(enabled=True, command="pytest"),
-        security_scan=QualityGateConfig(enabled=True)
+        security_scan=QualityGateConfig(enabled=True),
     )
     return config
+
 
 def test_static_analysis_gate_success(mock_ticket, mock_response):
     gate = StaticAnalysisGate(tools={"ruff": "ruff check ."})
@@ -45,6 +48,7 @@ def test_static_analysis_gate_success(mock_ticket, mock_response):
         assert "ruff" in result.output
         assert "No issues found" in result.output
 
+
 def test_static_analysis_gate_failure(mock_ticket, mock_response):
     gate = StaticAnalysisGate(tools={"ruff": "ruff check ."})
     with patch("subprocess.run") as mock_run, patch("shutil.which") as mock_which:
@@ -57,6 +61,7 @@ def test_static_analysis_gate_failure(mock_ticket, mock_response):
 
         assert not result.passed
         assert "Unused variable" in result.output
+
 
 def test_unit_test_gate_success(mock_ticket, mock_response):
     gate = UnitTestGate(command="pytest")
@@ -71,6 +76,7 @@ def test_unit_test_gate_success(mock_ticket, mock_response):
         assert result.passed
         assert "10 tests passed" in result.output
 
+
 def test_quality_gates_run_all_success(project_config, mock_ticket, mock_response):
     manager = QualityGates(project_config, Path("."))
 
@@ -84,6 +90,7 @@ def test_quality_gates_run_all_success(project_config, mock_ticket, mock_respons
 
         assert results.all_passed
         assert len(results.results) == 3
+
 
 def test_quality_gates_run_all_failure_stops_execution(project_config, mock_ticket, mock_response):
     # Enable fail_on_error for static analysis (default)

@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Topic management for Cascade."""
+
+from __future__ import annotations
 
 from datetime import datetime
 from typing import Any

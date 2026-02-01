@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Context builder for ticket execution."""
+
+from __future__ import annotations
 
 import logging
 
@@ -88,7 +89,9 @@ class ContextBuilder:
             # Priority: Ticket > Conventions > Patterns > ADRs > Similar Tickets
             current_tokens = estimate_context_tokens(context)
             if current_tokens > token_budget:
-                logger.warning(f"Context for ticket #{ticket.id} exceeds budget ({current_tokens} > {token_budget}). Trimming...")
+                logger.warning(
+                    f"Context for ticket #{ticket.id} exceeds budget ({current_tokens} > {token_budget}). Trimming..."
+                )
 
                 # Trim similar tickets first
                 if context.similar_tickets:
@@ -163,9 +166,12 @@ class ContextBuilder:
         # Basic budget enforcement (similar to single-ticket, but simpler for now)
         if token_budget:
             from cascade.utils.tokens import estimate_context_tokens
+
             current_tokens = estimate_context_tokens(context)
             if current_tokens > token_budget:
-                logger.warning(f"Multi-context exceeds budget ({current_tokens} > {token_budget}). Trimming ADRs/Patterns...")
+                logger.warning(
+                    f"Multi-context exceeds budget ({current_tokens} > {token_budget}). Trimming ADRs/Patterns..."
+                )
                 while context.adrs and current_tokens > token_budget:
                     context.adrs.pop()
                     current_tokens = estimate_context_tokens(context)

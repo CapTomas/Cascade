@@ -16,12 +16,14 @@ class TestClaudeCodeAgent:
     def test_agent_name(self):
         """Test agent returns correct name."""
         from cascade.agents import ClaudeCodeAgent
+
         agent = ClaudeCodeAgent()
         assert agent.get_name() == "claude-cli"
 
     def test_capabilities(self):
         """Test agent declares correct capabilities."""
         from cascade.agents import ClaudeCodeAgent
+
         agent = ClaudeCodeAgent()
         caps = agent.get_capabilities()
 
@@ -33,6 +35,7 @@ class TestClaudeCodeAgent:
     def test_token_limit(self):
         """Test agent returns reasonable token limit."""
         from cascade.agents import ClaudeCodeAgent
+
         agent = ClaudeCodeAgent()
         limit = agent.get_token_limit()
 
@@ -60,6 +63,7 @@ class TestClaudeCodeAgent:
     def test_execute_empty_prompt_fails(self):
         """Test that empty prompt returns error."""
         from cascade.agents import ClaudeCodeAgent
+
         agent = ClaudeCodeAgent()
 
         response = agent.execute("")
@@ -69,6 +73,7 @@ class TestClaudeCodeAgent:
     def test_execute_invalid_working_dir(self, tmp_path):
         """Test that working_dir outside project root fails."""
         from cascade.agents import ClaudeCodeAgent
+
         agent = ClaudeCodeAgent()
 
         # Try to use a directory outside current working dir
@@ -76,7 +81,7 @@ class TestClaudeCodeAgent:
             mock_cwd.return_value = tmp_path
             response = agent.execute(
                 "Test prompt",
-                working_dir="/etc"  # Outside project
+                working_dir="/etc",  # Outside project
             )
             assert response.success is False
             assert "Security" in response.error or "outside" in response.error.lower()
@@ -88,7 +93,11 @@ class TestClaudeCodeAgent:
         mock_process = MagicMock()
         mock_process.poll.return_value = 0
         mock_process.returncode = 0
-        mock_process.stdout.readline.side_effect = ["Task completed successfully.\n", "Modified: src/main.py\n", ""]
+        mock_process.stdout.readline.side_effect = [
+            "Task completed successfully.\n",
+            "Modified: src/main.py\n",
+            "",
+        ]
         mock_process.stdout.read.return_value = ""
         mock_process.stderr.readline.return_value = ""
         mock_process.stderr.read.return_value = ""
@@ -116,11 +125,12 @@ class TestClaudeCodeAgent:
             with patch("shutil.which", return_value="/usr/local/bin/claude"):
                 with patch("pathlib.Path.cwd", return_value=tmp_path):
                     with patch("select.select", return_value=([mock_process.stdout], [], [])):
-                        with patch("time.time", side_effect=[0, 0, 1000, 1000, 1000, 1000]): # Start, loops, timeout, status calls
-                            agent = ClaudeCodeAgent(config=AgentConfig(
-                                name="claude-code",
-                                timeout_seconds=300
-                            ))
+                        with patch(
+                            "time.time", side_effect=[0, 0, 1000, 1000, 1000, 1000]
+                        ):  # Start, loops, timeout, status calls
+                            agent = ClaudeCodeAgent(
+                                config=AgentConfig(name="claude-code", timeout_seconds=300)
+                            )
                             response = agent.execute("Long task", working_dir=str(tmp_path))
 
                             assert response.success is False
@@ -156,12 +166,14 @@ class TestCodexAgent:
     def test_agent_name(self):
         """Test agent returns correct name."""
         from cascade.agents import CodexAgent
+
         agent = CodexAgent()
         assert agent.get_name() == "codex-api"
 
     def test_capabilities(self):
         """Test agent declares correct capabilities."""
         from cascade.agents import CodexAgent
+
         agent = CodexAgent()
         caps = agent.get_capabilities()
 
@@ -180,10 +192,7 @@ class TestCodexAgent:
         """Test is_available returns True with API key and model."""
         from cascade.agents import CodexAgent
 
-        with patch.dict("os.environ", {
-            "OPENAI_API_KEY": "sk-test",
-            "OPENAI_MODEL": "gpt-4"
-        }):
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test", "OPENAI_MODEL": "gpt-4"}):
             agent = CodexAgent()
             assert agent.is_available() is True
 
@@ -204,16 +213,13 @@ class TestCodexAgent:
 
         mock_response = MagicMock()
         mock_response.getcode.return_value = 200
-        mock_response.read.return_value = json.dumps({
-            "output_text": "Here is the solution..."
-        }).encode()
+        mock_response.read.return_value = json.dumps(
+            {"output_text": "Here is the solution..."}
+        ).encode()
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
 
-        with patch.dict("os.environ", {
-            "OPENAI_API_KEY": "sk-test",
-            "OPENAI_MODEL": "gpt-4"
-        }):
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-test", "OPENAI_MODEL": "gpt-4"}):
             with patch("urllib.request.urlopen", return_value=mock_response):
                 with patch("pathlib.Path.cwd", return_value=tmp_path):
                     agent = CodexAgent()
@@ -233,13 +239,10 @@ class TestCodexAgent:
             code=401,
             msg="Unauthorized",
             hdrs={},
-            fp=MagicMock(read=lambda: b'{"error": {"message": "Invalid key"}}')
+            fp=MagicMock(read=lambda: b'{"error": {"message": "Invalid key"}}'),
         )
 
-        with patch.dict("os.environ", {
-            "OPENAI_API_KEY": "sk-invalid",
-            "OPENAI_MODEL": "gpt-4"
-        }):
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "sk-invalid", "OPENAI_MODEL": "gpt-4"}):
             with patch("urllib.request.urlopen", side_effect=mock_error):
                 with patch("pathlib.Path.cwd", return_value=tmp_path):
                     agent = CodexAgent()
@@ -255,6 +258,7 @@ class TestGenericAgent:
     def test_agent_name(self):
         """Test agent returns correct name."""
         from cascade.agents.generic import GenericAgent
+
         agent = GenericAgent()
         assert agent.get_name() == "generic"
 

@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Codex agent implementation via OpenAI API."""
+
+from __future__ import annotations
 
 import json
 import logging
@@ -107,7 +108,9 @@ class CodexApiAgent(AgentInterface):
                     break
             except urllib.error.HTTPError as exc:
                 if attempt < max_retries and exc.code in (429, 500, 502, 503, 504):
-                    logger.warning(f"Codex API temporary failure ({exc.code}). Retrying in {retry_delay}s...")
+                    logger.warning(
+                        f"Codex API temporary failure ({exc.code}). Retrying in {retry_delay}s..."
+                    )
                     time.sleep(retry_delay)
                     retry_delay *= 2
                     continue
@@ -121,7 +124,7 @@ class CodexApiAgent(AgentInterface):
                     content="",
                     error=f"HTTP {exc.code}: {error_details}",
                     execution_time_ms=int((time.time() - start_time) * 1000),
-                    raw_output=body if 'body' in locals() else str(exc),
+                    raw_output=body if "body" in locals() else str(exc),
                 )
             except (urllib.error.URLError, TimeoutError) as exc:
                 if attempt < max_retries:

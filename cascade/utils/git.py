@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Git provider for repository operations."""
+
+from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass

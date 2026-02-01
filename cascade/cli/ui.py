@@ -1,9 +1,9 @@
-from __future__ import annotations
 """Modern UI components for Cascade CLI.
 
 Box-drawing utilities and screen layouts inspired by Claude, Codex, and Gemini CLIs.
 """
 
+from __future__ import annotations
 
 from rich import box
 from rich.columns import Columns
@@ -16,9 +16,10 @@ from rich.text import Text
 # Box drawing characters (Unicode)
 class BoxChars:
     """Unicode box drawing characters."""
+
     # Single line
-    H = "─"   # horizontal
-    V = "│"   # vertical
+    H = "─"  # horizontal
+    V = "│"  # vertical
     TL = "╭"  # top-left rounded
     TR = "╮"  # top-right rounded
     BL = "╰"  # bottom-left rounded
@@ -81,7 +82,9 @@ def draw_divider(console: Console, title: str | None = None) -> None:
         side_width = (width - len(title_text)) // 2
         left = BoxChars.H * side_width
         right = BoxChars.H * (width - side_width - len(title_text))
-        console.print(f"[border]{left}[/border][header]{title_text}[/header][border]{right}[/border]")
+        console.print(
+            f"[border]{left}[/border][header]{title_text}[/header][border]{right}[/border]"
+        )
     else:
         console.print(BoxChars.H * width, style="border")
 
@@ -257,46 +260,54 @@ def create_modern_table(
 
 def print_success_box(console: Console, message: str, title: str = "Success") -> None:
     """Print a success message in a styled box."""
-    console.print(Panel(
-        f"[success]✓[/success] {message}",
-        title=f"[success]{title}[/success]",
-        border_style="success",
-        box=box.ROUNDED,
-        padding=(0, 1),
-    ))
+    console.print(
+        Panel(
+            f"[success]✓[/success] {message}",
+            title=f"[success]{title}[/success]",
+            border_style="success",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+    )
 
 
 def print_error_box(console: Console, message: str, title: str = "Error") -> None:
     """Print an error message in a styled box."""
-    console.print(Panel(
-        f"[error]✗[/error] {message}",
-        title=f"[error]{title}[/error]",
-        border_style="error",
-        box=box.ROUNDED,
-        padding=(0, 1),
-    ))
+    console.print(
+        Panel(
+            f"[error]✗[/error] {message}",
+            title=f"[error]{title}[/error]",
+            border_style="error",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+    )
 
 
 def print_warning_box(console: Console, message: str, title: str = "Warning") -> None:
     """Print a warning message in a styled box."""
-    console.print(Panel(
-        f"[warning]⚠[/warning] {message}",
-        title=f"[warning]{title}[/warning]",
-        border_style="warning",
-        box=box.ROUNDED,
-        padding=(0, 1),
-    ))
+    console.print(
+        Panel(
+            f"[warning]⚠[/warning] {message}",
+            title=f"[warning]{title}[/warning]",
+            border_style="warning",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+    )
 
 
 def print_info_box(console: Console, message: str, title: str | None = None) -> None:
     """Print an info message in a styled box."""
-    console.print(Panel(
-        f"[info]ℹ[/info] {message}",
-        title=f"[info]{title}[/info]" if title else None,
-        border_style="info",
-        box=box.ROUNDED,
-        padding=(0, 1),
-    ))
+    console.print(
+        Panel(
+            f"[info]ℹ[/info] {message}",
+            title=f"[info]{title}[/info]" if title else None,
+            border_style="info",
+            box=box.ROUNDED,
+            padding=(0, 1),
+        )
+    )
 
 
 def print_keyboard_shortcuts(console: Console) -> None:
@@ -314,9 +325,11 @@ def print_keyboard_shortcuts(console: Console) -> None:
     for key, action in shortcuts:
         table.add_row(f"[accent]{key}[/accent]", action)
 
-    console.print(Panel(
-        table,
-        title="[header]Keyboard Shortcuts[/header]",
-        border_style="border",
-        box=box.ROUNDED,
-    ))
+    console.print(
+        Panel(
+            table,
+            title="[header]Keyboard Shortcuts[/header]",
+            border_style="border",
+            box=box.ROUNDED,
+        )
+    )

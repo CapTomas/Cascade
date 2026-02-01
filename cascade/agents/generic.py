@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Generic agent implementation via stdin/stdout."""
+
+from __future__ import annotations
 
 import logging
 import os
@@ -126,4 +127,3 @@ class GenericAgent(AgentInterface):
         if not command:
             return None
         return shlex.split(command) + self.config.extra_args
-

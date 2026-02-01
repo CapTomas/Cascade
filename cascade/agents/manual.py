@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Manual agent implementation for human-in-the-loop flows."""
+
+from __future__ import annotations
 
 import logging
 import subprocess
@@ -123,10 +124,14 @@ class ManualAgent(AgentInterface):
         if copied:
             self.console.print("[green]✓ Prompt copied to system clipboard.[/green]")
         else:
-            self.console.print("[yellow]! Could not auto-copy to clipboard. Please copy manually.[/yellow]")
+            self.console.print(
+                "[yellow]! Could not auto-copy to clipboard. Please copy manually.[/yellow]"
+            )
 
         self.console.print("\n[bold cyan]Waiting for AI response...[/bold cyan]")
-        self.console.print("(Paste the response below. Use [bold]Ctrl-D[/bold] on a new line when finished)")
+        self.console.print(
+            "(Paste the response below. Use [bold]Ctrl-D[/bold] on a new line when finished)"
+        )
 
         # Read multiple lines until EOF
         content_lines = []
@@ -166,12 +171,12 @@ class ManualAgent(AgentInterface):
         """Attempt to copy text to system clipboard."""
         try:
             if sys.platform == "darwin":
-                process = subprocess.Popen(['/usr/bin/pbcopy'], stdin=subprocess.PIPE, text=True)
+                process = subprocess.Popen(["/usr/bin/pbcopy"], stdin=subprocess.PIPE, text=True)
                 process.communicate(input=text)
                 return process.returncode == 0
             elif sys.platform == "linux":
                 # Check for xclip or xsel
-                for cmd in ['xclip -selection clipboard', 'xsel -bi']:
+                for cmd in ["xclip -selection clipboard", "xsel -bi"]:
                     try:
                         cmd_parts = cmd.split()
                         process = subprocess.Popen(cmd_parts, stdin=subprocess.PIPE, text=True)

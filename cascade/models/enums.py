@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Enumerations for Cascade domain models."""
+
+from __future__ import annotations
 
 from enum import Enum
 

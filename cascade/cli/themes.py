@@ -1,8 +1,9 @@
-from __future__ import annotations
 """Modern theme system for Cascade CLI.
 
 Provides customizable color schemes inspired by Claude, Codex, and Gemini CLIs.
 """
+
+from __future__ import annotations
 
 import json
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from rich.theme import Theme
 @dataclass
 class ColorTheme:
     """A complete color theme for the CLI."""
+
     name: str
     # Primary colors
     primary: str = "rose"
@@ -47,37 +49,39 @@ class ColorTheme:
 
     def to_rich_theme(self) -> Theme:
         """Convert to Rich Theme object."""
-        return Theme({
-            "primary": self.primary,
-            "secondary": self.secondary,
-            "accent": self.accent,
-            "success": f"bold {self.success}",
-            "warning": self.warning,
-            "error": f"bold {self.error}",
-            "info": self.info,
-            "muted": self.muted,
-            "border": self.border,
-            "border.focus": self.border_focus,
-            "header": self.header,
-            "label": "bold white",
-            "value": self.info,
-            "id": "bold yellow",
-            "status.ready": self.status_ready,
-            "status.progress": self.status_progress,
-            "status.done": self.status_done,
-            "status.blocked": self.error,
-            # Logo and branding
-            "logo": self.primary,
-            "logo.accent": self.accent,
-            # Input prompt
-            "prompt": self.primary,
-            "prompt.arrow": f"bold {self.primary}",
-            # Severity
-            "severity.critical": self.severity_critical,
-            "severity.high": self.severity_high,
-            "severity.medium": self.severity_medium,
-            "severity.low": self.severity_low,
-        })
+        return Theme(
+            {
+                "primary": self.primary,
+                "secondary": self.secondary,
+                "accent": self.accent,
+                "success": f"bold {self.success}",
+                "warning": self.warning,
+                "error": f"bold {self.error}",
+                "info": self.info,
+                "muted": self.muted,
+                "border": self.border,
+                "border.focus": self.border_focus,
+                "header": self.header,
+                "label": "bold white",
+                "value": self.info,
+                "id": "bold yellow",
+                "status.ready": self.status_ready,
+                "status.progress": self.status_progress,
+                "status.done": self.status_done,
+                "status.blocked": self.error,
+                # Logo and branding
+                "logo": self.primary,
+                "logo.accent": self.accent,
+                # Input prompt
+                "prompt": self.primary,
+                "prompt.arrow": f"bold {self.primary}",
+                # Severity
+                "severity.critical": self.severity_critical,
+                "severity.high": self.severity_high,
+                "severity.medium": self.severity_medium,
+                "severity.low": self.severity_low,
+            }
+        )
 
 
 # Built-in themes

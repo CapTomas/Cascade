@@ -33,7 +33,7 @@ class ClaudeApiAgent(AgentInterface):
                 AgentCapability.CODE_ANALYSIS,
             },
             supports_streaming=True,
-            supports_tools=False, # Basic API implementation first
+            supports_tools=False,  # Basic API implementation first
             max_output_tokens=4096,
         )
 
@@ -52,11 +52,12 @@ class ClaudeApiAgent(AgentInterface):
     ) -> AgentResponse:
         # Placeholder for actual API implementation
         return AgentResponse(
-            success=False,
-            content="Claude API not yet fully implemented",
-            error="Not implemented"
+            success=False, content="Claude API not yet fully implemented", error="Not implemented"
         )
 
     def _get_api_key(self) -> str | None:
         import os
-        return self.config.environment.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+
+        return self.config.environment.get("ANTHROPIC_API_KEY") or os.environ.get(
+            "ANTHROPIC_API_KEY"
+        )

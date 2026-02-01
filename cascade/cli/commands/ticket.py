@@ -1,13 +1,14 @@
-from __future__ import annotations
 """Ticket commands for Cascade CLI."""
 
+from __future__ import annotations
+
+from typing import Any
 
 import click
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
 
-from typing import Any
 from cascade.agents.registry import get_agent, resolve_agent_name
 from cascade.cli.styles import (
     console,
@@ -33,36 +34,42 @@ def ticket(ctx: click.Context) -> None:
 
 @ticket.command("create")
 @click.option(
-    "--title", "-t",
+    "--title",
+    "-t",
     prompt="Ticket title",
     help="Ticket title",
 )
 @click.option(
-    "--type", "-T",
+    "--type",
+    "-T",
     "ticket_type",
     type=click.Choice([t.value for t in TicketType], case_sensitive=False),
     default=TicketType.TASK.value,
     help="Ticket type",
 )
 @click.option(
-    "--description", "-d",
+    "--description",
+    "-d",
     default="",
     help="Ticket description",
 )
 @click.option(
-    "--severity", "-s",
+    "--severity",
+    "-s",
     type=click.Choice([s.value for s in Severity], case_sensitive=False),
     default=None,
     help="Ticket severity",
 )
 @click.option(
-    "--parent", "-p",
+    "--parent",
+    "-p",
     type=int,
     default=None,
     help="Parent ticket ID",
 )
 @click.option(
-    "--acceptance", "-a",
+    "--acceptance",
+    "-a",
     default="",
     help="Acceptance criteria",
 )
@@ -158,13 +165,15 @@ def show(ctx: click.Context, ticket_id: int) -> None:
             for b in blocking:
                 content += f" [error]![/error] [id]#{b.id}[/id]: {b.title} ({b.status.value})\n"
 
-        console.print(Panel(
-            content,
-            title=f"[header]Ticket #{t.id}[/header]: [accent]{t.title}[/accent]",
-            border_style="border",
-            box=box.ROUNDED,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                content,
+                title=f"[header]Ticket #{t.id}[/header]: [accent]{t.title}[/accent]",
+                border_style="border",
+                box=box.ROUNDED,
+                padding=(1, 2),
+            )
+        )
 
     except FileNotFoundError:
         print_error("Not a Cascade project.")
@@ -177,20 +186,23 @@ def show(ctx: click.Context, ticket_id: int) -> None:
 
 @ticket.command("list")
 @click.option(
-    "--status", "-s",
+    "--status",
+    "-s",
     type=click.Choice([s.value for s in TicketStatus], case_sensitive=False),
     default=None,
     help="Filter by status",
 )
 @click.option(
-    "--type", "-t",
+    "--type",
+    "-t",
     "ticket_type",
     type=click.Choice([t.value for t in TicketType], case_sensitive=False),
     default=None,
     help="Filter by type",
 )
 @click.option(
-    "--limit", "-l",
+    "--limit",
+    "-l",
     type=int,
     default=50,
     help="Maximum tickets to show",
@@ -213,12 +225,14 @@ def list_tickets(
         )
 
         if not tickets:
-            console.print(Panel(
-                "[muted]No tickets found.[/muted]\n\n"
-                "[accent]›[/accent] Run [white]cascade ticket create[/white] to create one",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            console.print(
+                Panel(
+                    "[muted]No tickets found.[/muted]\n\n"
+                    "[accent]›[/accent] Run [white]cascade ticket create[/white] to create one",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
             return
 
         console.print()
@@ -253,7 +267,8 @@ def list_tickets(
 @click.option("--title", "-t", default=None, help="New title")
 @click.option("--description", "-d", default=None, help="New description")
 @click.option(
-    "--status", "-s",
+    "--status",
+    "-s",
     type=click.Choice([s.value for s in TicketStatus], case_sensitive=False),
     default=None,
     help="New status",
@@ -414,7 +429,8 @@ def delete(ctx: click.Context, ticket_id: int, force: bool) -> None:
 @click.argument("ticket_id", type=int)
 @click.argument("depends_on_id", type=int)
 @click.option(
-    "--remove", "-r",
+    "--remove",
+    "-r",
     is_flag=True,
     help="Remove dependency instead of adding",
 )
@@ -445,6 +461,8 @@ def dependency(
     except FileNotFoundError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
+
+
 @ticket.command("execute")
 @click.argument("ticket_ids", type=int, nargs=-1, required=True)
 @click.option("--agent", "-A", help="Override default agent")
@@ -482,7 +500,11 @@ def execute(
             raise SystemExit(1)
 
         is_batch = len(ticket_ids) > 1
-        banner_text = f"Execution: #{ticket_ids[0]}" if not is_batch else f"Batch Execution: {', '.join(map(str, ticket_ids))}"
+        banner_text = (
+            f"Execution: #{ticket_ids[0]}"
+            if not is_batch
+            else f"Batch Execution: {', '.join(map(str, ticket_ids))}"
+        )
         print_banner(banner_text)
 
         executor = TicketExecutor(
@@ -516,19 +538,18 @@ def execute(
             print_info("Gathering context for manual execution...")
             if is_batch:
                 result = executor.execute_batch(
-                    list(ticket_ids),
-                    confirm_callback=confirm_callback,
-                    dry_run=dry_run
+                    list(ticket_ids), confirm_callback=confirm_callback, dry_run=dry_run
                 )
             else:
                 result = executor.execute(
                     ticket_ids[0],
                     confirm_callback=lambda t, p: confirm_callback([t], p),
-                    dry_run=dry_run
+                    dry_run=dry_run,
                 )
         else:
             # Automated agent: Use progress bar
             from cascade.cli.styles import get_progress
+
             with get_progress() as progress:
                 task = progress.add_task("[dim]Initializing...", total=100)
 
@@ -539,7 +560,9 @@ def execute(
                     return res
 
                 def bar_streaming(chunk: str) -> None:
-                    progress.update(task, description=f"[info]Agent Working: {chunk[:30]}...[/info]")
+                    progress.update(
+                        task, description=f"[info]Agent Working: {chunk[:30]}...[/info]"
+                    )
 
                 progress.update(task, completed=20, description="[info]Gathering context...[/info]")
                 progress.update(task, completed=40, description="[info]Contacting agent...[/info]")
@@ -549,16 +572,18 @@ def execute(
                         list(ticket_ids),
                         confirm_callback=wrapped_confirm,
                         dry_run=dry_run,
-                        streaming_callback=bar_streaming
+                        streaming_callback=bar_streaming,
                     )
                 else:
                     result = executor.execute(
                         ticket_ids[0],
                         confirm_callback=lambda t, p: wrapped_confirm([t], p),
                         dry_run=dry_run,
-                        streaming_callback=bar_streaming
+                        streaming_callback=bar_streaming,
                     )
-                progress.update(task, completed=80, description="[info]Running quality gates...[/info]")
+                progress.update(
+                    task, completed=80, description="[info]Running quality gates...[/info]"
+                )
                 progress.update(task, completed=100, description="[success]Completed[/success]")
 
         if dry_run:
@@ -577,7 +602,9 @@ def execute(
                     st = "[success]PASSED[/success]" if gr.passed else "[error]FAILED[/error]"
                     console.print(f" {st:15} {gr.gate_name}")
 
-            console.print(f"\n[dim]Time: {result.execution_time_ms}ms  |  Tokens: {result.token_usage}[/dim]")
+            console.print(
+                f"\n[dim]Time: {result.execution_time_ms}ms  |  Tokens: {result.token_usage}[/dim]"
+            )
         else:
             print_error(f"Execution failed: {result.error}")
             raise SystemExit(1)

@@ -1,7 +1,9 @@
-from __future__ import annotations
 """Metrics command for Cascade CLI."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
+from typing import Any
 
 import click
 
@@ -76,9 +78,6 @@ def metrics(
         raise SystemExit(1)
 
 
-from typing import Any
-
-
 def _show_overview(metrics: Any, days: int) -> None:
     """Show metrics overview."""
     exec_metrics = metrics.execution
@@ -122,9 +121,7 @@ def _show_overview(metrics: Any, days: int) -> None:
             print_banner("By Agent")
             agent_table = create_table(["Agent", "Executions", "Share"])
             total = exec_metrics.total_executions
-            for agent, count in sorted(
-                exec_metrics.by_agent.items(), key=lambda x: -x[1]
-            ):
+            for agent, count in sorted(exec_metrics.by_agent.items(), key=lambda x: -x[1]):
                 share = (count / total) * 100
                 agent_table.add_row(agent, str(count), f"{share:.1f}%")
             console.print(agent_table)

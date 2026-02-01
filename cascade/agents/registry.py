@@ -1,5 +1,8 @@
-from __future__ import annotations
 """Agent registry and helpers."""
+
+from __future__ import annotations
+
+from typing import Any, cast
 
 from cascade.agents.anthropic.claude_api import ClaudeApiAgent
 from cascade.agents.anthropic.claude_cli import ClaudeCliAgent
@@ -8,7 +11,6 @@ from cascade.agents.google.gemini_api import GeminiApiAgent
 from cascade.agents.google.gemini_cli import GeminiCliAgent
 from cascade.agents.interface import AgentConfig, AgentInterface
 from cascade.agents.manual import ManualAgent
-from typing import Any, cast
 from cascade.agents.openai.codex_api import CodexApiAgent
 from cascade.agents.openai.codex_cli import CodexCliAgent
 
@@ -33,43 +35,43 @@ AGENT_METADATA: dict[str, dict[str, str]] = {
     "claude-cli": {
         "title": "Claude Code (CLI)",
         "description": "Mature agent with streaming and tool support via 'claude' CLI.",
-        "provider": "Anthropic"
+        "provider": "Anthropic",
     },
     "claude-api": {
         "title": "Claude (API)",
         "description": "Direct integration with Anthropic's Claude API.",
-        "provider": "Anthropic"
+        "provider": "Anthropic",
     },
     "gemini-cli": {
         "title": "Gemini (CLI)",
         "description": "Google's Gemini models via 'gemini' CLI tool.",
-        "provider": "Google"
+        "provider": "Google",
     },
     "gemini-api": {
         "title": "Gemini (API)",
         "description": "Direct integration with Google Gemini Pro API.",
-        "provider": "Google"
+        "provider": "Google",
     },
     "codex-cli": {
         "title": "Codex (CLI)",
         "description": "OpenAI Codex/GPT models via 'codex' CLI tool.",
-        "provider": "OpenAI"
+        "provider": "OpenAI",
     },
     "codex-api": {
         "title": "Codex (API)",
         "description": "Direct integration with OpenAI API.",
-        "provider": "OpenAI"
+        "provider": "OpenAI",
     },
     "generic": {
         "title": "Generic Agent",
         "description": "Basic agent for simple text generation tasks.",
-        "provider": "Internal"
+        "provider": "Internal",
     },
     "manual": {
         "title": "Manual / Human",
         "description": "Ask a human for input when AI isn't enough.",
-        "provider": "User"
-    }
+        "provider": "User",
+    },
 }
 
 # In-memory cache for agent instances

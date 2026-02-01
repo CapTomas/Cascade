@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Models for ticket execution results and logging."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime

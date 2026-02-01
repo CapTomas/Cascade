@@ -1,11 +1,12 @@
-from __future__ import annotations
 """Project configuration model for Cascade."""
 
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, Field
-from typing import Any
 
 
 class QualityGateConfig(BaseModel):
@@ -79,7 +80,7 @@ class ProjectConfig(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
     @classmethod
-    def load(cls, config_path: Path) -> "ProjectConfig":
+    def load(cls, config_path: Path) -> ProjectConfig:
         """Load configuration from YAML file."""
         if not config_path.exists():
             return cls()
@@ -90,7 +91,7 @@ class ProjectConfig(BaseModel):
         return cls._from_dict(data)
 
     @classmethod
-    def _from_dict(cls, data: dict[str, Any]) -> "ProjectConfig":
+    def _from_dict(cls, data: dict[str, Any]) -> ProjectConfig:
         """Create config from dictionary with legacy support."""
         # Map legacy top-level keys if they exist
         project_data = data.get("project", {})

@@ -15,11 +15,13 @@ def mock_kb():
     kb.get_relevant_adrs.return_value = ["ADR 1"]
     return kb
 
+
 @pytest.fixture
 def mock_tm():
     tm = MagicMock()
     tm.get_similar_completed_tickets.return_value = ["Similar 1"]
     return tm
+
 
 @pytest.fixture
 def test_ticket():
@@ -28,8 +30,9 @@ def test_ticket():
         title="Test Ticket",
         description="Test Description",
         ticket_type=TicketType.TASK,
-        status=TicketStatus.READY
+        status=TicketStatus.READY,
     )
+
 
 def test_build_minimal_context(mock_kb, mock_tm, test_ticket):
     builder = ContextBuilder(mock_kb, mock_tm)
@@ -42,6 +45,7 @@ def test_build_minimal_context(mock_kb, mock_tm, test_ticket):
     assert len(context.similar_tickets) == 0
     mock_kb.get_conventions.assert_called_once()
 
+
 def test_build_standard_context(mock_kb, mock_tm, test_ticket):
     builder = ContextBuilder(mock_kb, mock_tm)
     context = builder.build_context(test_ticket, ContextMode.STANDARD)
@@ -51,6 +55,7 @@ def test_build_standard_context(mock_kb, mock_tm, test_ticket):
     assert len(context.adrs) == 1
     assert len(context.similar_tickets) == 0
     mock_kb.get_relevant_patterns.assert_called_with(test_ticket, limit=3)
+
 
 def test_build_full_context(mock_kb, mock_tm, test_ticket):
     builder = ContextBuilder(mock_kb, mock_tm)

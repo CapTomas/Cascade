@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -57,7 +58,7 @@ class ADR:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ADR":
+    def from_dict(cls, data: dict[str, Any]) -> ADR:
         """Create ADR from dictionary."""
         for field_name in ("created_at", "approved_at"):
             if data.get(field_name) and isinstance(data[field_name], str):
@@ -121,7 +122,7 @@ class Pattern:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Pattern":
+    def from_dict(cls, data: dict[str, Any]) -> Pattern:
         """Create pattern from dictionary."""
         import json
 
@@ -140,7 +141,7 @@ class Pattern:
         """Format pattern for inclusion in agent context."""
         return f"""### Pattern: {self.pattern_name}
 **Description:** {self.description}
-**Tags:** {', '.join(self.applies_to_tags)}
+**Tags:** {", ".join(self.applies_to_tags)}
 
 ```
 {self.code_template}
@@ -179,7 +180,7 @@ class Convention:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Convention":
+    def from_dict(cls, data: dict[str, Any]) -> Convention:
         """Create convention from dictionary."""
         if data.get("created_at") and isinstance(data["created_at"], str):
             data["created_at"] = datetime.fromisoformat(data["created_at"])

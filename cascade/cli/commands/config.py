@@ -1,8 +1,10 @@
-from __future__ import annotations
 """Config commands for Cascade CLI."""
 
-import click
+from __future__ import annotations
+
 from typing import Any
+
+import click
 import yaml
 from rich import box
 from rich.panel import Panel
@@ -43,29 +45,33 @@ def show(ctx: click.Context) -> None:
             f"[label]Description[/label]  [muted]{config_dict.get('project', {}).get('description', 'N/A')}[/muted]\n"
             f"[label]Tech Stack[/label]   [accent]{', '.join(config_dict.get('project', {}).get('tech_stack', []))}[/accent]"
         )
-        console.print(Panel(
-            project_info,
-            title="[header]⚙ Project[/header]",
-            border_style="border",
-            box=box.ROUNDED,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                project_info,
+                title="[header]⚙ Project[/header]",
+                border_style="border",
+                box=box.ROUNDED,
+                padding=(1, 2),
+            )
+        )
 
         console.print()
 
         # Agent section
-        agent_config = config_dict.get('agent', {})
+        agent_config = config_dict.get("agent", {})
         agent_info = (
             f"[label]Default[/label]   [accent]{agent_config.get('default', 'N/A')}[/accent]\n"
             f"[label]Fallback[/label]  [muted]{agent_config.get('fallback', 'N/A')}[/muted]"
         )
-        console.print(Panel(
-            agent_info,
-            title="[header]⚙ Agent[/header]",
-            border_style="border",
-            box=box.ROUNDED,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                agent_info,
+                title="[header]⚙ Agent[/header]",
+                border_style="border",
+                box=box.ROUNDED,
+                padding=(1, 2),
+            )
+        )
 
         console.print()
 
@@ -75,16 +81,20 @@ def show(ctx: click.Context) -> None:
             f"[label]Current[/label]  [accent]{current_theme.name}[/accent]\n"
             f"[label]Colors[/label]   [{current_theme.primary}]■[/{current_theme.primary}] [{current_theme.accent}]■[/{current_theme.accent}] [{current_theme.success}]■[/{current_theme.success}]"
         )
-        console.print(Panel(
-            theme_info,
-            title="[header]⚙ Theme[/header]",
-            border_style="border",
-            box=box.ROUNDED,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                theme_info,
+                title="[header]⚙ Theme[/header]",
+                border_style="border",
+                box=box.ROUNDED,
+                padding=(1, 2),
+            )
+        )
 
         console.print()
-        console.print("[muted]Run [white]cascade config set <key> <value>[/white] to modify settings[/muted]")
+        console.print(
+            "[muted]Run [white]cascade config set <key> <value>[/white] to modify settings[/muted]"
+        )
         console.print("[muted]Run [white]cascade config edit[/white] to open in editor[/muted]")
 
     except FileNotFoundError as e:
@@ -147,6 +157,7 @@ def set_config(ctx: click.Context, key: str, value: str) -> None:
 
         # Reload config from dict and save
         from cascade.models.project import ProjectConfig
+
         project._config = ProjectConfig._from_dict(config_dict)
         project.save_config()
 
@@ -185,12 +196,14 @@ def get_config(ctx: click.Context, key: str) -> None:
 
         if isinstance(current, dict):
             yaml_str = yaml.dump(current, default_flow_style=False)
-            console.print(Panel(
-                Syntax(yaml_str.strip(), "yaml", theme="monokai"),
-                title=f"[accent]{key}[/accent]",
-                border_style="border",
-                box=box.ROUNDED,
-            ))
+            console.print(
+                Panel(
+                    Syntax(yaml_str.strip(), "yaml", theme="monokai"),
+                    title=f"[accent]{key}[/accent]",
+                    border_style="border",
+                    box=box.ROUNDED,
+                )
+            )
         else:
             console.print(f"[accent]{key}[/accent] = [white]{current}[/white]")
 
@@ -228,6 +241,7 @@ def reset_config(ctx: click.Context, force: bool) -> None:
                 return
 
         from cascade.models.project import ProjectConfig
+
         project._config = ProjectConfig(
             name=project.config.name,  # Keep name
             description=project.config.description,  # Keep description
@@ -244,7 +258,12 @@ def reset_config(ctx: click.Context, force: bool) -> None:
 
 @config.command("theme")
 @click.argument("name", required=False)
-@click.option("--scope", type=click.Choice(["user", "project"]), default="user", help="Where to save the theme preference")
+@click.option(
+    "--scope",
+    type=click.Choice(["user", "project"]),
+    default="user",
+    help="Where to save the theme preference",
+)
 @click.pass_context
 def set_theme(ctx: click.Context, name: str | None, scope: str) -> None:
     """Set or view the color theme."""

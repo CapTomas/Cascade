@@ -36,6 +36,7 @@ Done.
     assert "singleton" in p.applies_to_tags
     assert "utils.py" in p.file_examples
 
+
 def test_extract_adr_proposal():
     extractor = KnowledgeExtractor()
     response = """
@@ -59,6 +60,7 @@ alternatives: Flask, Django
     assert a.created_by_ticket_id == 42
     assert "Pydantic" in a.rationale
 
+
 def test_extract_multiple_proposals():
     extractor = KnowledgeExtractor()
     response = """
@@ -81,11 +83,13 @@ rationale: R1
     assert isinstance(proposals[0], Pattern)
     assert isinstance(proposals[1], ADR)
 
+
 def test_extract_no_proposal():
     extractor = KnowledgeExtractor()
     response = "No proposal here."
     proposals = extractor.extract_proposals(response)
     assert len(proposals) == 0
+
 
 def test_extract_malformed_proposal():
     extractor = KnowledgeExtractor()

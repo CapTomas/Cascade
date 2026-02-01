@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Planner for analyzing requirements and generating a project plan."""
+
+from __future__ import annotations
 
 import json
 import logging
@@ -67,7 +68,10 @@ class Planner:
             if attempt > 0:
                 logger.info(f"Retrying planning analysis (attempt {attempt}/{max_retries})")
                 # Add a hint to the prompt about the previous failure if possible
-                retry_prompt = prompt + f"\n\nIMPORTANT: Your previous response was invalid. Error: {last_error}\nPlease ensure you return a valid JSON object strictly following the schema."
+                retry_prompt = (
+                    prompt
+                    + f"\n\nIMPORTANT: Your previous response was invalid. Error: {last_error}\nPlease ensure you return a valid JSON object strictly following the schema."
+                )
             else:
                 retry_prompt = prompt
 
@@ -126,8 +130,7 @@ class Planner:
         topic_map: dict[str, int | None] = {}
         for prop_topic in result.topics:
             topic = self.topic_manager.create(
-                name=prop_topic.name,
-                description=prop_topic.description
+                name=prop_topic.name, description=prop_topic.description
             )
             topic_map[prop_topic.name] = topic.id
 
@@ -222,7 +225,9 @@ class Planner:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse agent JSON: {e}")
             logger.debug(f"Raw content: {content}")
-            raise ValueError("Agent response was not valid JSON. Please try again or refine requirements.") from e
+            raise ValueError(
+                "Agent response was not valid JSON. Please try again or refine requirements."
+            ) from e
 
         # Basic validation
         if "tickets" not in data or not isinstance(data["tickets"], list):

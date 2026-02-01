@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Knowledge base management for Cascade (conventions, patterns, ADRs)."""
+
+from __future__ import annotations
 
 import json
 from datetime import datetime
@@ -119,9 +120,7 @@ class KnowledgeBase:
                 (category,),
             )
         else:
-            rows = self.db.fetch_all(
-                "SELECT * FROM conventions ORDER BY category, priority DESC"
-            )
+            rows = self.db.fetch_all("SELECT * FROM conventions ORDER BY category, priority DESC")
 
         return [Convention.from_dict(dict(row)) for row in rows]
 
@@ -226,9 +225,7 @@ class KnowledgeBase:
 
     def get_pattern_by_name(self, name: str) -> Pattern | None:
         """Get pattern by name."""
-        row = self.db.fetch_one(
-            "SELECT * FROM patterns WHERE pattern_name = ?", (name,)
-        )
+        row = self.db.fetch_one("SELECT * FROM patterns WHERE pattern_name = ?", (name,))
         return Pattern.from_dict(dict(row)) if row else None
 
     def get_patterns(
@@ -410,9 +407,7 @@ class KnowledgeBase:
 
     def get_adr_by_number(self, adr_number: int) -> ADR | None:
         """Get ADR by number."""
-        row = self.db.fetch_one(
-            "SELECT * FROM adrs WHERE adr_number = ?", (adr_number,)
-        )
+        row = self.db.fetch_one("SELECT * FROM adrs WHERE adr_number = ?", (adr_number,))
         return ADR.from_dict(dict(row)) if row else None
 
     def get_adrs(

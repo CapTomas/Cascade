@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -96,7 +97,9 @@ class TicketExecutor:
 
         if self.tm.has_unmet_dependencies(ticket_id):
             blocking = [t.id for t in self.tm.get_blocking_tickets(ticket_id)]
-            logger.warning(f"Execution blocked: Ticket #{ticket_id} depends on incomplete tickets {blocking}")
+            logger.warning(
+                f"Execution blocked: Ticket #{ticket_id} depends on incomplete tickets {blocking}"
+            )
             return ExecutionResult(
                 success=False,
                 ticket_id=ticket_id,
@@ -133,20 +136,23 @@ class TicketExecutor:
             )
 
             from cascade.utils.tokens import TokenBudget
+
             budget = TokenBudget().get_limit(mode.value)
 
             context = self.context_builder.build_context(ticket, mode, token_budget=budget)
             prompt = self.prompt_builder.build_execution_prompt(context)
 
             if dry_run:
-                self.log_action(ticket_id, "DRY_RUN", details=f"Prompt generated for mode: {mode.value}")
+                self.log_action(
+                    ticket_id, "DRY_RUN", details=f"Prompt generated for mode: {mode.value}"
+                )
                 self.tm.update_status(ticket_id, TicketStatus.READY)
                 # Cleanup branch if created (though dry run shouldn't create it usually, but we guard above)
                 return ExecutionResult(
                     success=True,
                     ticket_id=ticket_id,
                     context_mode=mode,
-                    agent_response=prompt, # We return the prompt as the response
+                    agent_response=prompt,  # We return the prompt as the response
                     error="Dry run completed successfully",
                 )
 
@@ -193,7 +199,9 @@ class TicketExecutor:
                         proposals = []
                         if self.knowledge_extractor:
                             try:
-                                extracted = self.knowledge_extractor.extract_proposals(response.content, ticket_id)
+                                extracted = self.knowledge_extractor.extract_proposals(
+                                    response.content, ticket_id
+                                )
                                 for item in extracted:
                                     if isinstance(item, Pattern):
                                         self.kb.propose_pattern(
@@ -217,7 +225,9 @@ class TicketExecutor:
                                     proposals.append(item.to_dict())
                             except Exception as ke:
                                 logger.error(f"Knowledge extraction failed: {ke}")
-                                self.log_action(ticket_id, "KNOWLEDGE_EXTRACTION_ERROR", details=str(ke))
+                                self.log_action(
+                                    ticket_id, "KNOWLEDGE_EXTRACTION_ERROR", details=str(ke)
+                                )
 
                         self.log_action(
                             ticket_id,
@@ -338,6 +348,7 @@ class TicketExecutor:
             logger.info(f"Executing batch {ticket_ids} in {mode.value} mode")
 
             from cascade.utils.tokens import TokenBudget
+
             budget = TokenBudget().get_limit(mode.value)
 
             context = self.context_builder.build_multi_context(tickets, mode, token_budget=budget)
@@ -374,7 +385,10 @@ class TicketExecutor:
                 if response.success:
                     # Parse batch summary
                     import re
-                    summary_match = re.search(r"<batch_summary>(.*?)</batch_summary>", response.content, re.DOTALL)
+
+                    summary_match = re.search(
+                        r"<batch_summary>(.*?)</batch_summary>", response.content, re.DOTALL
+                    )
                     statuses = {}
                     if summary_match:
                         summary_text = summary_match.group(1)
@@ -398,18 +412,26 @@ class TicketExecutor:
                         if gate_results.all_passed and agent_success:
                             self.tm.update_status(t.id, TicketStatus.DONE)
                             self.tm.update(t.id, context_mode=mode.value)
-                            self.log_action(t.id, "BATCH_EXECUTION_SUCCESS", details="Part of successful batch")
+                            self.log_action(
+                                t.id, "BATCH_EXECUTION_SUCCESS", details="Part of successful batch"
+                            )
                         else:
                             all_passed = False
                             # If it failed, we'll need to handle it. For now, mark as READY/BLOCKED depending on mode
                             self.tm.update_status(t.id, TicketStatus.READY)
-                            self.log_action(t.id, "BATCH_EXECUTION_FAILURE", details="Gate failed or agent reported failure for this ticket.")
+                            self.log_action(
+                                t.id,
+                                "BATCH_EXECUTION_FAILURE",
+                                details="Gate failed or agent reported failure for this ticket.",
+                            )
 
                     # Knowledge extraction (on whole response)
                     proposals = []
                     if self.knowledge_extractor:
                         try:
-                            extracted = self.knowledge_extractor.extract_proposals(response.content, ticket_ids[0])
+                            extracted = self.knowledge_extractor.extract_proposals(
+                                response.content, ticket_ids[0]
+                            )
                             for item in extracted:
                                 # (same KB proposal logic as single execute)
                                 if isinstance(item, Pattern):
@@ -418,7 +440,9 @@ class TicketExecutor:
                                         description=item.description,
                                         code_template=item.code_template,
                                         applies_to_tags=item.applies_to_tags,
-                                        learned_from_ticket_id=ticket_ids[0], # Using first ticket in batch for simplicity
+                                        learned_from_ticket_id=ticket_ids[
+                                            0
+                                        ],  # Using first ticket in batch for simplicity
                                         file_examples=item.file_examples,
                                     )
                                 elif isinstance(item, ADR):
@@ -445,7 +469,9 @@ class TicketExecutor:
                         execution_time_ms=execution_time_ms,
                         proposals=proposals,
                         # We might need a way to return multiple gate results, but for now we aggregate
-                        error=None if all_passed else "Some tickets in the batch failed validation."
+                        error=None
+                        if all_passed
+                        else "Some tickets in the batch failed validation.",
                     )
                 else:
                     last_error = response.error or "Unknown agent error"

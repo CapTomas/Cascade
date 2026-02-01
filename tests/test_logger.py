@@ -58,9 +58,9 @@ class TestSetupLogging:
 
         logger = logging.getLogger("level_test")
         logger.debug("Debug message")  # Should not appear
-        logger.info("Info message")    # Should not appear
+        logger.info("Info message")  # Should not appear
         logger.warning("Warning message")  # Should appear
-        logger.error("Error message")      # Should appear
+        logger.error("Error message")  # Should appear
 
         content = log_file.read_text()
         assert "Debug message" not in content

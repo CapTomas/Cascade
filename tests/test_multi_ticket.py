@@ -15,20 +15,23 @@ def mock_agent():
     agent.execute.return_value = AgentResponse(
         success=True,
         content="Success\n<batch_summary>\n- TICKET #1: SUCCESS\n- TICKET #2: SUCCESS\n</batch_summary>",
-        token_count=100
+        token_count=100,
     )
     return agent
+
 
 @pytest.fixture
 def mock_cb():
     cb = MagicMock()
     return cb
 
+
 @pytest.fixture
 def mock_pb():
     pb = MagicMock()
     pb.build_multi_execution_prompt.return_value = "Batch Prompt"
     return pb
+
 
 @pytest.fixture
 def mock_tm():
@@ -39,19 +42,23 @@ def mock_tm():
     tm.has_unmet_dependencies.return_value = False
     return tm
 
+
 @pytest.fixture
 def mock_qg():
     qg = MagicMock()
     qg.run_all.return_value = MagicMock(all_passed=True)
     return qg
 
+
 @pytest.fixture
 def mock_kb():
     return MagicMock()
 
+
 @pytest.fixture
 def executor(mock_agent, mock_cb, mock_pb, mock_tm, mock_qg, mock_kb):
     return TicketExecutor(mock_agent, mock_cb, mock_pb, mock_tm, mock_qg, mock_kb)
+
 
 def test_execute_batch_success(executor, mock_agent, mock_tm, mock_qg):
     result = executor.execute_batch([1, 2])
@@ -63,6 +70,7 @@ def test_execute_batch_success(executor, mock_agent, mock_tm, mock_qg):
     mock_tm.update_status.assert_any_call(1, TicketStatus.DONE)
     mock_tm.update_status.assert_any_call(2, TicketStatus.DONE)
 
+
 def test_execute_batch_blocked(executor, mock_tm):
     mock_tm.has_unmet_dependencies.side_effect = lambda tid: tid == 2
     mock_tm.get_blocking_tickets.return_value = [Ticket(id=3, title="Blocker")]
@@ -72,6 +80,7 @@ def test_execute_batch_blocked(executor, mock_tm):
     assert not result.success
     assert "blocked" in result.error
     assert not executor.agent.execute.called
+
 
 def test_estimate_context_tokens_multi():
     from cascade.models.context import MultiTicketContext

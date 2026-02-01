@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Quality gate framework for enforcing project standards."""
+
+from __future__ import annotations
 
 import logging
 import subprocess
@@ -92,11 +93,7 @@ class StaticAnalysisGate(BaseGate):
                 if error:
                     all_output.append(f"Error: {error}")
 
-        return GateResult(
-            gate_name=self.name,
-            passed=all_passed,
-            output="\n".join(all_output)
-        )
+        return GateResult(gate_name=self.name, passed=all_passed, output="\n".join(all_output))
 
 
 class UnitTestGate(BaseGate):
@@ -116,18 +113,16 @@ class UnitTestGate(BaseGate):
             coverage = self._parse_coverage(output)
             if coverage is not None and coverage < self.min_coverage:
                 success = False
-                output += f"\n\nCoverage failure: {coverage}% is below threshold {self.min_coverage}%"
+                output += (
+                    f"\n\nCoverage failure: {coverage}% is below threshold {self.min_coverage}%"
+                )
 
-        return GateResult(
-            gate_name=self.name,
-            passed=success,
-            output=output,
-            error=error
-        )
+        return GateResult(gate_name=self.name, passed=success, output=output, error=error)
 
     def _parse_coverage(self, output: str) -> float | None:
         """Attempt to parse coverage percentage from output."""
         import re
+
         # Support for pytest-cov output
         match = re.search(r"TOTAL\s+\d+\s+\d+\s+(\d+)%", output)
         if match:
@@ -208,7 +203,7 @@ class SecurityScanGate(BaseGate):
 
                 # Some tools use non-zero exit code to indicate ANY findings
                 if not success and ("audit" in cmd or "bandit" in cmd):
-                    if not issues_found: # If not already flagged by keywords
+                    if not issues_found:  # If not already flagged by keywords
                         issues_found = True
 
                 if issues_found:
@@ -249,23 +244,28 @@ class QualityGates:
         q = self.config.quality
 
         if q.static_analysis.enabled:
-            self.gates.append(StaticAnalysisGate(
-                tools=q.static_analysis.tools,
-                fail_on_error=q.static_analysis.fail_on_error
-            ))
+            self.gates.append(
+                StaticAnalysisGate(
+                    tools=q.static_analysis.tools, fail_on_error=q.static_analysis.fail_on_error
+                )
+            )
 
         if q.unit_tests.enabled and q.unit_tests.command:
-            self.gates.append(UnitTestGate(
-                command=q.unit_tests.command,
-                min_coverage=q.unit_tests.min_coverage,
-                fail_on_error=q.unit_tests.fail_on_error
-            ))
+            self.gates.append(
+                UnitTestGate(
+                    command=q.unit_tests.command,
+                    min_coverage=q.unit_tests.min_coverage,
+                    fail_on_error=q.unit_tests.fail_on_error,
+                )
+            )
 
         if q.security_scan.enabled:
-            self.gates.append(SecurityScanGate(
-                fail_on_critical=q.security_scan.fail_on_critical,
-                fail_on_high=q.security_scan.fail_on_high
-            ))
+            self.gates.append(
+                SecurityScanGate(
+                    fail_on_critical=q.security_scan.fail_on_critical,
+                    fail_on_high=q.security_scan.fail_on_high,
+                )
+            )
 
     def run_all(self, ticket: Ticket, response: AgentResponse) -> GateResults:
         """Run all loaded quality gates."""

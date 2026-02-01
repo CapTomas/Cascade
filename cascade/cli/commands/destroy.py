@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Destroy command for Cascade CLI."""
+
+from __future__ import annotations
 
 import shutil
 from pathlib import Path
@@ -12,7 +13,8 @@ from cascade.core.project import CascadeProject
 
 @click.command("destroy")
 @click.option(
-    "--force", "-f",
+    "--force",
+    "-f",
     is_flag=True,
     help="Skip confirmation",
 )
@@ -38,8 +40,8 @@ def destroy_cmd(ctx: click.Context, force: bool) -> None:
         if not project_root:
             project_root = Path.cwd()
             if not (project_root / CascadeProject.CASCADE_DIR).exists():
-                 print_warning("No Cascade project found in this directory (or parents).")
-                 return
+                print_warning("No Cascade project found in this directory (or parents).")
+                return
 
         cascade_dir = project_root / CascadeProject.CASCADE_DIR
 

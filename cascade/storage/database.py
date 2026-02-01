@@ -2,10 +2,10 @@ import logging
 import sqlite3
 import time
 from collections.abc import Generator
-from typing import Any
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

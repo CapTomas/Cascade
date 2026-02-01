@@ -2,7 +2,6 @@ import shutil
 import subprocess
 import time
 from collections.abc import Callable
-from typing import Any
 
 from cascade.agents.interface import (
     AgentCapabilities,
@@ -217,7 +216,7 @@ class ClaudeCliAgent(AgentInterface):
             logger.exception("Unexpected error executing Claude Code")
             return AgentResponse(
                 success=False,
-                content="".join(stdout_lines) if 'stdout_lines' in locals() else "",
+                content="".join(stdout_lines) if "stdout_lines" in locals() else "",
                 error=f"Unexpected error: {str(e)}",
                 execution_time_ms=int((time.time() - start_time) * 1000),
             )
@@ -239,11 +238,10 @@ class ClaudeCliAgent(AgentInterface):
         if self.config.extra_args:
             for arg in self.config.extra_args:
                 # Basic safety filtering for CLI arguments
-                if not any(char in arg for char in [';', '&', '|', '>', '<']):
+                if not any(char in arg for char in [";", "&", "|", ">", "<"]):
                     cmd.append(arg)
 
         return cmd
-
 
     def _parse_response(
         self,
@@ -284,7 +282,7 @@ class ClaudeCliAgent(AgentInterface):
         # Common markers in Claude Code output
         patterns = [
             r"(?:Created|Modified|Edited|Wrote|Updated|Applied changes to)\s*(?:file:?\s*)?`?([^`\s\*,]+)`?",
-            r"CHANGELOG\.md|package\.json|pyproject\.toml", # Specific important files often mentioned
+            r"CHANGELOG\.md|package\.json|pyproject\.toml",  # Specific important files often mentioned
             r"(?:into|to)\s+`?([^`\s\*,]+\.[a-z0-9]+)`?",
         ]
 

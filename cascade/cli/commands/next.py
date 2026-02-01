@@ -1,5 +1,6 @@
-from __future__ import annotations
 """Next command for Cascade CLI."""
+
+from __future__ import annotations
 
 import re
 
@@ -14,17 +15,15 @@ from cascade.models.enums import TicketStatus, TicketType
 @click.command("next")
 @click.option("--topic", "topic_name", help="Suggest within topic")
 @click.option(
-    "--type", "ticket_type",
+    "--type",
+    "ticket_type",
     type=click.Choice([t.value for t in TicketType], case_sensitive=False),
-    help="Suggest within ticket type"
+    help="Suggest within ticket type",
 )
 @click.option("--agent", "-A", help="Override default agent for selection")
 @click.pass_context
 def next_cmd(
-    ctx: click.Context,
-    topic_name: str | None,
-    ticket_type: str | None,
-    agent: str | None
+    ctx: click.Context, topic_name: str | None, ticket_type: str | None, agent: str | None
 ) -> None:
     """AI suggests the next ticket to work on."""
     try:
@@ -45,15 +44,20 @@ def next_cmd(
             tickets = project.tickets.list_all(status=TicketStatus.READY)
 
         if not tickets:
-            console.print("[yellow]No tickets are currently READY. Use 'ccd status' to see pending work.[/yellow]")
+            console.print(
+                "[yellow]No tickets are currently READY. Use 'ccd status' to see pending work.[/yellow]"
+            )
             return
 
         if len(tickets) == 1:
             ticket = tickets[0]
             assert ticket.id is not None
-            console.print(f"[info]Only one ticket is READY:[/info] [id]#{ticket.id}[/id]: {ticket.title}")
+            console.print(
+                f"[info]Only one ticket is READY:[/info] [id]#{ticket.id}[/id]: {ticket.title}"
+            )
             if click.confirm("\nExecute it?"):
                 from cascade.cli.commands.ticket import execute
+
                 ctx.invoke(execute, ticket_id=ticket.id)
             return
 
@@ -84,7 +88,9 @@ def next_cmd(
 
         selection_str = match.group(1).strip()
         is_batch = type_match and type_match.group(1).upper() == "BATCH"
-        rationale = rationale_match.group(1).strip() if rationale_match else "No rationale provided."
+        rationale = (
+            rationale_match.group(1).strip() if rationale_match else "No rationale provided."
+        )
 
         # Extract IDs - handle #1, #2 or 1, 2
         ticket_ids = [int(i.strip().replace("#", "")) for i in re.findall(r"#?\d+", selection_str)]
@@ -108,14 +114,11 @@ def next_cmd(
             sel_t = selected_tickets[0]
             msg = f"[bold white]Selected Ticket:[/bold white] [id]#{sel_t.id}[/id]: {sel_t.title}\n\n[bold white]Rationale:[/bold white]\n{rationale}"
 
-        console.print(create_panel(
-            msg,
-            title="Recommendation",
-            border_style="green"
-        ))
+        console.print(create_panel(msg, title="Recommendation", border_style="green"))
 
         if click.confirm("\nProceed with this selection?"):
             from cascade.cli.commands.ticket import execute
+
             ctx.invoke(execute, ticket_ids=tuple(ticket_ids))
 
     except FileNotFoundError:

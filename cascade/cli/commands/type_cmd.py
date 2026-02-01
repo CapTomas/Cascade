@@ -1,6 +1,6 @@
-from __future__ import annotations
 """Type commands for Cascade CLI."""
 
+from __future__ import annotations
 
 import click
 
@@ -15,12 +15,14 @@ from cascade.models.enums import TicketStatus, TicketType
     type=click.Choice([t.value for t in TicketType], case_sensitive=False),
 )
 @click.option(
-    "--next", "execute_next",
+    "--next",
+    "execute_next",
     is_flag=True,
     help="Execute the next priority ticket of this type",
 )
 @click.option(
-    "--limit", "-l",
+    "--limit",
+    "-l",
     type=int,
     default=50,
     help="Maximum tickets to show",
@@ -35,17 +37,13 @@ def type_cmd(ctx: click.Context, ticket_type: str, execute_next: bool, limit: in
         if execute_next:
             # Find next ready ticket of this type
             tickets = project.tickets.list_all(
-                status=TicketStatus.READY,
-                ticket_type=ttype,
-                limit=1
+                status=TicketStatus.READY, ticket_type=ttype, limit=1
             )
 
             if not tickets:
                 # Try finding DEFINED if no READY
                 tickets = project.tickets.list_all(
-                    status=TicketStatus.DEFINED,
-                    ticket_type=ttype,
-                    limit=1
+                    status=TicketStatus.DEFINED, ticket_type=ttype, limit=1
                 )
 
             if not tickets:
@@ -56,14 +54,12 @@ def type_cmd(ctx: click.Context, ticket_type: str, execute_next: bool, limit: in
 
             # We invoke the ticket execute command
             from cascade.cli.commands.ticket import execute
+
             ctx.invoke(execute, ticket_id=ticket.id)
             return
 
         # Regular listing
-        tickets = project.tickets.list_all(
-            ticket_type=ttype,
-            limit=limit
-        )
+        tickets = project.tickets.list_all(ticket_type=ttype, limit=limit)
 
         if not tickets:
             console.print(f"[dim]No tickets of type {ttype.value} found.[/dim]")

@@ -1,8 +1,8 @@
-from __future__ import annotations
 """Ticket management for Cascade."""
 
+from __future__ import annotations
+
 import json
-import logging
 from datetime import datetime
 from typing import Any
 
@@ -83,7 +83,7 @@ class TicketManager:
             description=description,
             status=status,
             severity=severity,
-            priority_score=float(data["priority_score"]), # type: ignore
+            priority_score=float(data["priority_score"]),  # type: ignore
             parent_ticket_id=parent_ticket_id,
             created_at=now,
             updated_at=now,
@@ -503,7 +503,7 @@ class TicketManager:
         # Get all completed tickets of the same type
         rows = self.db.fetch_all(
             "SELECT * FROM tickets WHERE status = ? AND ticket_type = ? AND id != ? ORDER BY completed_at DESC LIMIT 50",
-            (TicketStatus.DONE.value, ticket.ticket_type.value, ticket.id)
+            (TicketStatus.DONE.value, ticket.ticket_type.value, ticket.id),
         )
 
         if not rows:
@@ -516,7 +516,7 @@ class TicketManager:
         target_files = set(ticket.affected_files or [])
 
         for t in completed:
-            score = 1.0 # Base score for same type
+            score = 1.0  # Base score for same type
 
             if target_files:
                 current_files = set(t.affected_files or [])

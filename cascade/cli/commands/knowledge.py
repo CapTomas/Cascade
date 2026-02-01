@@ -1,8 +1,10 @@
-from __future__ import annotations
 """Knowledge commands for Cascade CLI."""
 
-import click
+from __future__ import annotations
+
 from typing import Any
+
+import click
 
 from cascade.cli.styles import (
     console,
@@ -118,7 +120,9 @@ def reject(ctx: click.Context, entity_type: str, entity_id: int) -> None:
 
 
 @knowledge.command("add-convention")
-@click.option("--category", "-c", required=True, help="Category (naming, style, structure, security)")
+@click.option(
+    "--category", "-c", required=True, help="Category (naming, style, structure, security)"
+)
 @click.option("--key", "-k", required=True, help="Convention key")
 @click.option("--value", "-v", required=True, help="Convention value/rule")
 @click.option("--rationale", "-r", default="", help="Why this convention exists")
@@ -140,7 +144,8 @@ def add_convention(ctx: click.Context, category: str, key: str, value: str, rati
 
 @knowledge.command("conventions")
 @click.option(
-    "--category", "-c",
+    "--category",
+    "-c",
     default=None,
     help="Filter by category (naming, style, structure, security)",
 )
@@ -153,7 +158,9 @@ def conventions(ctx: click.Context, category: str | None) -> None:
         convs = kb.get_conventions(category)
 
         if not convs:
-            console.print("[dim]No conventions defined. Edit .cascade/conventions.yaml to add some.[/dim]")
+            console.print(
+                "[dim]No conventions defined. Edit .cascade/conventions.yaml to add some.[/dim]"
+            )
             return
 
         print_banner("Project Conventions")
@@ -166,7 +173,9 @@ def conventions(ctx: click.Context, category: str | None) -> None:
         for cat, items in sorted(grouped.items()):
             console.print(f"\n[label]{cat.upper()}[/label]")
             for item in items:
-                console.print(f" [accent]•[/accent] [white]{item.convention_key}[/white]: {item.convention_value}")
+                console.print(
+                    f" [accent]•[/accent] [white]{item.convention_key}[/white]: {item.convention_value}"
+                )
                 if item.rationale:
                     console.print(f"   [dim]({item.rationale})[/dim]")
 
@@ -177,7 +186,8 @@ def conventions(ctx: click.Context, category: str | None) -> None:
 
 @knowledge.command("patterns")
 @click.option(
-    "--status", "-s",
+    "--status",
+    "-s",
     type=click.Choice(["proposed", "approved", "rejected"]),
     default=None,
     help="Filter by status",
@@ -222,7 +232,8 @@ def patterns(ctx: click.Context, status: str | None) -> None:
 
 @knowledge.command("adrs")
 @click.option(
-    "--status", "-s",
+    "--status",
+    "-s",
     type=click.Choice(["proposed", "approved", "rejected", "superseded"]),
     default=None,
     help="Filter by status",
