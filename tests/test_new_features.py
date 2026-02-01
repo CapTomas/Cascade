@@ -1,16 +1,11 @@
 """Tests for new features: Metrics, Git, Orchestration."""
 
-import pytest
-from unittest.mock import MagicMock, patch
 from dataclasses import dataclass
-from datetime import datetime
-from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-from cascade.core.metrics import MetricsService, ExecutionMetrics
-from cascade.utils.git import GitProvider
 from cascade.agents.registry import resolve_agent_name
-from cascade.agents.interface import AgentConfig
-
+from cascade.core.metrics import MetricsService
+from cascade.utils.git import GitProvider
 
 # --- Metrics Tests ---
 

@@ -2,9 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
-from cascade.models.enums import TicketType, TicketStatus, Severity, ContextMode
+from cascade.models.enums import ContextMode, Severity, TicketStatus, TicketType
 
 
 @dataclass
@@ -17,19 +16,19 @@ class Ticket:
     organization (parent/child) and dependency tracking.
     """
 
-    id: Optional[int] = None
+    id: int | None = None
     ticket_type: TicketType = TicketType.TASK
     title: str = ""
     description: str = ""
     status: TicketStatus = TicketStatus.DEFINED
-    severity: Optional[Severity] = None
+    severity: Severity | None = None
     priority_score: float = 0.0
-    parent_ticket_id: Optional[int] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    estimated_effort: Optional[int] = None  # Story points or hours
-    actual_effort: Optional[int] = None
+    parent_ticket_id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    completed_at: datetime | None = None
+    estimated_effort: int | None = None  # Story points or hours
+    actual_effort: int | None = None
     affected_files: list[str] = field(default_factory=list)
     acceptance_criteria: str = ""
     context_mode: ContextMode = ContextMode.MINIMAL

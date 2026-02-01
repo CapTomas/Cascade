@@ -1,6 +1,5 @@
 """Tests for KnowledgeBase."""
 
-import pytest
 
 from cascade.models.enums import KnowledgeStatus
 
@@ -136,7 +135,7 @@ class TestPatterns:
     def test_get_patterns_by_status(self, knowledge_base):
         """Test filtering patterns by status."""
         p1 = knowledge_base.propose_pattern("pattern1", "Test 1")
-        p2 = knowledge_base.propose_pattern("pattern2", "Test 2")
+        knowledge_base.propose_pattern("pattern2", "Test 2")
         knowledge_base.approve_pattern(p1.id)
 
         proposed = knowledge_base.get_patterns(status=KnowledgeStatus.PROPOSED)

@@ -1,9 +1,12 @@
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-from cascade.core.executor import TicketExecutor
-from cascade.models.enums import ContextMode, TicketStatus, TicketType
-from cascade.models.ticket import Ticket
+
 from cascade.agents.interface import AgentResponse
+from cascade.core.executor import TicketExecutor
+from cascade.models.enums import TicketStatus
+from cascade.models.ticket import Ticket
+
 
 @pytest.fixture
 def mock_agent():
@@ -71,9 +74,9 @@ def test_execute_batch_blocked(executor, mock_tm):
     assert not executor.agent.execute.called
 
 def test_estimate_context_tokens_multi():
-    from cascade.utils.tokens import estimate_context_tokens
     from cascade.models.context import MultiTicketContext
     from cascade.models.ticket import Ticket
+    from cascade.utils.tokens import estimate_context_tokens
 
     t1 = Ticket(id=1, title="Title 1", description="Desc 1")
     t2 = Ticket(id=2, title="Title 2", description="Desc 2")

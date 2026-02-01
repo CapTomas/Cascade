@@ -2,15 +2,10 @@
 
 import json
 import subprocess
-from unittest.mock import patch, MagicMock, PropertyMock
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from cascade.agents.interface import (
-    AgentInterface,
-    AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
 )
 
@@ -20,14 +15,10 @@ class TestClaudeCodeAgent:
 
     def test_agent_name(self):
         """Test agent returns correct name."""
-    def test_agent_name(self):
-        """Test agent returns correct name."""
         from cascade.agents import ClaudeCodeAgent
         agent = ClaudeCodeAgent()
         assert agent.get_name() == "claude-cli"
 
-    def test_capabilities(self):
-        """Test agent declares correct capabilities."""
     def test_capabilities(self):
         """Test agent declares correct capabilities."""
         from cascade.agents import ClaudeCodeAgent
@@ -41,16 +32,12 @@ class TestClaudeCodeAgent:
 
     def test_token_limit(self):
         """Test agent returns reasonable token limit."""
-    def test_token_limit(self):
-        """Test agent returns reasonable token limit."""
         from cascade.agents import ClaudeCodeAgent
         agent = ClaudeCodeAgent()
         limit = agent.get_token_limit()
 
         assert limit == 200000  # Claude's context window
 
-    def test_is_available_when_installed(self):
-        """Test is_available returns True when claude CLI is found."""
     def test_is_available_when_installed(self):
         """Test is_available returns True when claude CLI is found."""
         from cascade.agents import ClaudeCodeAgent
@@ -63,8 +50,6 @@ class TestClaudeCodeAgent:
 
     def test_is_available_when_not_installed(self):
         """Test is_available returns False when claude CLI not found."""
-    def test_is_available_when_not_installed(self):
-        """Test is_available returns False when claude CLI not found."""
         from cascade.agents import ClaudeCodeAgent
 
         with patch("shutil.which") as mock_which:
@@ -74,8 +59,6 @@ class TestClaudeCodeAgent:
 
     def test_execute_empty_prompt_fails(self):
         """Test that empty prompt returns error."""
-    def test_execute_empty_prompt_fails(self):
-        """Test that empty prompt returns error."""
         from cascade.agents import ClaudeCodeAgent
         agent = ClaudeCodeAgent()
 
@@ -83,8 +66,6 @@ class TestClaudeCodeAgent:
         assert response.success is False
         assert "empty" in response.error.lower()
 
-    def test_execute_invalid_working_dir(self, tmp_path):
-        """Test that working_dir outside project root fails."""
     def test_execute_invalid_working_dir(self, tmp_path):
         """Test that working_dir outside project root fails."""
         from cascade.agents import ClaudeCodeAgent
@@ -100,8 +81,6 @@ class TestClaudeCodeAgent:
             assert response.success is False
             assert "Security" in response.error or "outside" in response.error.lower()
 
-    def test_execute_success(self, tmp_path):
-        """Test successful execution with mocked subprocess.Popen."""
     def test_execute_success(self, tmp_path):
         """Test successful execution with mocked subprocess.Popen."""
         from cascade.agents import ClaudeCodeAgent
@@ -126,8 +105,6 @@ class TestClaudeCodeAgent:
 
     def test_execute_timeout(self, tmp_path):
         """Test execution timeout handling."""
-    def test_execute_timeout(self, tmp_path):
-        """Test execution timeout handling."""
         from cascade.agents import ClaudeCodeAgent
 
         mock_process = MagicMock()
@@ -150,8 +127,6 @@ class TestClaudeCodeAgent:
                             assert "timed out" in response.error.lower()
                             mock_process.kill.assert_called_once()
 
-    def test_execute_cli_error(self, tmp_path):
-        """Test CLI error handling."""
     def test_execute_cli_error(self, tmp_path):
         """Test CLI error handling."""
         from cascade.agents import ClaudeCodeAgent
@@ -180,14 +155,10 @@ class TestCodexAgent:
 
     def test_agent_name(self):
         """Test agent returns correct name."""
-    def test_agent_name(self):
-        """Test agent returns correct name."""
         from cascade.agents import CodexAgent
         agent = CodexAgent()
         assert agent.get_name() == "codex-api"
 
-    def test_capabilities(self):
-        """Test agent declares correct capabilities."""
     def test_capabilities(self):
         """Test agent declares correct capabilities."""
         from cascade.agents import CodexAgent
@@ -199,16 +170,12 @@ class TestCodexAgent:
 
     def test_is_available_without_config(self):
         """Test is_available returns False without API key."""
-    def test_is_available_without_config(self):
-        """Test is_available returns False without API key."""
         from cascade.agents import CodexAgent
 
         with patch.dict("os.environ", {}, clear=True):
             agent = CodexAgent()
             assert agent.is_available() is False
 
-    def test_is_available_with_config(self):
-        """Test is_available returns True with API key and model."""
     def test_is_available_with_config(self):
         """Test is_available returns True with API key and model."""
         from cascade.agents import CodexAgent
@@ -222,8 +189,6 @@ class TestCodexAgent:
 
     def test_execute_without_api_key(self):
         """Test execution fails without API key."""
-    def test_execute_without_api_key(self):
-        """Test execution fails without API key."""
         from cascade.agents import CodexAgent
 
         with patch.dict("os.environ", {}, clear=True):
@@ -233,8 +198,6 @@ class TestCodexAgent:
             assert response.success is False
             assert "OPENAI_API_KEY" in response.error
 
-    def test_execute_api_success(self, tmp_path):
-        """Test successful API execution."""
     def test_execute_api_success(self, tmp_path):
         """Test successful API execution."""
         from cascade.agents import CodexAgent
@@ -261,10 +224,9 @@ class TestCodexAgent:
 
     def test_execute_api_error(self, tmp_path):
         """Test API error handling."""
-    def test_execute_api_error(self, tmp_path):
-        """Test API error handling."""
-        from cascade.agents import CodexAgent
         import urllib.error
+
+        from cascade.agents import CodexAgent
 
         mock_error = urllib.error.HTTPError(
             url="test",
@@ -396,8 +358,6 @@ class TestAgentInterface:
         assert is_valid is False
         assert "empty" in error.lower()
 
-    def test_validate_prompt_too_long(self):
-        """Test that overly long prompts are rejected."""
     def test_validate_prompt_too_long(self):
         """Test that overly long prompts are rejected."""
         from cascade.agents import ClaudeCodeAgent

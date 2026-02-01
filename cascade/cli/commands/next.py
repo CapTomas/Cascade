@@ -1,18 +1,14 @@
 """Next command for Cascade CLI."""
 
-import click
 import re
-from typing import Optional
+
+import click
+
+from cascade.agents.registry import get_agent
+from cascade.cli.styles import console, create_panel, print_banner, print_error
 from cascade.core.project import get_project
 from cascade.models.enums import TicketStatus, TicketType
-from cascade.agents.registry import get_agent
-from cascade.cli.styles import (
-    console,
-    print_banner,
-    print_error,
-    print_success,
-    create_panel
-)
+
 
 @click.command("next")
 @click.option("--topic", "topic_name", help="Suggest within topic")
@@ -25,9 +21,9 @@ from cascade.cli.styles import (
 @click.pass_context
 def next_cmd(
     ctx: click.Context,
-    topic_name: Optional[str],
-    ticket_type: Optional[str],
-    agent: Optional[str]
+    topic_name: str | None,
+    ticket_type: str | None,
+    agent: str | None
 ) -> None:
     """AI suggests the next ticket to work on."""
     try:

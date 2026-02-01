@@ -1,11 +1,10 @@
 """Context models for ticket execution."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from cascade.models.enums import ContextMode
+from cascade.models.knowledge import ADR, Convention, Pattern
 from cascade.models.ticket import Ticket
-from cascade.models.knowledge import ADR, Pattern, Convention
 
 
 @dataclass

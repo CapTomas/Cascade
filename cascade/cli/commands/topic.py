@@ -1,17 +1,18 @@
 """Topic commands for Cascade CLI."""
 
+
 import click
-from typing import Optional
-from cascade.core.project import get_project
-from cascade.models.enums import TicketStatus
+
 from cascade.cli.styles import (
     console,
-    print_banner,
-    print_success,
-    print_error,
+    create_panel,
     create_table,
-    create_panel
+    print_banner,
+    print_error,
+    print_success,
 )
+from cascade.core.project import get_project
+from cascade.models.enums import TicketStatus
 
 
 @click.group()
@@ -101,7 +102,7 @@ def list_topics(ctx: click.Context) -> None:
     help="Execute the next priority ticket in this topic",
 )
 @click.pass_context
-def show(ctx: click.Context, name: str, status: Optional[str], execute_next: bool) -> None:
+def show(ctx: click.Context, name: str, status: str | None, execute_next: bool) -> None:
     """Show topic details and tickets."""
     try:
         project = get_project()

@@ -2,10 +2,8 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional
 
 from cascade.storage.database import Database
-from cascade.models.enums import TicketStatus, TicketType
 
 
 @dataclass
@@ -51,8 +49,8 @@ class ProjectMetrics:
     execution: ExecutionMetrics = field(default_factory=ExecutionMetrics)
     tickets: TicketMetrics = field(default_factory=TicketMetrics)
     quality: QualityMetrics = field(default_factory=QualityMetrics)
-    period_start: Optional[datetime] = None
-    period_end: Optional[datetime] = None
+    period_start: datetime | None = None
+    period_end: datetime | None = None
 
 
 class MetricsService:
@@ -68,8 +66,8 @@ class MetricsService:
 
     def get_execution_metrics(
         self,
-        since: Optional[datetime] = None,
-        until: Optional[datetime] = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
     ) -> ExecutionMetrics:
         """Get execution metrics for a time period."""
         metrics = ExecutionMetrics()
@@ -184,8 +182,8 @@ class MetricsService:
 
     def get_project_metrics(
         self,
-        since: Optional[datetime] = None,
-        until: Optional[datetime] = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
     ) -> ProjectMetrics:
         """Get complete project metrics."""
         return ProjectMetrics(

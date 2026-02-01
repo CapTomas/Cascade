@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -14,10 +13,10 @@ class Topic:
     logical grouping. A ticket can belong to multiple topics.
     """
 
-    id: Optional[int] = None
+    id: int | None = None
     name: str = ""
     description: str = ""
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     def __post_init__(self) -> None:
         """Normalize topic name."""

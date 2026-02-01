@@ -1,16 +1,14 @@
 """Centralized logging for Cascade."""
 
 import logging
-import os
 import sys
-from pathlib import Path
 from logging.handlers import RotatingFileHandler
-from typing import Optional
+from pathlib import Path
 
 
 def setup_logging(
     level: int = logging.INFO,
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     console: bool = True
 ) -> None:
     """

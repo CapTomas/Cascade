@@ -1,11 +1,12 @@
 """CLI integration tests for Cascade."""
 
+import os
+
 import pytest
 from click.testing import CliRunner
+
 from cascade.cli.main import cli
-from cascade.core.project import CascadeProject
-import os
-import shutil
+
 
 @pytest.fixture
 def runner():

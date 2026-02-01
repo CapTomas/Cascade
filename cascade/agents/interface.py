@@ -1,9 +1,9 @@
-"""Abstract interface for AI agents."""
-
+from __future__ import annotations
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Callable
 
 
 class AgentCapability(str, Enum):
@@ -47,12 +47,12 @@ class AgentResponse:
 
     success: bool
     content: str
-    error: Optional[str] = None
+    error: str | None = None
     files_modified: list[str] = field(default_factory=list)
     commands_executed: list[str] = field(default_factory=list)
     token_count: int = 0
     execution_time_ms: int = 0
-    raw_output: Optional[str] = None
+    raw_output: str | None = None
 
     @property
     def has_error(self) -> bool:
@@ -69,7 +69,7 @@ class AgentConfig:
     max_retries: int = 3
     environment: dict[str, str] = field(default_factory=dict)
     extra_args: list[str] = field(default_factory=list)
-    command: Optional[str] = None
+    command: str | None = None
     orchestration: dict[str, str] = field(default_factory=dict)
 
 
@@ -82,7 +82,7 @@ class AgentInterface(ABC):
     common interface.
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         """
         Initialize agent with optional configuration.
 
@@ -125,8 +125,8 @@ class AgentInterface(ABC):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         """
         Execute a prompt and return the response.
@@ -156,7 +156,7 @@ class AgentInterface(ABC):
         """
         pass
 
-    def validate_prompt(self, prompt: str) -> tuple[bool, Optional[str]]:
+    def validate_prompt(self, prompt: str) -> tuple[bool, str | None]:
         """
         Validate a prompt before execution.
 
@@ -177,7 +177,7 @@ class AgentInterface(ABC):
 
         return True, None
 
-    def _validate_working_dir(self, working_dir: Optional[str]) -> tuple[bool, Optional[str]]:
+    def _validate_working_dir(self, working_dir: str | None) -> tuple[bool, str | None]:
         """
         Ensure working_dir is safe (within project boundaries).
 
@@ -190,7 +190,6 @@ class AgentInterface(ABC):
         if not working_dir:
             return True, None
 
-        import os
         from pathlib import Path
 
         try:

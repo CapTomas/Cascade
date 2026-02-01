@@ -1,7 +1,6 @@
 """Token counting utility for Cascade."""
 
 import logging
-from typing import Optional
 
 try:
     import tiktoken

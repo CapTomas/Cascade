@@ -1,29 +1,25 @@
 """Ticket commands for Cascade CLI."""
 
-import click
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
-from rich import box
-from typing import Optional
 
-from cascade.core.project import get_project
-from cascade.core.executor import TicketExecutor
+import click
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+
 from cascade.agents.registry import get_agent, resolve_agent_name
-from cascade.utils.git import GitProvider
-from cascade.models.enums import TicketType, TicketStatus, Severity
 from cascade.cli.styles import (
     console,
-    print_banner,
-    create_table,
     create_panel,
-    print_success,
+    create_table,
+    print_banner,
     print_error,
-    print_warning,
     print_info,
-    get_progress,
+    print_success,
 )
+from cascade.core.executor import TicketExecutor
+from cascade.core.project import get_project
+from cascade.models.enums import Severity, TicketStatus, TicketType
+from cascade.utils.git import GitProvider
 
 
 @click.group()
@@ -79,8 +75,8 @@ def create(
     title: str,
     ticket_type: str,
     description: str,
-    severity: Optional[str],
-    parent: Optional[int],
+    severity: str | None,
+    parent: int | None,
     acceptance: str,
     topic: tuple[str, ...],
 ) -> None:
@@ -149,12 +145,12 @@ def show(ctx: click.Context, ticket_id: int) -> None:
         )
 
         if t.affected_files:
-            content += f"\n[bold white]Affected Files:[/bold white]\n"
+            content += "\n[bold white]Affected Files:[/bold white]\n"
             for f in t.affected_files:
                 content += f" [dim]•[/dim] {f}\n"
 
         if blocking:
-            content += f"\n[bold white]Blocked By:[/bold white]\n"
+            content += "\n[bold white]Blocked By:[/bold white]\n"
             for b in blocking:
                 content += f" [error]![/error] [id]#{b.id}[/id]: {b.title} ({b.status.value})\n"
 
@@ -198,8 +194,8 @@ def show(ctx: click.Context, ticket_id: int) -> None:
 @click.pass_context
 def list_tickets(
     ctx: click.Context,
-    status: Optional[str],
-    ticket_type: Optional[str],
+    status: str | None,
+    ticket_type: str | None,
     limit: int,
 ) -> None:
     """List tickets with optional filters."""
@@ -269,11 +265,11 @@ def list_tickets(
 def update(
     ctx: click.Context,
     ticket_id: int,
-    title: Optional[str],
-    description: Optional[str],
-    status: Optional[str],
-    severity: Optional[str],
-    acceptance: Optional[str],
+    title: str | None,
+    description: str | None,
+    status: str | None,
+    severity: str | None,
+    acceptance: str | None,
 ) -> None:
     """Update ticket fields."""
     console: Console = ctx.obj["console"]
@@ -454,7 +450,7 @@ def dependency(
 def execute(
     ctx: click.Context,
     ticket_ids: tuple[int, ...],
-    agent: Optional[str],
+    agent: str | None,
     yes: bool,
     dry_run: bool = False,
 ) -> None:
@@ -495,8 +491,9 @@ def execute(
             git_provider=GitProvider(project.root),
         )
 
-        def confirm_callback(tickets, prompt) -> bool:
-            if yes: return True
+        def confirm_callback(tickets: list, prompt: str) -> bool:
+            if yes:
+                return True
             console.print(create_panel(prompt, title="AGENT PROMPT", border_style="dim"))
 
             label = f"Proceed with {agent_name}?"
@@ -581,7 +578,7 @@ def execute(
             print_error(f"Execution failed: {result.error}")
             raise SystemExit(1)
 
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         print_error("Not in a Cascade project.")
         raise SystemExit(1)
     except Exception as e:
@@ -599,7 +596,7 @@ def _status_style(status: TicketStatus) -> str:
     }.get(status, "dim")
 
 
-def _severity_color(severity: Optional[Severity]) -> str:
+def _severity_color(severity: Severity | None) -> str:
     """Get color for severity level."""
     if not severity:
         return "dim"

@@ -1,27 +1,23 @@
 import time
+from collections.abc import Callable
 from datetime import datetime
-from typing import Optional, Callable
 
-from cascade.agents.interface import AgentInterface, AgentResponse
+from cascade.agents.interface import AgentInterface
 from cascade.core.context_builder import ContextBuilder
+from cascade.core.exceptions import (
+    TicketError,
+)
+from cascade.core.knowledge_base import KnowledgeBase
+from cascade.core.knowledge_extractor import KnowledgeExtractor
 from cascade.core.prompt_builder import PromptBuilder
 from cascade.core.quality_gates import QualityGates
 from cascade.core.ticket_manager import TicketManager
-from cascade.core.knowledge_extractor import KnowledgeExtractor
-from cascade.core.knowledge_base import KnowledgeBase
 from cascade.models.enums import ContextMode, TicketStatus
 from cascade.models.execution import ExecutionResult
 from cascade.models.knowledge import ADR, Pattern
 from cascade.models.ticket import Ticket
 from cascade.utils.git import GitProvider, create_ticket_branch_name
 from cascade.utils.logger import get_logger
-from cascade.core.exceptions import (
-    TicketError,
-    TicketBlockedError,
-    ContextError,
-    QualityGateError,
-    AgentError,
-)
 
 logger = get_logger(__name__)
 
@@ -42,8 +38,8 @@ class TicketExecutor:
         ticket_manager: TicketManager,
         quality_gates: QualityGates,
         knowledge_base: KnowledgeBase,
-        knowledge_extractor: Optional[KnowledgeExtractor] = None,
-        git_provider: Optional[GitProvider] = None,
+        knowledge_extractor: KnowledgeExtractor | None = None,
+        git_provider: GitProvider | None = None,
     ):
         """
         Initialize ticket executor.
@@ -67,9 +63,9 @@ class TicketExecutor:
     def execute(
         self,
         ticket_id: int,
-        confirm_callback: Optional[Callable[[Ticket, str], bool]] = None,
+        confirm_callback: Callable[[Ticket, str], bool] | None = None,
         dry_run: bool = False,
-        streaming_callback: Optional[Callable[[str], None]] = None,
+        streaming_callback: Callable[[str], None] | None = None,
     ) -> ExecutionResult:
         """
         Execute a single ticket.
@@ -297,9 +293,9 @@ class TicketExecutor:
     def execute_batch(
         self,
         ticket_ids: list[int],
-        confirm_callback: Optional[Callable[[list[Ticket], str], bool]] = None,
+        confirm_callback: Callable[[list[Ticket], str], bool] | None = None,
         dry_run: bool = False,
-        streaming_callback: Optional[Callable[[str], None]] = None,
+        streaming_callback: Callable[[str], None] | None = None,
     ) -> ExecutionResult:
         """
         Execute multiple tickets together.
@@ -405,7 +401,7 @@ class TicketExecutor:
                             all_passed = False
                             # If it failed, we'll need to handle it. For now, mark as READY/BLOCKED depending on mode
                             self.tm.update_status(t.id, TicketStatus.READY)
-                            self.log_action(t.id, "BATCH_EXECUTION_FAILURE", details=f"Gate failed or agent reported failure for this ticket.")
+                            self.log_action(t.id, "BATCH_EXECUTION_FAILURE", details="Gate failed or agent reported failure for this ticket.")
 
                     # Knowledge extraction (on whole response)
                     proposals = []
@@ -470,11 +466,11 @@ class TicketExecutor:
         self,
         ticket_id: int,
         action: str,
-        agent: Optional[str] = None,
-        context_mode: Optional[ContextMode] = None,
-        details: Optional[str] = None,
-        token_count: Optional[int] = None,
-        execution_time_ms: Optional[int] = None,
+        agent: str | None = None,
+        context_mode: ContextMode | None = None,
+        details: str | None = None,
+        token_count: int | None = None,
+        execution_time_ms: int | None = None,
     ) -> None:
         """Log an execution action to the database."""
         data = {

@@ -1,10 +1,12 @@
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-from datetime import datetime
+
+from cascade.agents.interface import AgentResponse
 from cascade.core.executor import TicketExecutor
 from cascade.models.enums import ContextMode, TicketStatus, TicketType
 from cascade.models.ticket import Ticket
-from cascade.agents.interface import AgentResponse
+
 
 @pytest.fixture
 def mock_agent():
@@ -122,7 +124,6 @@ def test_execute_cancelled_by_user(executor, mock_agent):
     assert not mock_agent.execute.called
 
 def test_execute_with_knowledge_extraction(executor, mock_agent, mock_kb):
-    from cascade.models.knowledge import Pattern
 
     mock_agent.execute.return_value = AgentResponse(
         success=True,

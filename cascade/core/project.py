@@ -2,19 +2,18 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
 
-from cascade.models.project import ProjectConfig
-from cascade.storage.database import Database, get_database
+from cascade.agents.registry import get_agent
+from cascade.core.context_builder import ContextBuilder
+from cascade.core.knowledge_base import KnowledgeBase
+from cascade.core.metrics import MetricsService
+from cascade.core.planner import Planner
+from cascade.core.prompt_builder import PromptBuilder
+from cascade.core.quality_gates import QualityGates
 from cascade.core.ticket_manager import TicketManager
 from cascade.core.topic_manager import TopicManager
-from cascade.core.knowledge_base import KnowledgeBase
-from cascade.core.quality_gates import QualityGates
-from cascade.core.context_builder import ContextBuilder
-from cascade.core.prompt_builder import PromptBuilder
-from cascade.core.planner import Planner
-from cascade.core.metrics import MetricsService
-from cascade.agents.registry import get_agent
+from cascade.models.project import ProjectConfig
+from cascade.storage.database import Database, get_database
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class CascadeProject:
     CONVENTIONS_FILE = "conventions.yaml"
     DB_FILE = "cascade.db"
 
-    def __init__(self, project_root: Optional[Path] = None):
+    def __init__(self, project_root: Path | None = None):
         """
         Initialize Cascade project.
 
@@ -41,16 +40,16 @@ class CascadeProject:
                           from cwd for existing .cascade directory.
         """
         self._root = project_root or self._find_project_root()
-        self._config: Optional[ProjectConfig] = None
-        self._db: Optional[Database] = None
-        self._tickets: Optional[TicketManager] = None
-        self._topics: Optional[TopicManager] = None
-        self._kb: Optional[KnowledgeBase] = None
-        self._quality_gates: Optional[QualityGates] = None
-        self._context_builder: Optional[ContextBuilder] = None
-        self._prompt_builder: Optional[PromptBuilder] = None
-        self._planner: Optional[Planner] = None
-        self._metrics: Optional[MetricsService] = None
+        self._config: ProjectConfig | None = None
+        self._db: Database | None = None
+        self._tickets: TicketManager | None = None
+        self._topics: TopicManager | None = None
+        self._kb: KnowledgeBase | None = None
+        self._quality_gates: QualityGates | None = None
+        self._context_builder: ContextBuilder | None = None
+        self._prompt_builder: PromptBuilder | None = None
+        self._planner: Planner | None = None
+        self._metrics: MetricsService | None = None
 
     @property
     def root(self) -> Path:
@@ -163,7 +162,7 @@ class CascadeProject:
         self,
         name: str = "",
         description: str = "",
-        tech_stack: Optional[list[str]] = None,
+        tech_stack: list[str] | None = None,
     ) -> None:
         """
         Initialize a new Cascade project.
@@ -271,7 +270,7 @@ class CascadeProject:
         }
 
 
-def get_project(project_root: Optional[Path] = None) -> CascadeProject:
+def get_project(project_root: Path | None = None) -> CascadeProject:
     """
     Get Cascade project instance.
 
@@ -294,7 +293,7 @@ def get_project(project_root: Optional[Path] = None) -> CascadeProject:
     return project
 
 
-def find_project_root() -> Optional[Path]:
+def find_project_root() -> Path | None:
     """
     Find the nearest Cascade project root.
 

@@ -1,10 +1,7 @@
 """Tests for cascade.utils.logger module."""
 
 import logging
-import tempfile
 from pathlib import Path
-
-import pytest
 
 
 class TestSetupLogging:
@@ -37,7 +34,7 @@ class TestSetupLogging:
         logger.info("Console test message")
 
         # Console output should contain the message
-        captured = capsys.readouterr()
+        capsys.readouterr()
         # Note: May or may not appear depending on handler setup
         # Just verify no errors occurred
 

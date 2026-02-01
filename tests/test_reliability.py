@@ -1,12 +1,13 @@
 """Reliability and error handling tests for Cascade."""
 
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-from cascade.agents import AntigravityAgent
+
 from cascade.agents.interface import AgentResponse
 from cascade.core.executor import TicketExecutor
-from cascade.core.exceptions import AgentError
 from cascade.models.enums import TicketStatus
+
 
 @pytest.fixture
 def mock_agent():

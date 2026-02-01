@@ -1,18 +1,18 @@
+from __future__ import annotations
 """Agent registry and helpers."""
 
-from typing import Optional, Type
 
-from cascade.agents.interface import AgentInterface, AgentConfig
-from cascade.agents.anthropic.claude_cli import ClaudeCliAgent
 from cascade.agents.anthropic.claude_api import ClaudeApiAgent
-from cascade.agents.openai.codex_cli import CodexCliAgent
-from cascade.agents.openai.codex_api import CodexApiAgent
-from cascade.agents.google.gemini_cli import GeminiCliAgent
-from cascade.agents.google.gemini_api import GeminiApiAgent
+from cascade.agents.anthropic.claude_cli import ClaudeCliAgent
 from cascade.agents.generic import GenericAgent
+from cascade.agents.google.gemini_api import GeminiApiAgent
+from cascade.agents.google.gemini_cli import GeminiCliAgent
+from cascade.agents.interface import AgentConfig, AgentInterface
 from cascade.agents.manual import ManualAgent
+from cascade.agents.openai.codex_api import CodexApiAgent
+from cascade.agents.openai.codex_cli import CodexCliAgent
 
-AGENT_CLASSES: dict[str, Type[AgentInterface]] = {
+AGENT_CLASSES: dict[str, type[AgentInterface]] = {
     "claude-cli": ClaudeCliAgent,
     "claude-api": ClaudeApiAgent,
     "codex-cli": CodexCliAgent,
@@ -81,7 +81,7 @@ def list_agents() -> list[str]:
     return sorted(AGENT_CLASSES.keys())
 
 
-def get_agent(name: str, config: Optional[AgentConfig] = None) -> AgentInterface:
+def get_agent(name: str, config: AgentConfig | None = None) -> AgentInterface:
     """
     Instantiate an agent by name or return cached instance.
 
@@ -122,7 +122,7 @@ def resolve_agent_name(ticket_type: str, agent_config: AgentConfig) -> str:
     return agent_config.default
 
 
-def get_agent_class_for_provider(provider: str, mode: str) -> Type[AgentInterface]:
+def get_agent_class_for_provider(provider: str, mode: str) -> type[AgentInterface]:
     """Get agent class for a specific provider and mode."""
     key = f"{provider}-{mode}"
     if key in AGENT_CLASSES:

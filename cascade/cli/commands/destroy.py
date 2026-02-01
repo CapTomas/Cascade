@@ -1,15 +1,12 @@
 """Destroy command for Cascade CLI."""
 
 import shutil
-import click
 from pathlib import Path
+
+import click
+
+from cascade.cli.styles import console, print_error, print_success, print_warning
 from cascade.core.project import CascadeProject
-from cascade.cli.styles import (
-    console,
-    print_error,
-    print_success,
-    print_warning
-)
 
 
 @click.command("destroy")

@@ -5,13 +5,10 @@ Integrates with the theme system for consistent styling across commands.
 
 from rich import box
 from rich.console import Console
-from rich.theme import Theme
 from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 from rich.table import Table
-from rich.text import Text
-from rich.columns import Columns
-from rich.live import Live
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from rich.theme import Theme
 
 from cascade.cli.themes import get_current_theme
 

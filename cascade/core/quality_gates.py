@@ -4,7 +4,6 @@ import logging
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional
 
 from cascade.agents.interface import AgentResponse
 from cascade.models.execution import GateResult, GateResults
@@ -26,7 +25,7 @@ class BaseGate(ABC):
         """Run the gate check."""
         pass
 
-    def _run_command(self, command: str, cwd: Path) -> tuple[bool, str, Optional[str]]:
+    def _run_command(self, command: str, cwd: Path) -> tuple[bool, str, str | None]:
         """
         Run a shell command safely and return (success, output, error).
 
@@ -102,7 +101,7 @@ class StaticAnalysisGate(BaseGate):
 class UnitTestGate(BaseGate):
     """Gate for running unit tests."""
 
-    def __init__(self, command: str, min_coverage: Optional[int] = None, fail_on_error: bool = True):
+    def __init__(self, command: str, min_coverage: int | None = None, fail_on_error: bool = True):
         super().__init__("Unit Tests", fail_on_error)
         self.command = command
         self.min_coverage = min_coverage
@@ -125,7 +124,7 @@ class UnitTestGate(BaseGate):
             error=error
         )
 
-    def _parse_coverage(self, output: str) -> Optional[float]:
+    def _parse_coverage(self, output: str) -> float | None:
         """Attempt to parse coverage percentage from output."""
         import re
         # Support for pytest-cov output
@@ -151,7 +150,7 @@ class SecurityScanGate(BaseGate):
 
     def __init__(
         self,
-        tools: Optional[dict[str, list[str]]] = None,
+        tools: dict[str, list[str]] | None = None,
         fail_on_critical: bool = True,
         fail_on_high: bool = False,
     ):
@@ -241,7 +240,7 @@ class QualityGates:
     def __init__(self, config: ProjectConfig, project_root: Path):
         self.config = config
         self.project_root = project_root
-        self.gates: List[BaseGate] = []
+        self.gates: list[BaseGate] = []
         self._load_gates()
 
     def _load_gates(self):

@@ -2,14 +2,9 @@
 
 import click
 
-from cascade.agents.registry import list_agents, get_agent
+from cascade.agents.registry import get_agent, list_agents
+from cascade.cli.styles import console, create_panel, create_table, print_banner
 from cascade.core.project import get_project
-from cascade.cli.styles import (
-    console,
-    print_banner,
-    create_table,
-    create_panel
-)
 
 
 @click.group(invoke_without_command=True)

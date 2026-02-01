@@ -3,12 +3,12 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
 import yaml
 
-from cascade.models.knowledge import ADR, Pattern, Convention
-from cascade.models.ticket import Ticket
 from cascade.models.enums import KnowledgeStatus
+from cascade.models.knowledge import ADR, Convention, Pattern
+from cascade.models.ticket import Ticket
 from cascade.storage.database import Database
 
 
@@ -22,7 +22,7 @@ class KnowledgeBase:
     - AI proposes knowledge, humans approve/reject
     """
 
-    def __init__(self, db: Database, conventions_path: Optional[Path] = None):
+    def __init__(self, db: Database, conventions_path: Path | None = None):
         """
         Initialize knowledge base.
 
@@ -97,7 +97,7 @@ class KnowledgeBase:
             created_at=now,
         )
 
-    def get_convention(self, category: str, key: str) -> Optional[Convention]:
+    def get_convention(self, category: str, key: str) -> Convention | None:
         """Get a specific convention."""
         row = self.db.fetch_one(
             "SELECT * FROM conventions WHERE category = ? AND convention_key = ?",
@@ -105,7 +105,7 @@ class KnowledgeBase:
         )
         return Convention.from_dict(dict(row)) if row else None
 
-    def get_conventions(self, category: Optional[str] = None) -> list[Convention]:
+    def get_conventions(self, category: str | None = None) -> list[Convention]:
         """
         Get all conventions, optionally filtered by category.
 
@@ -169,9 +169,9 @@ class KnowledgeBase:
         pattern_name: str,
         description: str,
         code_template: str = "",
-        applies_to_tags: Optional[list[str]] = None,
-        learned_from_ticket_id: Optional[int] = None,
-        file_examples: Optional[list[str]] = None,
+        applies_to_tags: list[str] | None = None,
+        learned_from_ticket_id: int | None = None,
+        file_examples: list[str] | None = None,
     ) -> Pattern:
         """
         Propose a new pattern (status = PROPOSED).
@@ -217,12 +217,12 @@ class KnowledgeBase:
             created_at=now,
         )
 
-    def get_pattern(self, pattern_id: int) -> Optional[Pattern]:
+    def get_pattern(self, pattern_id: int) -> Pattern | None:
         """Get pattern by ID."""
         row = self.db.fetch_one("SELECT * FROM patterns WHERE id = ?", (pattern_id,))
         return Pattern.from_dict(dict(row)) if row else None
 
-    def get_pattern_by_name(self, name: str) -> Optional[Pattern]:
+    def get_pattern_by_name(self, name: str) -> Pattern | None:
         """Get pattern by name."""
         row = self.db.fetch_one(
             "SELECT * FROM patterns WHERE pattern_name = ?", (name,)
@@ -231,7 +231,7 @@ class KnowledgeBase:
 
     def get_patterns(
         self,
-        status: Optional[KnowledgeStatus] = None,
+        status: KnowledgeStatus | None = None,
         limit: int = 100,
     ) -> list[Pattern]:
         """Get patterns, optionally filtered by status."""
@@ -306,7 +306,7 @@ class KnowledgeBase:
         scored.sort(key=lambda x: x[0], reverse=True)
         return [p for _, p in scored[:limit]]
 
-    def approve_pattern(self, pattern_id: int) -> Optional[Pattern]:
+    def approve_pattern(self, pattern_id: int) -> Pattern | None:
         """Approve a proposed pattern."""
         self.db.update(
             "patterns",
@@ -319,7 +319,7 @@ class KnowledgeBase:
         )
         return self.get_pattern(pattern_id)
 
-    def reject_pattern(self, pattern_id: int) -> Optional[Pattern]:
+    def reject_pattern(self, pattern_id: int) -> Pattern | None:
         """Reject a proposed pattern."""
         self.db.update(
             "patterns",
@@ -346,7 +346,7 @@ class KnowledgeBase:
         rationale: str,
         consequences: str = "",
         alternatives_considered: str = "",
-        created_by_ticket_id: Optional[int] = None,
+        created_by_ticket_id: int | None = None,
     ) -> ADR:
         """
         Propose a new Architecture Decision Record.
@@ -401,12 +401,12 @@ class KnowledgeBase:
             created_at=now,
         )
 
-    def get_adr(self, adr_id: int) -> Optional[ADR]:
+    def get_adr(self, adr_id: int) -> ADR | None:
         """Get ADR by ID."""
         row = self.db.fetch_one("SELECT * FROM adrs WHERE id = ?", (adr_id,))
         return ADR.from_dict(dict(row)) if row else None
 
-    def get_adr_by_number(self, adr_number: int) -> Optional[ADR]:
+    def get_adr_by_number(self, adr_number: int) -> ADR | None:
         """Get ADR by number."""
         row = self.db.fetch_one(
             "SELECT * FROM adrs WHERE adr_number = ?", (adr_number,)
@@ -415,7 +415,7 @@ class KnowledgeBase:
 
     def get_adrs(
         self,
-        status: Optional[KnowledgeStatus] = None,
+        status: KnowledgeStatus | None = None,
         limit: int = 100,
     ) -> list[ADR]:
         """Get ADRs, optionally filtered by status."""
@@ -456,7 +456,7 @@ class KnowledgeBase:
         """
         return self.get_adrs(status=KnowledgeStatus.APPROVED, limit=limit)
 
-    def approve_adr(self, adr_id: int) -> Optional[ADR]:
+    def approve_adr(self, adr_id: int) -> ADR | None:
         """Approve a proposed ADR."""
         self.db.update(
             "adrs",
@@ -469,7 +469,7 @@ class KnowledgeBase:
         )
         return self.get_adr(adr_id)
 
-    def reject_adr(self, adr_id: int) -> Optional[ADR]:
+    def reject_adr(self, adr_id: int) -> ADR | None:
         """Reject a proposed ADR."""
         self.db.update(
             "adrs",
@@ -479,7 +479,7 @@ class KnowledgeBase:
         )
         return self.get_adr(adr_id)
 
-    def supersede_adr(self, adr_id: int, superseded_by_id: int) -> Optional[ADR]:
+    def supersede_adr(self, adr_id: int, superseded_by_id: int) -> ADR | None:
         """Mark an ADR as superseded by another."""
         self.db.update(
             "adrs",

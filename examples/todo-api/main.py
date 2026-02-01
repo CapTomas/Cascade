@@ -1,6 +1,6 @@
+
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List, Optional
 
 app = FastAPI(title="Cascade TODO Demo")
 
@@ -9,7 +9,7 @@ class Todo(BaseModel):
     task: str
     completed: bool = False
 
-todos: List[Todo] = []
+todos: list[Todo] = []
 
 @app.get("/")
 def read_root():

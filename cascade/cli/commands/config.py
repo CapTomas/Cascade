@@ -2,22 +2,19 @@
 
 import click
 import yaml
-from rich.syntax import Syntax
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
 from rich import box
+from rich.panel import Panel
+from rich.syntax import Syntax
 
-from cascade.core.project import get_project
 from cascade.agents.registry import list_agents
 from cascade.cli.styles import (
     console,
-    print_success,
-    print_error,
-    print_warning,
     create_table,
+    print_error,
+    print_success,
 )
-from cascade.cli.themes import get_theme_manager, get_current_theme, THEMES
+from cascade.cli.themes import THEMES, get_current_theme, get_theme_manager
+from cascade.core.project import get_project
 
 
 @click.group()

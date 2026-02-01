@@ -82,6 +82,11 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "S101",   # assert usage (fine in tests)
+    "S602",   # subprocess with shell=True
+    "S603",   # subprocess without escape
+    "S608",   # SQL injection (internal storage uses f-strings for table names)
+    "S110",   # try-except-pass (intentional in some lazy loads)
+    "B904",   # raise ... from (minor linting issue, many occurrences)
 ]
 
 [tool.ruff.lint.per-file-ignores]

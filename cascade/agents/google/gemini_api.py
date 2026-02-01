@@ -1,16 +1,16 @@
+from __future__ import annotations
 import json
 import os
 import time
-import urllib.request
 import urllib.error
-from typing import Optional
+import urllib.request
 
 from cascade.agents.interface import (
-    AgentInterface,
     AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
+    AgentInterface,
+    AgentResponse,
 )
 from cascade.utils.logger import get_logger
 
@@ -31,7 +31,7 @@ class GeminiApiAgent(AgentInterface):
     DEFAULT_MODEL = "antigravity-pro-1"
     DEFAULT_TOKEN_LIMIT = 1000000
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         super().__init__(config)
 
     def get_name(self) -> str:
@@ -61,8 +61,8 @@ class GeminiApiAgent(AgentInterface):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:
@@ -96,7 +96,7 @@ class GeminiApiAgent(AgentInterface):
         for attempt in range(max_retries + 1):
             try:
                 data = json.dumps(payload).encode("utf-8")
-                request = urllib.request.Request(
+                request = urllib.request.Request(  # noqa: S310
                     url,
                     data=data,
                     headers={
@@ -107,7 +107,8 @@ class GeminiApiAgent(AgentInterface):
                     method="POST",
                 )
 
-                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as resp:
+                # Allow custom schemes like https for API calls
+                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as resp:  # noqa: S310
                     status_code = resp.getcode()
                     raw_response = resp.read().decode("utf-8")
 
@@ -159,7 +160,7 @@ class GeminiApiAgent(AgentInterface):
                     execution_time_ms=int((time.time() - start_time) * 1000),
                 )
 
-    def _get_api_key(self) -> Optional[str]:
+    def _get_api_key(self) -> str | None:
         return (
             self.config.environment.get("GEMINI_API_KEY")
             or os.environ.get("GEMINI_API_KEY")

@@ -3,15 +3,14 @@
 import json
 import logging
 import re
-from typing import Optional
 
 from cascade.agents.interface import AgentInterface
+from cascade.core.knowledge_base import KnowledgeBase
 from cascade.core.prompt_builder import PromptBuilder
 from cascade.core.ticket_manager import TicketManager
 from cascade.core.topic_manager import TopicManager
-from cascade.core.knowledge_base import KnowledgeBase
+from cascade.models.enums import Severity, TicketStatus, TicketType
 from cascade.models.planning import PlanningResult, ProposedTicket, ProposedTopic
-from cascade.models.enums import TicketType, Severity, TicketStatus
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +131,7 @@ class Planner:
         # 2. Create tickets (recursively)
         created_tickets = {}  # title -> id
 
-        def create_recursive(prop_ticket: ProposedTicket, parent_id: Optional[int] = None):
+        def create_recursive(prop_ticket: ProposedTicket, parent_id: int | None = None):
             # Determine initial status: READY if no dependencies and no children, else DEFINED
             initial_status = TicketStatus.READY
             if prop_ticket.dependencies or prop_ticket.children:
@@ -217,7 +216,7 @@ class Planner:
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse agent JSON: {e}")
             logger.debug(f"Raw content: {content}")
-            raise ValueError("Agent response was not valid JSON. Please try again or refine requirements.")
+            raise ValueError("Agent response was not valid JSON. Please try again or refine requirements.") from e
 
         # Basic validation
         if "tickets" not in data or not isinstance(data["tickets"], list):

@@ -1,11 +1,11 @@
-from typing import Optional
+from __future__ import annotations
 
 from cascade.agents.interface import (
-    AgentInterface,
     AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
+    AgentInterface,
+    AgentResponse,
 )
 from cascade.utils.logger import get_logger
 
@@ -19,7 +19,7 @@ class ClaudeApiAgent(AgentInterface):
     This agent uses the Anthropic Python SDK to interact indirectly with Claude models.
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         super().__init__(config)
 
     def get_name(self) -> str:
@@ -45,8 +45,8 @@ class ClaudeApiAgent(AgentInterface):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         # Placeholder for actual API implementation
         return AgentResponse(
@@ -55,6 +55,6 @@ class ClaudeApiAgent(AgentInterface):
             error="Not implemented"
         )
 
-    def _get_api_key(self) -> Optional[str]:
+    def _get_api_key(self) -> str | None:
         import os
         return self.config.environment.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")

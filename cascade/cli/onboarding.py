@@ -4,18 +4,22 @@ Extracted from init.py to be shared with interactive mode.
 """
 
 from pathlib import Path
+
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich import box
-from cascade.core.project import CascadeProject
+
 from cascade.cli.styles import print_warning
+from cascade.core.project import CascadeProject
 
 
 def configure_agent(console: Console, project: CascadeProject) -> None:
     """Interactively configure the default agent."""
-    from cascade.agents.registry import get_agent
     import sys
+
     import questionary
+
+    from cascade.agents.registry import get_agent
 
     console.print()
     console.print(Panel(
@@ -130,7 +134,7 @@ def configure_agent(console: Console, project: CascadeProject) -> None:
 
     # 2. Save Securely to .env
     save_to_env(project.cascade_dir.parent, env_var_name, api_key)
-    console.print(f"[success]✓[/success] API key saved securely to [muted].env[/muted]")
+    console.print("[success]✓[/success] API key saved securely to [muted].env[/muted]")
     console.print(f"[success]✓[/success] Default agent set to [accent]{project.config.agent.default}[/accent]")
 
 
@@ -141,9 +145,10 @@ def run_onboarding(console: Console, project_path: Path) -> bool:
         True if project was initialized, False otherwise.
     """
     import questionary
-    from rich.panel import Panel
     from rich import box
-    from cascade.cli.styles import get_progress, print_success, print_info, print_error
+    from rich.panel import Panel
+
+    from cascade.cli.styles import get_progress, print_error, print_info, print_success
 
     console.print(Panel(
         "[header]Welcome to Cascade![/header]\n\n"
@@ -244,8 +249,8 @@ def run_onboarding(console: Console, project_path: Path) -> bool:
 
 def _display_proposed_plan(console: Console, plan) -> None:
     """Display the proposed project plan (copied from init.py for independence)."""
-    from rich.text import Text
     from rich import box
+
     from cascade.cli.styles import create_table
 
     tech_stack = ", ".join(f"[accent]{t}[/accent]" for t in plan.tech_stack)

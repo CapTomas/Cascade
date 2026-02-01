@@ -1,26 +1,19 @@
 """Status command for Cascade CLI."""
 
 import click
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.columns import Columns
-from rich.text import Text
 from rich import box
+from rich.panel import Panel
+from rich.text import Text
 
-from cascade.core.project import get_project
-from cascade.models.enums import TicketStatus, TicketType
 from cascade.cli.styles import (
     console,
-    print_banner,
     create_table,
-    print_error,
 )
 from cascade.cli.ui import (
-    create_dashboard_panel,
     create_status_hud,
-    BoxChars,
 )
+from cascade.core.project import get_project
+from cascade.models.enums import TicketStatus
 
 
 @click.command()
@@ -78,7 +71,7 @@ def _display_dashboard(status_data: dict, agent: str) -> None:
         active_pct = (tickets['in_progress'] / total) * 100
         ready_pct = (tickets['ready'] / total) * 100
         blocked_pct = (tickets['blocked'] / total) * 100
-        other_pct = 100 - done_pct - active_pct - ready_pct - blocked_pct
+        100 - done_pct - active_pct - ready_pct - blocked_pct
 
         # Create visual progress bar
         bar_width = 40
@@ -98,15 +91,15 @@ def _display_dashboard(status_data: dict, agent: str) -> None:
         # Status breakdown with bar
         status_content = Text()
         status_content.append(bar)
-        status_content.append(f"\n\n")
-        status_content.append(f"  [success]●[/success] Done        ", style="muted")
+        status_content.append("\n\n")
+        status_content.append("  [success]●[/success] Done        ", style="muted")
         status_content.append(f"{tickets['done']}", style="success")
-        status_content.append(f"   [status.progress]●[/status.progress] Active      ", style="muted")
+        status_content.append("   [status.progress]●[/status.progress] Active      ", style="muted")
         status_content.append(f"{tickets['in_progress']}", style="status.progress")
-        status_content.append(f"\n")
-        status_content.append(f"  [status.ready]●[/status.ready] Ready       ", style="muted")
+        status_content.append("\n")
+        status_content.append("  [status.ready]●[/status.ready] Ready       ", style="muted")
         status_content.append(f"{tickets['ready']}", style="status.ready")
-        status_content.append(f"   [error]●[/error] Blocked     ", style="muted")
+        status_content.append("   [error]●[/error] Blocked     ", style="muted")
         status_content.append(f"{tickets['blocked']}", style="error")
 
         console.print(Panel(
@@ -183,7 +176,7 @@ def _display_recommendations(tickets: dict) -> None:
             console.print()
             accomplishments = Text()
             for t in recent_done:
-                accomplishments.append(f"[success]✓[/success] ", style="success")
+                accomplishments.append("[success]✓[/success] ", style="success")
                 accomplishments.append(f"[muted]#{t.id}[/muted] ", style="muted")
                 accomplishments.append(f"{t.title}\n")
 

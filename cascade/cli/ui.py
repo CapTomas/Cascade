@@ -3,15 +3,13 @@
 Box-drawing utilities and screen layouts inspired by Claude, Codex, and Gemini CLIs.
 """
 
-from typing import Optional
-from rich.console import Console, Group
+
+from rich import box
+from rich.columns import Columns
+from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from rich.columns import Columns
-from rich import box
-
-from cascade.cli.themes import get_current_theme
 
 
 # Box drawing characters (Unicode)
@@ -66,16 +64,15 @@ def draw_horizontal_line(
     console: Console,
     char: str = BoxChars.H,
     style: str = "border",
-    width: Optional[int] = None,
+    width: int | None = None,
 ) -> None:
     """Draw a horizontal line across the terminal."""
     w = width or get_terminal_width(console)
     console.print(char * w, style=style)
 
 
-def draw_divider(console: Console, title: Optional[str] = None) -> None:
+def draw_divider(console: Console, title: str | None = None) -> None:
     """Draw a divider line, optionally with a centered title."""
-    theme = get_current_theme()
     width = get_terminal_width(console)
 
     if title:
@@ -90,11 +87,11 @@ def draw_divider(console: Console, title: Optional[str] = None) -> None:
 
 def create_box(
     content: str | Text,
-    title: Optional[str] = None,
-    subtitle: Optional[str] = None,
+    title: str | None = None,
+    subtitle: str | None = None,
     border_style: str = "border",
     padding: tuple[int, int] = (0, 1),
-    width: Optional[int] = None,
+    width: int | None = None,
 ) -> Panel:
     """Create a modern box panel with rounded corners."""
     return Panel(
@@ -111,14 +108,13 @@ def create_box(
 
 def create_welcome_box(
     console: Console,
-    project_name: Optional[str] = None,
-    agent: Optional[str] = None,
-    directory: Optional[str] = None,
+    project_name: str | None = None,
+    agent: str | None = None,
+    directory: str | None = None,
     version: str = "1.0.0",
-    user: Optional[str] = None,
+    user: str | None = None,
 ) -> Panel:
     """Create a welcome screen box like Claude/Codex/Gemini CLIs."""
-    theme = get_current_theme()
     width = min(get_terminal_width(console), 100)
 
     # Left side: Logo and basic info
@@ -131,7 +127,7 @@ def create_welcome_box(
     left_content.append("\n")
 
     if user:
-        left_content.append(f"Welcome back, ", style="muted")
+        left_content.append("Welcome back, ", style="muted")
         left_content.append(f"{user}!\n", style="header")
 
     if agent:
@@ -189,8 +185,6 @@ def create_welcome_box(
 
 def create_prompt_box(console: Console, placeholder: str = "Type your message...") -> Panel:
     """Create an input prompt box like modern CLIs."""
-    theme = get_current_theme()
-
     content = Text()
     content.append("› ", style="prompt.arrow")
     content.append(placeholder, style="muted")
@@ -240,7 +234,7 @@ def create_dashboard_panel(
 
 def create_modern_table(
     columns: list[str],
-    title: Optional[str] = None,
+    title: str | None = None,
     show_lines: bool = False,
 ) -> Table:
     """Create a clean, modern table."""
@@ -293,7 +287,7 @@ def print_warning_box(console: Console, message: str, title: str = "Warning") ->
     ))
 
 
-def print_info_box(console: Console, message: str, title: Optional[str] = None) -> None:
+def print_info_box(console: Console, message: str, title: str | None = None) -> None:
     """Print an info message in a styled box."""
     console.print(Panel(
         f"[info]ℹ[/info] {message}",

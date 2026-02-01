@@ -1,14 +1,15 @@
 """Tests for TopicManager."""
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
 
-from cascade.storage.database import Database
+import pytest
+
 from cascade.core.ticket_manager import TicketManager
 from cascade.core.topic_manager import TopicManager
 from cascade.models.enums import TicketStatus
+from cascade.storage.database import Database
 
 
 @pytest.fixture

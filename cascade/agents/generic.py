@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Generic agent implementation via stdin/stdout."""
 
 import logging
@@ -5,14 +6,13 @@ import os
 import shlex
 import subprocess
 import time
-from typing import Optional
 
 from cascade.agents.interface import (
-    AgentInterface,
     AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
+    AgentInterface,
+    AgentResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class GenericAgent(AgentInterface):
     DEFAULT_TOKEN_LIMIT = 32768
     ENV_COMMAND = "CASCADE_GENERIC_AGENT_CMD"
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         super().__init__(config)
 
     def get_name(self) -> str:
@@ -55,8 +55,8 @@ class GenericAgent(AgentInterface):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:
@@ -120,7 +120,7 @@ class GenericAgent(AgentInterface):
             raw_output=result.stdout or "",
         )
 
-    def _get_command(self) -> Optional[list[str]]:
+    def _get_command(self) -> list[str] | None:
         command = self.config.command or os.environ.get(self.ENV_COMMAND)
         if not command:
             return None

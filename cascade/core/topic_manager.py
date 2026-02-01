@@ -1,11 +1,10 @@
 """Topic management for Cascade."""
 
 from datetime import datetime
-from typing import Optional
 
-from cascade.models.topic import Topic
-from cascade.models.ticket import Ticket
 from cascade.models.enums import TicketStatus
+from cascade.models.ticket import Ticket
+from cascade.models.topic import Topic
 from cascade.storage.database import Database
 
 
@@ -64,7 +63,7 @@ class TopicManager:
             created_at=now,
         )
 
-    def get(self, topic_id: int) -> Optional[Topic]:
+    def get(self, topic_id: int) -> Topic | None:
         """
         Get topic by ID.
 
@@ -79,7 +78,7 @@ class TopicManager:
             return None
         return self._row_to_topic(row)
 
-    def get_by_name(self, name: str) -> Optional[Topic]:
+    def get_by_name(self, name: str) -> Topic | None:
         """
         Get topic by name.
 
@@ -121,7 +120,7 @@ class TopicManager:
         rows = self.db.fetch_all("SELECT * FROM topics ORDER BY name")
         return [self._row_to_topic(row) for row in rows]
 
-    def update(self, topic_id: int, **updates) -> Optional[Topic]:
+    def update(self, topic_id: int, **updates) -> Topic | None:
         """
         Update topic fields.
 
@@ -219,7 +218,7 @@ class TopicManager:
     def get_tickets(
         self,
         topic_id: int,
-        status: Optional[TicketStatus] = None,
+        status: TicketStatus | None = None,
     ) -> list[Ticket]:
         """
         Get all tickets assigned to a topic.
@@ -290,7 +289,7 @@ class TopicManager:
         )
         return [self._row_to_topic(row) for row in rows]
 
-    def count_tickets(self, topic_id: int, status: Optional[TicketStatus] = None) -> int:
+    def count_tickets(self, topic_id: int, status: TicketStatus | None = None) -> int:
         """
         Count tickets in a topic.
 

@@ -1,13 +1,14 @@
 """Tests for TicketManager."""
 
-import pytest
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
 
-from cascade.storage.database import Database
+import pytest
+
 from cascade.core.ticket_manager import TicketManager
-from cascade.models.enums import TicketType, TicketStatus, Severity
+from cascade.models.enums import Severity, TicketStatus, TicketType
+from cascade.storage.database import Database
 
 
 @pytest.fixture

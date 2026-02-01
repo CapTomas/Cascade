@@ -1,21 +1,20 @@
+from __future__ import annotations
 """Manual agent implementation for human-in-the-loop flows."""
 
 import logging
 import subprocess
 import sys
 import time
-from typing import Optional
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Prompt
 
 from cascade.agents.interface import (
-    AgentInterface,
     AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
+    AgentInterface,
+    AgentResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ class ManualAgent(AgentInterface):
     subscriptions instead of paying for API credits.
     """
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         """
         Initialize Manual agent.
 
@@ -76,8 +75,8 @@ class ManualAgent(AgentInterface):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         """
         Facilitate manual execution by human.
@@ -166,7 +165,7 @@ class ManualAgent(AgentInterface):
         """Attempt to copy text to system clipboard."""
         try:
             if sys.platform == "darwin":
-                process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE, text=True)
+                process = subprocess.Popen(['/usr/bin/pbcopy'], stdin=subprocess.PIPE, text=True)
                 process.communicate(input=text)
                 return process.returncode == 0
             elif sys.platform == "linux":

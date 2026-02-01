@@ -2,10 +2,9 @@
 
 import json
 from datetime import datetime
-from typing import Optional
 
+from cascade.models.enums import Severity, TicketStatus, TicketType
 from cascade.models.ticket import Ticket, TicketDependency
-from cascade.models.enums import TicketType, TicketStatus, Severity
 from cascade.storage.database import Database
 
 
@@ -31,11 +30,11 @@ class TicketManager:
         title: str,
         ticket_type: TicketType = TicketType.TASK,
         description: str = "",
-        severity: Optional[Severity] = None,
-        parent_ticket_id: Optional[int] = None,
+        severity: Severity | None = None,
+        parent_ticket_id: int | None = None,
         acceptance_criteria: str = "",
-        affected_files: Optional[list[str]] = None,
-        estimated_effort: Optional[int] = None,
+        affected_files: list[str] | None = None,
+        estimated_effort: int | None = None,
         status: TicketStatus = TicketStatus.DEFINED,
     ) -> Ticket:
         """
@@ -90,7 +89,7 @@ class TicketManager:
             estimated_effort=estimated_effort,
         )
 
-    def get(self, ticket_id: int) -> Optional[Ticket]:
+    def get(self, ticket_id: int) -> Ticket | None:
         """
         Get ticket by ID.
 
@@ -141,7 +140,7 @@ class TicketManager:
         """Get all tickets ready for execution."""
         return self.get_by_status(TicketStatus.READY)
 
-    def get_next_ready(self, topic_id: Optional[int] = None) -> Optional[Ticket]:
+    def get_next_ready(self, topic_id: int | None = None) -> Ticket | None:
         """
         Get highest priority ready ticket.
 
@@ -193,8 +192,8 @@ class TicketManager:
 
     def list_all(
         self,
-        status: Optional[TicketStatus] = None,
-        ticket_type: Optional[TicketType] = None,
+        status: TicketStatus | None = None,
+        ticket_type: TicketType | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[Ticket]:
@@ -232,7 +231,7 @@ class TicketManager:
         rows = self.db.fetch_all(query, tuple(params))
         return [self._row_to_ticket(row) for row in rows]
 
-    def update(self, ticket_id: int, **updates) -> Optional[Ticket]:
+    def update(self, ticket_id: int, **updates) -> Ticket | None:
         """
         Update ticket fields.
 
@@ -271,7 +270,7 @@ class TicketManager:
         self.db.update("tickets", updates, "id = ?", (ticket_id,))
         return self.get(ticket_id)
 
-    def update_status(self, ticket_id: int, status: TicketStatus) -> Optional[Ticket]:
+    def update_status(self, ticket_id: int, status: TicketStatus) -> Ticket | None:
         """
         Update ticket status.
 
@@ -416,8 +415,8 @@ class TicketManager:
 
     def count(
         self,
-        status: Optional[TicketStatus] = None,
-        ticket_type: Optional[TicketType] = None,
+        status: TicketStatus | None = None,
+        ticket_type: TicketType | None = None,
     ) -> int:
         """
         Count tickets with optional filters.
@@ -459,7 +458,7 @@ class TicketManager:
 
         return Ticket.from_dict(data)
 
-    def _calculate_priority(self, severity: Optional[Severity]) -> float:
+    def _calculate_priority(self, severity: Severity | None) -> float:
         """Calculate priority score from severity."""
         if not severity:
             return 0.0

@@ -1,10 +1,17 @@
-import pytest
-from unittest.mock import MagicMock, patch
 from pathlib import Path
-from cascade.core.quality_gates import QualityGates, StaticAnalysisGate, UnitTestGate, SecurityScanGate
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from cascade.agents.interface import AgentResponse
+from cascade.core.quality_gates import (
+    QualityGates,
+    StaticAnalysisGate,
+    UnitTestGate,
+)
 from cascade.models.project import ProjectConfig, QualityConfig, QualityGateConfig
 from cascade.models.ticket import Ticket
-from cascade.agents.interface import AgentResponse
+
 
 @pytest.fixture
 def mock_ticket():

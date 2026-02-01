@@ -1,18 +1,18 @@
 """Knowledge commands for Cascade CLI."""
 
 import click
-from cascade.core.project import get_project
-from cascade.core.knowledge_base import KnowledgeBase
-from cascade.models.enums import KnowledgeStatus
+
 from cascade.cli.styles import (
     console,
-    print_banner,
-    print_success,
-    print_error,
-    print_warning,
+    create_panel,
     create_table,
-    create_panel
+    print_banner,
+    print_error,
+    print_success,
 )
+from cascade.core.knowledge_base import KnowledgeBase
+from cascade.core.project import get_project
+from cascade.models.enums import KnowledgeStatus
 
 
 @click.group()
@@ -327,7 +327,7 @@ def show_pattern(ctx: click.Context, pattern_id: int) -> None:
             content += f"\n[bold white]Code Template:[/bold white]\n{pattern.code_template}\n"
 
         if pattern.file_examples:
-            content += f"\n[bold white]Example Files:[/bold white]\n"
+            content += "\n[bold white]Example Files:[/bold white]\n"
             for f in pattern.file_examples:
                 content += f" [dim]•[/dim] {f}\n"
 

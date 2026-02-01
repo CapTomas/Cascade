@@ -1,16 +1,14 @@
 """Git commands for Cascade CLI."""
 
-import click
-from typing import Optional
 
-from cascade.core.project import get_project
-from cascade.utils.git import GitProvider
+import click
+
 from cascade.cli.styles import (
     console,
     print_banner,
-    create_table,
-    create_panel,
 )
+from cascade.core.project import get_project
+from cascade.utils.git import GitProvider
 
 
 @click.group("git")
@@ -95,7 +93,7 @@ def git_log(ctx: click.Context, count: int) -> None:
 @click.option("--staged", "-s", is_flag=True, help="Show staged changes only.")
 @click.argument("file_path", required=False)
 @click.pass_context
-def git_diff(ctx: click.Context, staged: bool, file_path: Optional[str]) -> None:
+def git_diff(ctx: click.Context, staged: bool, file_path: str | None) -> None:
     """Show diff of changes."""
     try:
         project = get_project()
@@ -124,7 +122,7 @@ def git_diff(ctx: click.Context, staged: bool, file_path: Optional[str]) -> None
 @click.argument("name", required=False)
 @click.option("--checkout/--no-checkout", default=True, help="Checkout after creating.")
 @click.pass_context
-def git_branch(ctx: click.Context, name: Optional[str], checkout: bool) -> None:
+def git_branch(ctx: click.Context, name: str | None, checkout: bool) -> None:
     """Create a new branch or show current branch."""
     try:
         project = get_project()

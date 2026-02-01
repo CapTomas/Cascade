@@ -1,15 +1,14 @@
-import json
+from __future__ import annotations
 import shutil
 import subprocess
 import time
-from typing import Optional
 
 from cascade.agents.interface import (
-    AgentInterface,
     AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
+    AgentInterface,
+    AgentResponse,
 )
 from cascade.utils.logger import get_logger
 
@@ -31,7 +30,7 @@ class ClaudeCliAgent(AgentInterface):
     # Default token limit for Claude models
     DEFAULT_TOKEN_LIMIT = 200000
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         """
         Initialize Claude Code agent.
 
@@ -39,8 +38,8 @@ class ClaudeCliAgent(AgentInterface):
             config: Agent configuration
         """
         super().__init__(config)
-        self._cli_path: Optional[str] = None
-        self._available: Optional[bool] = None
+        self._cli_path: str | None = None
+        self._available: bool | None = None
 
     def get_name(self) -> str:
         """Return agent identifier."""
@@ -83,8 +82,8 @@ class ClaudeCliAgent(AgentInterface):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         """
         Execute prompt via Claude Code CLI.
@@ -299,7 +298,7 @@ class ClaudeCliAgent(AgentInterface):
                         if not any(x in path for x in [" ", "\n", "\t"]):
                             files.add(path)
 
-        return sorted(list(files))
+        return sorted(files)
 
     def _extract_commands(self, output: str) -> list[str]:
         """Extract executed commands from output."""

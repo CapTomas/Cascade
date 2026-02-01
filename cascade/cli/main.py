@@ -1,16 +1,30 @@
 """Main CLI entry point for Cascade."""
 
 import sys
+
 import click
+from dotenv import load_dotenv
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
-from rich import box
-from dotenv import load_dotenv
 
+from cascade.cli.commands import (
+    agents,
+    config,
+    destroy,
+    git,
+    init,
+    knowledge,
+    metrics,
+    next,
+    status,
+    ticket,
+    topic,
+    type_cmd,
+)
 from cascade.cli.themes import get_current_theme
-from cascade.cli.commands import init, ticket, topic, status, config, knowledge, agents, type_cmd, next, metrics, git, destroy
 from cascade.core.project import get_project
-from cascade.utils.logger import setup_logging, get_logger
+from cascade.utils.logger import get_logger, setup_logging
 
 # Load environment variables from .env file
 load_dotenv()

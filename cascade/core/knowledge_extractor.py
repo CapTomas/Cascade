@@ -3,12 +3,12 @@
 import json
 import logging
 import re
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 import yaml
 
-from cascade.models.knowledge import ADR, Pattern
 from cascade.models.enums import KnowledgeStatus
+from cascade.models.knowledge import ADR, Pattern
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class KnowledgeExtractor:
         r"<knowledge_proposal>(.*?)</knowledge_proposal>", re.DOTALL | re.IGNORECASE
     )
 
-    def extract_proposals(self, response_text: str, ticket_id: Optional[int] = None) -> List[Any]:
+    def extract_proposals(self, response_text: str, ticket_id: int | None = None) -> list[Any]:
         """
         Parse the agent response for knowledge proposals.
 
@@ -81,7 +81,7 @@ class KnowledgeExtractor:
 
         return proposals
 
-    def _create_pattern(self, data: Dict[str, Any], ticket_id: Optional[int]) -> Pattern:
+    def _create_pattern(self, data: dict[str, Any], ticket_id: int | None) -> Pattern:
         """Create a Pattern model from raw data with validation."""
         name = data.get("name", "").strip()
         description = data.get("description", "").strip()
@@ -101,7 +101,7 @@ class KnowledgeExtractor:
             file_examples=data.get("examples", []),
         )
 
-    def _create_adr(self, data: Dict[str, Any], ticket_id: Optional[int]) -> ADR:
+    def _create_adr(self, data: dict[str, Any], ticket_id: int | None) -> ADR:
         """Create an ADR model from raw data with validation."""
         title = data.get("title", "").strip()
         context = data.get("context", "").strip()

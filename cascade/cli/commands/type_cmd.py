@@ -1,16 +1,12 @@
 """Type commands for Cascade CLI."""
 
+
 import click
-from typing import Optional
+
+from cascade.cli.styles import console, create_table, print_banner, print_error
 from cascade.core.project import get_project
-from cascade.models.enums import TicketType, TicketStatus
-from cascade.cli.styles import (
-    console,
-    print_banner,
-    create_table,
-    print_error,
-    print_success
-)
+from cascade.models.enums import TicketStatus, TicketType
+
 
 @click.command("type")
 @click.argument(
@@ -75,7 +71,7 @@ def type_cmd(ctx: click.Context, ticket_type: str, execute_next: bool, limit: in
         print_banner(f"Tickets: {ttype.value}")
         table = create_table(["#", "STATUS", "SEVERITY", "TITLE"])
 
-        from cascade.cli.commands.ticket import _status_style, _severity_color
+        from cascade.cli.commands.ticket import _severity_color, _status_style
 
         for t in tickets:
             st_style = _status_style(t.status)
@@ -92,7 +88,7 @@ def type_cmd(ctx: click.Context, ticket_type: str, execute_next: bool, limit: in
 
     except FileNotFoundError:
         print_error("Not a Cascade project.")
-        raise SystemExit(1)
+        raise SystemExit(1) from None
     except Exception as e:
         print_error(f"Failed to process type command: {e}")
-        raise SystemExit(1)
+        raise SystemExit(1) from e

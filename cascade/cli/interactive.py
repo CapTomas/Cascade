@@ -4,33 +4,29 @@ Provides a modern interactive shell with slash commands like Claude/Codex/Gemini
 """
 
 import os
-import sys
-from pathlib import Path
-from typing import Optional, Callable
 import shutil
-import questionary
+from collections.abc import Callable
+from pathlib import Path
 
+import questionary
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completion, NestedCompleter
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.styles import Style as PTStyle
+from rich import box
+from rich.columns import Columns
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.text import Text
-from rich import box
 
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import WordCompleter, NestedCompleter, Completion
-from prompt_toolkit.styles import Style as PTStyle
-from prompt_toolkit.formatted_text import HTML
-
-from cascade.cli.themes import get_theme_manager, get_current_theme, THEMES
+from cascade.cli.themes import THEMES, get_current_theme, get_theme_manager
 from cascade.cli.ui import (
-    create_welcome_box,
     create_modern_table,
-    print_keyboard_shortcuts,
+    create_welcome_box,
     draw_divider,
-    BoxChars,
-    CASCADE_LOGO_SMALL,
+    print_keyboard_shortcuts,
 )
-from cascade.models.enums import TicketType, Severity, TicketStatus
+from cascade.models.enums import Severity, TicketStatus, TicketType
 from cascade.utils.git import GitProvider
 
 
@@ -112,7 +108,7 @@ class SlashCommand:
         name: str,
         description: str,
         handler: Callable,
-        aliases: Optional[list[str]] = None,
+        aliases: list[str] | None = None,
     ):
         self.name = name
         self.description = description
@@ -265,8 +261,6 @@ class InteractiveMode:
     def show_welcome(self) -> None:
         """Display the welcome screen."""
         project = self._get_project()
-        theme = get_current_theme()
-
         # Get user info
         user = os.environ.get("USER") or os.environ.get("USERNAME") or "Developer"
 
@@ -383,11 +377,11 @@ class InteractiveMode:
     def _handle_natural_input(self, input_str: str) -> None:
         """Handle natural language input."""
         self.console.print(Panel(
-            f"[muted]Natural language mode coming soon![/muted]\n\n"
-            f"For now, use commands:\n"
-            f"  [accent]status[/accent]  - View project dashboard\n"
-            f"  [accent]ticket[/accent]  - Manage tickets\n"
-            f"  [accent]help[/accent]    - See all commands",
+            "[muted]Natural language mode coming soon![/muted]\n\n"
+            "For now, use commands:\n"
+            "  [accent]status[/accent]  - View project dashboard\n"
+            "  [accent]ticket[/accent]  - Manage tickets\n"
+            "  [accent]help[/accent]    - See all commands",
             border_style="border",
             box=box.ROUNDED,
         ))
@@ -398,7 +392,7 @@ class InteractiveMode:
         table = create_modern_table(["Command", "Description"])
 
         seen = set()
-        for name, cmd in sorted(self.commands.items()):
+        for _name, cmd in sorted(self.commands.items()):
             if cmd.name in seen:
                 continue
             seen.add(cmd.name)
@@ -445,7 +439,6 @@ class InteractiveMode:
         self.console.print(Panel(hud, border_style="border", box=box.ROUNDED, padding=(0, 1)))
 
         # 2. Main Body (Columns)
-        from rich.columns import Columns
         from rich.console import Group
 
         # Left: Ticket & Quality Stats
@@ -458,7 +451,7 @@ class InteractiveMode:
 
         quality_info = Text()
         pass_rate = metrics.quality.pass_rate * 100
-        quality_info.append(f"Pass Rate: ", style="muted")
+        quality_info.append("Pass Rate: ", style="muted")
         quality_info.append(f"{pass_rate:.1f}%", style="success" if pass_rate > 80 else "warning")
         quality_info.append(f"\nTests Run: [accent]{metrics.quality.total_runs}[/accent]", style="muted")
 
@@ -478,7 +471,7 @@ class InteractiveMode:
         kb_data = project.kb.get_pending_knowledge()
         kb_pending = len(kb_data["patterns"]) + len(kb_data["adrs"])
         knowledge_stats = Text()
-        knowledge_stats.append(f"Pending Review: ", style="muted")
+        knowledge_stats.append("Pending Review: ", style="muted")
         knowledge_stats.append(f"{kb_pending}\n", style="warning" if kb_pending > 0 else "muted")
         knowledge_stats.append(f"Approved Pat:   [accent]{len(project.kb.get_patterns())}[/accent]\n", style="muted")
 
@@ -661,7 +654,8 @@ class InteractiveMode:
 
             success_count = 0
             for tid_str in subargs:
-                if not tid_str.isdigit(): continue
+                if not tid_str.isdigit():
+                    continue
                 tid = int(tid_str)
                 if project.tickets.has_unmet_dependencies(tid):
                     self.console.print(f"[warning]Ticket #{tid} is blocked by unmet dependencies.[/warning]")
@@ -716,7 +710,8 @@ class InteractiveMode:
         elif subcmd == "create":
             # Interactive creation with questionary
             title = questionary.text("Ticket title:").ask()
-            if not title: return
+            if not title:
+                return
 
             t_type = questionary.select(
                 "Ticket type:",
@@ -761,7 +756,8 @@ class InteractiveMode:
                 choices=["title", "description", "status", "severity", "cancel"]
             ).ask()
 
-            if field == "cancel": return
+            if field == "cancel":
+                return
 
             if field == "status":
                 new_val = questionary.select(
@@ -848,7 +844,8 @@ class InteractiveMode:
 
         elif subcmd == "create":
             name = subargs[0] if subargs else questionary.text("Topic name:").ask()
-            if not name: return
+            if not name:
+                return
             desc = questionary.text("Description (optional):").ask() if not subargs else ""
 
             t = project.topics.get_or_create(name)
@@ -1149,7 +1146,8 @@ class InteractiveMode:
 
         elif subcmd == "commit":
             msg = " ".join(subargs) if subargs else questionary.text("Commit message:").ask()
-            if not msg: return
+            if not msg:
+                return
 
             # stage all
             git.run_git(["add", "."])
@@ -1209,10 +1207,11 @@ class InteractiveMode:
              return
 
         # Native execution logic without CliRunner
+        from rich.progress import Progress, SpinnerColumn, TextColumn
+
+        from cascade.agents.registry import get_agent
         from cascade.core.executor import TicketExecutor
         from cascade.core.quality_gates import QualityGates
-        from cascade.agents.registry import get_agent
-        from rich.progress import Progress, SpinnerColumn, TextColumn
 
         executor = TicketExecutor(
             agent=get_agent(project.config.agent.default),
@@ -1252,7 +1251,7 @@ class InteractiveMode:
                     console=self.console,
                     transient=True,
                 ) as progress:
-                    task = progress.add_task(description="Running batch execution...", total=None)
+                    progress.add_task(description="Running batch execution...", total=None)
 
                     def wrapped_confirm(ts, p) -> bool:
                         progress.stop()
@@ -1266,7 +1265,7 @@ class InteractiveMode:
                     )
 
                 if result.success:
-                    self.console.print(f"[success]✓[/success] Batch executed successfully!")
+                    self.console.print("[success]✓[/success] Batch executed successfully!")
                 else:
                     self.console.print(f"[error]✗[/error] Batch failed: {result.error}")
             except Exception as e:
@@ -1286,7 +1285,7 @@ class InteractiveMode:
                     console=self.console,
                     transient=True,
                 ) as progress:
-                    task = progress.add_task(description=f"Agent working on #{tid}...", total=None)
+                    progress.add_task(description=f"Agent working on #{tid}...", total=None)
 
                     def wrapped_confirm(ts, p) -> bool:
                         progress.stop()
@@ -1355,7 +1354,7 @@ class InteractiveMode:
 
     def _cmd_model(self, args: str) -> None:
         """Change AI agent."""
-        from cascade.agents.registry import list_agents, get_agent
+        from cascade.agents.registry import get_agent, list_agents
         agents = list_agents()
 
         if args and args in agents:
@@ -1426,7 +1425,7 @@ class InteractiveMode:
 
         try:
             webbrowser.open(url)
-            self.console.print(f"[success]✓[/success] Opened documentation in browser")
+            self.console.print("[success]✓[/success] Opened documentation in browser")
         except Exception:
             self.console.print(f"[info]ℹ[/info] Documentation: {url}")
 
@@ -1443,10 +1442,10 @@ class InteractiveMode:
             print_warning_box(self.console, "No Cascade project found to destroy.")
             return
 
-        from cascade.cli.ui import print_warning_box, print_success_box, print_error_box
-        from rich.panel import Panel
         from rich import box
-        import shutil
+        from rich.panel import Panel
+
+        from cascade.cli.ui import print_error_box, print_success_box, print_warning_box
 
         cascade_dir = project.cascade_dir
 

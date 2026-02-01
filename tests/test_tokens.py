@@ -1,7 +1,6 @@
 """Tests for cascade.utils.tokens module."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 
 class TestCountTokens:

@@ -1,9 +1,8 @@
 """Prompt builder for ticket execution."""
 
 import logging
-from typing import Optional
 
-from cascade.models.context import TicketContext, MultiTicketContext
+from cascade.models.context import MultiTicketContext, TicketContext
 from cascade.models.ticket import Ticket
 
 logger = logging.getLogger(__name__)
@@ -55,7 +54,7 @@ class PromptBuilder:
 
         prompt = [
             "# Task",
-            f"Complete the following ticket. Focus only on this ticket.",
+            "Complete the following ticket. Focus only on this ticket.",
             "",
             f"## Ticket #{ticket.id}: {title}",
             f"Type: {ticket.ticket_type.value}",
@@ -271,7 +270,7 @@ You MUST respond with a JSON object following this structure:
 Ensure the JSON is valid and follows the schema strictly.
 """
 
-    def build_suggestion_prompt(self, tickets: list[Ticket], topic_name: Optional[str] = None) -> str:
+    def build_suggestion_prompt(self, tickets: list[Ticket], topic_name: str | None = None) -> str:
         """
         Build a prompt for the AI to suggest the next ticket to work on.
 

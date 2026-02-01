@@ -1,9 +1,11 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from cascade.core.context_builder import ContextBuilder
-from cascade.models.enums import ContextMode
+from cascade.models.enums import ContextMode, TicketStatus, TicketType
 from cascade.models.ticket import Ticket
-from cascade.models.enums import TicketType, TicketStatus
+
 
 @pytest.fixture
 def mock_kb():

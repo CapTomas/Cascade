@@ -1,18 +1,17 @@
 """Metrics command for Cascade CLI."""
 
-import click
 from datetime import datetime, timedelta
-from typing import Optional
 
-from cascade.core.project import get_project
-from cascade.core.metrics import MetricsService
+import click
+
 from cascade.cli.styles import (
     console,
-    print_banner,
-    create_table,
-    create_panel,
     create_hud,
+    create_table,
+    print_banner,
 )
+from cascade.core.metrics import MetricsService
+from cascade.core.project import get_project
 
 
 @click.command("metrics")

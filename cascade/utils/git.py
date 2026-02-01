@@ -1,10 +1,8 @@
 """Git provider for repository operations."""
 
 import subprocess
-import shlex
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from cascade.utils.logger import get_logger
 
@@ -27,7 +25,7 @@ class GitProvider:
     Uses subprocess to interact with git, avoiding external dependencies.
     """
 
-    def __init__(self, repo_path: Optional[Path] = None) -> None:
+    def __init__(self, repo_path: Path | None = None) -> None:
         """
         Initialize Git provider.
 
@@ -35,7 +33,7 @@ class GitProvider:
             repo_path: Path to the repository. If None, uses current directory.
         """
         self.repo_path = repo_path or Path.cwd()
-        self._git_available: Optional[bool] = None
+        self._git_available: bool | None = None
 
     def is_available(self) -> bool:
         """Check if git is available and we're in a repository."""
@@ -50,7 +48,7 @@ class GitProvider:
 
         return self._git_available
 
-    def get_current_branch(self) -> Optional[str]:
+    def get_current_branch(self) -> str | None:
         """Get the current branch name."""
         result = self._run_git(["rev-parse", "--abbrev-ref", "HEAD"])
         if result.success:
@@ -99,7 +97,7 @@ class GitProvider:
             args.append("--short")
         return self._run_git(args)
 
-    def get_diff(self, staged: bool = False, file_path: Optional[str] = None) -> GitResult:
+    def get_diff(self, staged: bool = False, file_path: str | None = None) -> GitResult:
         """
         Get diff output.
 
@@ -133,7 +131,7 @@ class GitProvider:
             return GitResult(success=False, output="", error="No paths provided")
         return self._run_git(["add"] + paths)
 
-    def stash(self, message: Optional[str] = None) -> GitResult:
+    def stash(self, message: str | None = None) -> GitResult:
         """Stash current changes."""
         args = ["stash", "push"]
         if message:
@@ -149,7 +147,7 @@ class GitProvider:
         result = self._run_git(["status", "--porcelain"])
         return bool(result.output.strip())
 
-    def get_remote_url(self) -> Optional[str]:
+    def get_remote_url(self) -> str | None:
         """Get the remote origin URL."""
         result = self._run_git(["remote", "get-url", "origin"])
         if result.success:

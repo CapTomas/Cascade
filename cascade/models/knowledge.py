@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 from cascade.models.enums import KnowledgeStatus
 
@@ -17,7 +16,7 @@ class ADR:
     Only approved ADRs are loaded into context.
     """
 
-    id: Optional[int] = None
+    id: int | None = None
     adr_number: int = 0
     title: str = ""
     status: KnowledgeStatus = KnowledgeStatus.PROPOSED
@@ -26,9 +25,9 @@ class ADR:
     rationale: str = ""  # Why this decision?
     consequences: str = ""  # What are the implications?
     alternatives_considered: str = ""  # What else was considered?
-    created_by_ticket_id: Optional[int] = None
-    created_at: Optional[datetime] = None
-    approved_at: Optional[datetime] = None
+    created_by_ticket_id: int | None = None
+    created_at: datetime | None = None
+    approved_at: datetime | None = None
 
     def __post_init__(self) -> None:
         """Normalize enum values."""
@@ -83,17 +82,17 @@ class Pattern:
     They are proposed by AI and approved by humans.
     """
 
-    id: Optional[int] = None
+    id: int | None = None
     pattern_name: str = ""
     description: str = ""
     code_template: str = ""
     applies_to_tags: list[str] = field(default_factory=list)
-    learned_from_ticket_id: Optional[int] = None
+    learned_from_ticket_id: int | None = None
     status: KnowledgeStatus = KnowledgeStatus.PROPOSED
     reuse_count: int = 0
     file_examples: list[str] = field(default_factory=list)
-    created_at: Optional[datetime] = None
-    approved_at: Optional[datetime] = None
+    created_at: datetime | None = None
+    approved_at: datetime | None = None
 
     def __post_init__(self) -> None:
         """Normalize enum values."""
@@ -159,13 +158,13 @@ class Convention:
     human-readable YAML file.
     """
 
-    id: Optional[int] = None
+    id: int | None = None
     category: str = ""  # 'naming', 'style', 'structure', 'security'
     convention_key: str = ""
     convention_value: str = ""
     rationale: str = ""
     priority: int = 0  # Higher = load first
-    created_at: Optional[datetime] = None
+    created_at: datetime | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for storage."""

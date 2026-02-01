@@ -1,11 +1,10 @@
 """Context builder for ticket execution."""
 
 import logging
-from typing import Optional
 
 from cascade.core.knowledge_base import KnowledgeBase
 from cascade.core.ticket_manager import TicketManager
-from cascade.models.context import TicketContext, MultiTicketContext
+from cascade.models.context import MultiTicketContext, TicketContext
 from cascade.models.enums import ContextMode
 from cascade.models.ticket import Ticket
 
@@ -35,7 +34,7 @@ class ContextBuilder:
         self,
         ticket: Ticket,
         mode: ContextMode = ContextMode.MINIMAL,
-        token_budget: Optional[int] = None,
+        token_budget: int | None = None,
     ) -> TicketContext:
         """
         Build context for a ticket based on the specified mode.
@@ -115,7 +114,7 @@ class ContextBuilder:
         self,
         tickets: list[Ticket],
         mode: ContextMode = ContextMode.MINIMAL,
-        token_budget: Optional[int] = None,
+        token_budget: int | None = None,
     ) -> MultiTicketContext:
         """
         Build context for multiple tickets.

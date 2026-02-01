@@ -1,9 +1,6 @@
 """Tests for CLI command workflows."""
 
 import os
-import tempfile
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import pytest
 from click.testing import CliRunner

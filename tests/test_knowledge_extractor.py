@@ -1,9 +1,9 @@
 """Tests for KnowledgeExtractor."""
 
-import pytest
 from cascade.core.knowledge_extractor import KnowledgeExtractor
-from cascade.models.knowledge import ADR, Pattern
 from cascade.models.enums import KnowledgeStatus
+from cascade.models.knowledge import ADR, Pattern
+
 
 def test_extract_pattern_proposal():
     extractor = KnowledgeExtractor()

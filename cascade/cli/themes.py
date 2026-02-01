@@ -3,10 +3,9 @@
 Provides customizable color schemes inspired by Claude, Codex, and Gemini CLIs.
 """
 
-from dataclasses import dataclass, field
-from typing import Optional
-from pathlib import Path
 import json
+from dataclasses import dataclass
+from pathlib import Path
 
 from rich.theme import Theme
 
@@ -139,7 +138,7 @@ class ThemeManager:
     USER_CONFIG_PATH = Path.home() / ".cascaderc"
 
     def __init__(self) -> None:
-        self._current_theme: Optional[ColorTheme] = None
+        self._current_theme: ColorTheme | None = None
         self._user_config: dict = {}
         self._load_user_config()
 
@@ -158,7 +157,7 @@ class ThemeManager:
         except OSError:
             pass  # Silently fail if we can't write
 
-    def get_theme(self, project_theme: Optional[str] = None) -> ColorTheme:
+    def get_theme(self, project_theme: str | None = None) -> ColorTheme:
         """Get the active theme, checking project then user config."""
         if self._current_theme:
             return self._current_theme
@@ -204,7 +203,7 @@ class ThemeManager:
 
 
 # Global theme manager instance
-_theme_manager: Optional[ThemeManager] = None
+_theme_manager: ThemeManager | None = None
 
 
 def get_theme_manager() -> ThemeManager:

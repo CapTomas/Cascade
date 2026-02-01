@@ -1,7 +1,7 @@
 """Project configuration model for Cascade."""
 
 from pathlib import Path
-from typing import Optional
+
 import yaml
 from pydantic import BaseModel, Field
 
@@ -12,8 +12,8 @@ class QualityGateConfig(BaseModel):
     enabled: bool = True
     fail_on_error: bool = True
     tools: dict[str, str] = Field(default_factory=dict)
-    command: Optional[str] = None
-    min_coverage: Optional[int] = None
+    command: str | None = None
+    min_coverage: int | None = None
     fail_on_critical: bool = True
     fail_on_high: bool = False
 
@@ -117,7 +117,8 @@ class ProjectConfig(BaseModel):
 
         # Filter out empty dicts so Pydantic uses defaults
         def clean(d):
-            if not isinstance(d, dict): return d
+            if not isinstance(d, dict):
+                return d
             return {k: clean(v) for k, v in d.items() if v is not None}
 
         return cls.model_validate(clean(config_data))

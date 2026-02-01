@@ -1,11 +1,13 @@
 """Tests for the Planner class."""
 
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import MagicMock, patch
-from cascade.core.planner import Planner
-from cascade.models.planning import PlanningResult, ProposedTicket, ProposedTopic
-from cascade.models.enums import TicketType, Severity, TicketStatus
+
 from cascade.agents.interface import AgentResponse
+from cascade.core.planner import Planner
+from cascade.models.enums import Severity, TicketStatus, TicketType
+from cascade.models.planning import PlanningResult, ProposedTicket, ProposedTopic
 
 
 @pytest.fixture

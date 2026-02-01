@@ -1,12 +1,12 @@
 """Database connection and management for Cascade."""
 
+import logging
 import sqlite3
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Generator, Optional, Any
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class Database:
             db_path: Path to SQLite database file
         """
         self.db_path = db_path
-        self._connection: Optional[sqlite3.Connection] = None
+        self._connection: sqlite3.Connection | None = None
 
     def initialize(self) -> None:
         """Create database and initialize schema."""
@@ -95,7 +95,7 @@ class Database:
 
     def execute(
         self, query: str, params: tuple = (), *, fetch: bool = False
-    ) -> Optional[list[sqlite3.Row]]:
+    ) -> list[sqlite3.Row] | None:
         """
         Execute a query and optionally fetch results.
 
@@ -130,7 +130,7 @@ class Database:
         with self.transaction() as conn:
             conn.executemany(query, params_list)
 
-    def fetch_one(self, query: str, params: tuple = ()) -> Optional[sqlite3.Row]:
+    def fetch_one(self, query: str, params: tuple = ()) -> sqlite3.Row | None:
         """
         Execute query and fetch single result.
 

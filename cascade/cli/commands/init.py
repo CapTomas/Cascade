@@ -1,32 +1,25 @@
 """Init command for Cascade CLI."""
 
-import click
 from pathlib import Path
+
+import click
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from rich.table import Table
-from rich import box
 
-from cascade.core.project import CascadeProject
 from cascade.cli.styles import (
-    console,
-    print_banner,
-    print_success,
-    print_error,
-    print_warning,
-    create_table,
-    create_panel,
-    get_progress,
     CASCADE_LOGO,
+    create_table,
+    get_progress,
+    print_error,
+    print_success,
+    print_warning,
 )
 from cascade.cli.ui import (
-    create_box,
-    create_dashboard_panel,
-    print_success_box,
     print_info_box,
-    BoxChars,
 )
+from cascade.core.project import CascadeProject
 
 
 @click.command("init")

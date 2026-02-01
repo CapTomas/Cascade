@@ -1,10 +1,11 @@
-import pytest
 import os
-from unittest.mock import patch, MagicMock
-from cascade.agents.registry import list_agents, get_agent
-from cascade.agents.interface import AgentCapability
+from unittest.mock import MagicMock, patch
+
 from cascade.agents import AntigravityAgent
+from cascade.agents.interface import AgentCapability
 from cascade.agents.manual import ManualAgent
+from cascade.agents.registry import get_agent, list_agents
+
 
 def test_list_agents():
     agents = list_agents()
@@ -76,8 +77,8 @@ def test_manual_agent_execute(mock_popen, mock_readline):
 def test_prompt_builder():
     from cascade.core.prompt_builder import PromptBuilder
     from cascade.models.context import TicketContext
+    from cascade.models.enums import TicketStatus, TicketType
     from cascade.models.ticket import Ticket
-    from cascade.models.enums import TicketType, TicketStatus
 
     ticket = Ticket(
         id=1,

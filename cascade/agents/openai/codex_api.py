@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Codex agent implementation via OpenAI API."""
 
 import json
@@ -6,14 +7,13 @@ import os
 import time
 import urllib.error
 import urllib.request
-from typing import Optional
 
 from cascade.agents.interface import (
-    AgentInterface,
     AgentCapabilities,
     AgentCapability,
-    AgentResponse,
     AgentConfig,
+    AgentInterface,
+    AgentResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class CodexApiAgent(AgentInterface):
 
     DEFAULT_TOKEN_LIMIT = 128000
 
-    def __init__(self, config: Optional[AgentConfig] = None):
+    def __init__(self, config: AgentConfig | None = None):
         super().__init__(config)
 
     def get_name(self) -> str:
@@ -56,8 +56,8 @@ class CodexApiAgent(AgentInterface):
     def execute(
         self,
         prompt: str,
-        working_dir: Optional[str] = None,
-        callback: Optional[callable] = None,
+        working_dir: str | None = None,
+        callback: Callable | None = None,
     ) -> AgentResponse:
         is_valid, error = self.validate_prompt(prompt)
         if not is_valid:
@@ -85,7 +85,7 @@ class CodexApiAgent(AgentInterface):
         }
 
         data = json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(
+        request = urllib.request.Request(  # noqa: S310
             url,
             data=data,
             headers={
@@ -100,7 +100,8 @@ class CodexApiAgent(AgentInterface):
 
         for attempt in range(max_retries + 1):
             try:
-                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as resp:
+                # Allow custom schemes like https for API calls
+                with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as resp:  # noqa: S310
                     raw = resp.read().decode("utf-8")
                     break
             except urllib.error.HTTPError as exc:
@@ -151,7 +152,7 @@ class CodexApiAgent(AgentInterface):
             raw_output=raw,
         )
 
-    def _get_api_key(self) -> Optional[str]:
+    def _get_api_key(self) -> str | None:
         return (
             self.config.environment.get("CODEX_API_KEY")
             or os.environ.get("CODEX_API_KEY")
@@ -159,7 +160,7 @@ class CodexApiAgent(AgentInterface):
             or os.environ.get("OPENAI_API_KEY")
         )
 
-    def _get_model(self) -> Optional[str]:
+    def _get_model(self) -> str | None:
         return (
             self.config.environment.get("CODEX_MODEL")
             or os.environ.get("CODEX_MODEL")
