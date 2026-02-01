@@ -1,4 +1,4 @@
-# Cascade 🌊
+# Cascade
 
 [![CI](https://github.com/cascade-ai/cascade/actions/workflows/ci.yml/badge.svg)](https://github.com/cascade-ai/cascade/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/cascade-ai.svg)](https://badge.fury.io/py/cascade-ai)
@@ -118,11 +118,11 @@ Automatic extraction and management of institutional knowledge:
 
 AI doesn't just complete tasks - it **actively discovers** and **creates tickets** for follow-up work:
 
-- **🔍 Active Discovery**: While working, AI identifies bugs, security issues, tech debt, and improvements
-- **📝 Automatic Ticketing**: Discovered work is automatically converted into categorized, prioritized tickets
-- **🎯 Smart Categorization**: Auto-inferred ticket types (BUG, SECURITY, TEST, DOC, TASK) and severity
-- **🔗 Contextual Linking**: Created tickets link back to parent ticket for full traceability
-- **🧠 Self-Improving Backlog**: Your backlog grows organically with real, discovered issues
+- **Active Discovery**: While working, AI identifies bugs, security issues, tech debt, and improvements
+- **Automatic Ticketing**: Discovered work is automatically converted into categorized, prioritized tickets
+- **Smart Categorization**: Auto-inferred ticket types (BUG, SECURITY, TEST, DOC, TASK) and severity
+- **Contextual Linking**: Created tickets link back to parent ticket for full traceability
+- **Self-Improving Backlog**: Your backlog grows organically with real, discovered issues
 
 **Example**: AI fixes a login bug and auto-creates tickets for:
 - Similar validation missing in signup (BUG, HIGH)

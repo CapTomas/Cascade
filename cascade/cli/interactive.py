@@ -1884,7 +1884,7 @@ class InteractiveMode:
     def _cmd_quit(self, args: str) -> None:
         """Exit the REPL."""
         self.running = False
-        self.console.print("\n[muted]Goodbye! 👋[/muted]\n")
+        self.console.print("\n[muted]Goodbye![/muted]\n")
 
     def _status_style(self, status: str | TicketStatus) -> str:
         """Get style for ticket status."""
